@@ -1,0 +1,14 @@
+# Local PostgreSQL for development. Port 5433, because a Homebrew PostgreSQL may already use 5432.
+services:
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: bakery
+      POSTGRES_PASSWORD: bakery
+      POSTGRES_DB: bakery
+    ports:
+      - "5433:5432"
+    volumes:
+      - bakery-db:/var/lib/postgresql/data
+volumes:
+  bakery-db:

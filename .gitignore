@@ -1,0 +1,11 @@
+node_modules/
+.env
+.env.*
+!.env.example
+spikes/czech-voice/audio/
+spikes/czech-voice/out/
+.next/
+dist/
+.expo/
+*.tsbuildinfo
+.vitest/

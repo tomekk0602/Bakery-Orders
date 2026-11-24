@@ -1,0 +1,18 @@
+{
+  "name": "czech-voice",
+  "version": "1.0.0",
+  "description": "Measurement gate from `ai-tests/voice-ordering.md`. Ten scripted Czech customer utterances (`utterances.json`) are synthesised with the macOS Czech voice, in a clean and a phone-band variant, streamed in real time to each provider with the same instructions and tools (`common.mjs`), and scored on the `prepare_order` / `request_callback` tool calls.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "private": "true",
+  "dependencies": {
+    "@google/genai": "^3.6.1",
+    "ws": "^8.23.0"
+  }
+}

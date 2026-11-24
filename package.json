@@ -1,0 +1,16 @@
+{
+  "name": "bakery-voice-orders",
+  "private": true,
+  "type": "module",
+  "workspaces": ["packages/*", "apps/*"],
+  "engines": { "node": ">=24" },
+  "scripts": {
+    "dev": "npm run dev -w @bakery/web",
+    "test": "npm run test --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "db:up": "docker compose up -d db",
+    "db:migrate": "npm run migrate -w @bakery/db",
+    "db:seed": "npm run seed -w @bakery/db",
+    "db:studio": "npm run studio -w @bakery/db"
+  }
+}
