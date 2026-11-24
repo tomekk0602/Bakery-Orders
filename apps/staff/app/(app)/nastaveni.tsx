@@ -1,5 +1,3 @@
-import { ComingSoonScreen } from "@/features/navigation/ComingSoonScreen";
+import { SettingsScreen } from "@/features/settings/SettingsScreen";
 
-export default function Route() {
-  return <ComingSoonScreen titleKey="tabs.settings" />;
-}
+export default SettingsScreen;

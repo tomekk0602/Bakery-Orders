@@ -9,3 +9,4 @@ export * from "./staff-orders.repo.ts";
 export * from "./demo-orders.ts";
 export * from "./plan.repo.ts";
 export * from "./requests.repo.ts";
+export * from "./settings.repo.ts";

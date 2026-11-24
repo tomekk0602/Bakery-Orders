@@ -124,5 +124,55 @@
     "reopen": "Vrátit mezi otevřené",
     "none": "Žádné otevřené požadavky.",
     "handled": "Vyřízené"
+  },
+  "settings": {
+    "cutoff": "Uzávěrka objednávek",
+    "cutoffDays": "Kolik dní předem",
+    "cutoffTime": "V kolik hodin",
+    "closedWeekdays": "Zavřeno každý týden",
+    "closedDays": "Zavřeno navíc (svátky se počítají samy)",
+    "date": "Datum (RRRR-MM-DD)",
+    "reason": "Důvod",
+    "addDay": "Přidat zavřený den",
+    "removeDay": "Odebrat den",
+    "products": "Výrobky",
+    "priceNote": "Nová cena platí pro nové objednávky; uložené objednávky si drží cenu z doby objednání.",
+    "active": "{{product}} v nabídce",
+    "price": "Cena (Kč)",
+    "priceOf": "Cena: {{product}}",
+    "limit": "Limit za den",
+    "limitOf": "Limit za den: {{product}}",
+    "noLimit": "bez limitu",
+    "buffers": "Odhad prodeje v prodejně podle dne",
+    "bufferOf": "Odhad prodeje: {{product}}, {{day}}",
+    "weekdays": {
+      "mon": "Po",
+      "tue": "Út",
+      "wed": "St",
+      "thu": "Čt",
+      "fri": "Pá",
+      "sat": "So",
+      "sun": "Ne"
+    },
+    "save": "Uložit nastavení",
+    "saved": "Nastavení je uložené.",
+    "errors": {
+      "number": "Zadejte celé číslo.",
+      "price": "Zadejte cenu v Kč.",
+      "limit": "Zadejte číslo, nebo nechte prázdné.",
+      "cutoffDays": "0 až 3 dny.",
+      "time": "Čas ve tvaru 14:00.",
+      "date": "Datum ve tvaru 2026-12-31.",
+      "allClosed": "Alespoň jeden den v týdnu musí být otevřeno.",
+      "fix": "Opravte prosím označená pole."
+    },
+    "reset": {
+      "title": "Demo",
+      "explain": "Obnoví ukázkovou pekárnu: smaže všechny objednávky, hovory a požadavky a vrátí výchozí nabídku. Účty zůstanou.",
+      "start": "Obnovit demo",
+      "confirm": "Opravdu obnovit",
+      "cancel": "Zrušit",
+      "done": "Demo je obnovené."
+    }
   }
 }

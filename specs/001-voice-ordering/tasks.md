@@ -95,9 +95,9 @@ they cover and must fail first.
 ## Phase 4: User Story 2 — The owner sees what to bake (P1)
 
 - [x] T040 [P] [US2] `GET /api/staff/plan` + test (FR-010)
-- [ ] T041 [P] [US2] `GET/PUT /api/staff/settings` + test: cut-off, closed weekdays and days, buffers, limits (FR-011)
+- [x] T041 [P] [US2] `GET/PUT /api/staff/settings` + test: cut-off, closed weekdays and days, buffers, limits (FR-011)
 - [x] T042 [US2] "Plán" screen `apps/staff/app/(tabs)/plan.tsx`: day picker, per product reserved / buffer / to bake, totals (FR-010, SC-003)
-- [ ] T043 [P] [US2] Settings screen `apps/staff/app/nastaveni.tsx` (FR-011)
+- [x] T043 [P] [US2] Settings screen `apps/staff/app/nastaveni.tsx` (FR-011)
 
 **Checkpoint**: channel 2 and the baking plan work — both jobs of the brief, without any voice.
 
@@ -168,7 +168,7 @@ they cover and must fail first.
 - [ ] T074 [P] Shadow cost: `packages/core/src/agent/prices.ts` with source URL and date; cost per call and per dictation on the trace and the call record (ADR-0013)
 - [ ] T075 [US4] "Provoz" screen `apps/staff/app/(tabs)/provoz.tsx` + `GET /api/staff/provoz`: first-audio p50/p95, outcome shares, share of phone orders edited by staff (FR-033)
 - [ ] T076 [P] Sentry for the Expo app with the same masking; alerts (latency p95, failed calls, quota, order-path errors) to e-mail with proposed thresholds marked as debt (ADR-0013)
-- [ ] T077 [P] "Reset demo" in the staff app settings calling `POST /api/staff/reset` (FR-042)
+- [x] T077 [P] "Reset demo" in the staff app settings calling `POST /api/staff/reset` (FR-042)
 - [ ] T078 [P] Playwright smoke `apps/web/tests/e2e/`: web form order; staff login (quickstart 11)
 - [ ] T079 Deployment config: Vercel project for `apps/web` and the staff web build (EU region), Neon branch per preview, EAS Update for Expo Go — **set up and deployed only with the owner's yes; accounts and keys created by the owner**
 - [ ] T080 README for reviewers: links, how to log in (credentials sent separately), the three-minute walkthrough, the decisions in short with links to the ADRs, known limits (free tiers, browser call instead of a phone line)
