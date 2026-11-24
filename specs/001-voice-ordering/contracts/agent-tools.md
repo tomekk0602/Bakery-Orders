@@ -32,8 +32,9 @@ the model can say what happened instead of guessing.
 - **Description**: Saves the last prepared order. Call only after the customer has explicitly agreed
   to the read-back.
 - **Arguments**: `{ draft_id: string }`
-- **Server checks**: the draft exists, is unexpired and belongs to this call or staff session;
-  capacity updated in one transaction (R14).
+- **Server checks**: the draft exists, is unexpired and belongs to this call or staff session; the
+  pickup day is checked again at the moment of the yes — past, closed or (for customers) after the
+  cut-off is refused (R30); capacity updated in one transaction (R14).
 - **Result**: `{ ok: true, order_number }` or `{ ok: false, reason: "no_draft" | "over_limit" | "after_cutoff" | "closed_day" }`.
 
 ## request_staff

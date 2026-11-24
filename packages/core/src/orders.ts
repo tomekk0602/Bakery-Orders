@@ -51,6 +51,25 @@ export type PreparedOrder = {
 const refuse = (reason: RefusalReason, detail?: string): Refusal =>
   detail ? { ok: false, reason, detail } : { ok: false, reason };
 
+/**
+ * Whether a pickup day can still be ordered at `now`: not past, inside the 14-day window, open, and
+ * before the cut-off unless staff override it (FR-007, FR-013). Checked when an order is prepared and
+ * again when it is confirmed, because a call can cross the cut-off in between (research R30).
+ */
+export function checkPickupDay(
+  pickupDate: string,
+  now: Date,
+  schedule: BakerySchedule,
+  staffOverride: boolean,
+): Refusal | null {
+  if (pickupDate < pragueDate(now)) return refuse("past_day");
+  if (!buildCalendar(now, schedule).some((d) => d.date === pickupDate)) return refuse("outside_window");
+  const day = describeDay(pickupDate, schedule);
+  if (day.closed) return refuse("closed_day", day.closedReason ?? undefined);
+  if (!staffOverride && isAfterCutoff(pickupDate, now, schedule)) return refuse("after_cutoff");
+  return null;
+}
+
 /** Every rule an order must pass before it can be read back and confirmed (ADR-0003). */
 export function prepareOrder(input: PrepareInput, ctx: PrepareContext): PreparedOrder | Refusal {
   if (input.items.length === 0) return refuse("empty_order");
@@ -64,13 +83,9 @@ export function prepareOrder(input: PrepareInput, ctx: PrepareContext): Prepared
   for (const i of input.items) merged.set(i.productId, (merged.get(i.productId) ?? 0) + i.quantity);
   const items = [...merged].map(([productId, quantity]) => ({ productId, quantity }));
 
-  const today = pragueDate(ctx.now);
-  if (input.pickupDate < today) return refuse("past_day");
-  const window = buildCalendar(ctx.now, ctx.schedule);
-  if (!window.some((d) => d.date === input.pickupDate)) return refuse("outside_window");
+  const dayRefusal = checkPickupDay(input.pickupDate, ctx.now, ctx.schedule, ctx.staffOverride);
+  if (dayRefusal) return dayRefusal;
   const day = describeDay(input.pickupDate, ctx.schedule);
-  if (day.closed) return refuse("closed_day", day.closedReason ?? undefined);
-  if (!ctx.staffOverride && isAfterCutoff(input.pickupDate, ctx.now, ctx.schedule)) return refuse("after_cutoff");
 
   for (const i of items) {
     const left = ctx.remaining[i.productId];

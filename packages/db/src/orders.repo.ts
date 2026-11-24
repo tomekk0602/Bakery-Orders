@@ -1,4 +1,5 @@
-import type { OrderChannel, PreparedOrder } from "@bakery/core";
+import { checkPickupDay, type OrderChannel, type PreparedOrder, type RefusalReason } from "@bakery/core";
+import { loadBakery } from "./bakery.repo.ts";
 import { and, eq, gt, isNull, sql } from "drizzle-orm";
 import type { Db } from "./client.ts";
 import { firstRow } from "./rows.ts";
@@ -34,7 +35,13 @@ export async function saveDraft(
 
 export type ConfirmMeta = { promptVersion: string | null; model: string | null };
 export type ConfirmResult =
-  { ok: true; orderNumber: number; orderId: string } | { ok: false; reason: "no_draft" | "over_limit" };
+  | { ok: true; orderNumber: number; orderId: string }
+  | { ok: false; reason: "no_draft" | "over_limit" }
+  | {
+      ok: false;
+      reason: Extract<RefusalReason, "past_day" | "outside_window" | "closed_day" | "after_cutoff">;
+      detail?: string;
+    };
 
 type Tx = Parameters<Parameters<Db["transaction"]>[0]>[0];
 type OrderSourceValue = typeof order.$inferInsert.source;
@@ -118,6 +125,9 @@ export async function confirmDraft(
   now = new Date(),
 ): Promise<ConfirmResult> {
   const who = ownerColumns(owner);
+  // The day is checked again at the yes, not only at the read-back: a call can cross the cut-off in
+  // between, and the owner can close a day. Staff keep their cut-off override (FR-007, FR-013, R30).
+  const { schedule } = await loadBakery(db);
   return db
     .transaction(async (tx) => {
       const [draft] = await tx
@@ -133,7 +143,10 @@ export async function confirmDraft(
         )
         .for("update");
       if (!draft) return { ok: false, reason: "no_draft" } as const;
-      const saved = await insertOrder(tx, draft.payload as PreparedOrder, draft.channel, { ...meta, ...who });
+      const payload = draft.payload as PreparedOrder;
+      const refusal = checkPickupDay(payload.pickupDate, now, schedule, draft.channel === "staff");
+      if (refusal) return refusal as Extract<ConfirmResult, { reason: RefusalReason }>;
+      const saved = await insertOrder(tx, payload, draft.channel, { ...meta, ...who });
       await tx.update(orderDraft).set({ confirmedOrderId: saved.id }).where(eq(orderDraft.id, draft.id));
       return { ok: true, orderNumber: saved.number, orderId: saved.id } as const;
     })

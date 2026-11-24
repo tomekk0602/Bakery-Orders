@@ -8,7 +8,7 @@ import { loadBakery, remainingCapacity } from "./bakery.repo.ts";
 import { createCall, hitRateLimit } from "./calls.repo.ts";
 import { user } from "./auth-schema.ts";
 import { confirmDraft, saveDraft, type DraftOwner } from "./orders.repo.ts";
-import { dailyCapacity, order, product } from "./schema.ts";
+import { closedDay, dailyCapacity, order, product } from "./schema.ts";
 import { seedBakery, truncateBakery } from "./seed.ts";
 
 let container: StartedPostgreSqlContainer;
@@ -46,15 +46,23 @@ const STAFF: DraftOwner = { userId: "staff-1" };
 async function prepared(
   items: { productId: string; quantity: number }[],
   owner: DraftOwner = STAFF,
+  at: Date = now,
 ): Promise<{ draftId: string; p: PreparedOrder }> {
   const bakery = await loadBakery(db);
   const remaining = await remainingCapacity(db, bakery.catalogue, "2026-11-28");
   const p = prepareOrder(
     { items, pickupDate: "2026-11-28", customerName: "Nováková", customerPhone: "+420777000111" },
-    { now, channel: "phone", catalogue: bakery.catalogue, schedule: bakery.schedule, staffOverride: false, remaining },
+    {
+      now: at,
+      channel: "phone",
+      catalogue: bakery.catalogue,
+      schedule: bakery.schedule,
+      staffOverride: false,
+      remaining,
+    },
   );
   if (!p.ok) throw new Error(`prepare refused: ${p.reason}`);
-  return { draftId: await saveDraft(db, p, "phone", owner, now), p };
+  return { draftId: await saveDraft(db, p, "phone", owner, at), p };
 }
 
 const meta = { promptVersion: "test", model: "test" };
@@ -148,5 +156,37 @@ describe("hitRateLimit", () => {
     const hits = [];
     for (let i = 0; i < 4; i++) hits.push(await hitRateLimit(db, "call:ip", 3, 60_000, now));
     expect(hits).toEqual([true, true, true, false]);
+  });
+});
+
+describe("confirmDraft checks the day again at the yes (FR-007, research R30)", () => {
+  // Saturday 28 November: orders close on Friday 27 November at 14:00 Prague (13:00 UTC). The order is
+  // read back at 13:58 and the customer says yes at 14:01.
+  const readBack = new Date("2026-11-27T12:58:00Z");
+  const afterCutoff = new Date("2026-11-27T13:01:00Z");
+
+  it("refuses a customer's order whose yes came after the cut-off, though the read-back was before it", async () => {
+    const callId = await createCall(db, {
+      callerPhone: "+420777000111",
+      ipHash: "x",
+      promptVersion: "test",
+      model: "test",
+    });
+    const { draftId } = await prepared([{ productId: "rohlik", quantity: 2 }], { callId }, readBack);
+    expect(await confirmDraft(db, draftId, { callId }, meta, afterCutoff)).toEqual({
+      ok: false,
+      reason: "after_cutoff",
+    });
+    expect(await db.select().from(order)).toEqual([]);
+  });
+
+  it("lets staff confirm after the cut-off (their override), but not for a day that has since closed", async () => {
+    const { p } = await prepared([{ productId: "rohlik", quantity: 2 }], STAFF, readBack);
+    const staffDraft = await saveDraft(db, p, "staff", STAFF, readBack);
+    expect(await confirmDraft(db, staffDraft, STAFF, meta, afterCutoff)).toEqual(expect.objectContaining({ ok: true }));
+
+    const second = await saveDraft(db, p, "staff", STAFF, readBack);
+    await db.insert(closedDay).values({ day: "2026-11-28", reason: "Inventura" });
+    expect(await confirmDraft(db, second, STAFF, meta, readBack)).toMatchObject({ ok: false, reason: "closed_day" });
   });
 });
