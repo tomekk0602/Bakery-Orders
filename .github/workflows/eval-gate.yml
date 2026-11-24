@@ -9,6 +9,7 @@ on:
     branches: [main]
     paths: &agent
       - packages/core/src/agent/**
+      - "!packages/core/src/agent/prices.ts"
       - packages/core/src/calendar.ts
       - packages/core/src/catalogue.ts
       - packages/core/src/orders.ts

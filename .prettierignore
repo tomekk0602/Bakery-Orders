@@ -3,3 +3,4 @@ migrations/
 .expo/
 spikes/czech-voice/out/
 package-lock.json
+apps/web/public/staff/

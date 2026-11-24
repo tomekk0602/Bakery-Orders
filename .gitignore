@@ -13,3 +13,6 @@ dist/
 
 # eval run output (results, report); the baseline is committed
 packages/evals/out/
+
+# the staff app's web build, exported at deploy time (research R28)
+apps/web/public/staff/

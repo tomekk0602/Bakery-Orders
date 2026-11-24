@@ -19,7 +19,8 @@
     "db:studio": "npm run studio -w @bakery/db",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "build:deploy": "npm run export:web -w @bakery/staff && npm run build -w @bakery/web"
   },
   "overrides": {
     "react": "19.3.0",

@@ -15,6 +15,8 @@ export default tseslint.config(
       "**/migrations/**",
       "**/next-env.d.ts",
       "**/expo-env.d.ts",
+      // the staff app's exported web build (research R28)
+      "apps/web/public/staff/**",
     ],
   },
   ...tseslint.configs.strict,

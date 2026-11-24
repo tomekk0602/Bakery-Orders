@@ -1,6 +1,7 @@
 // Creates the two demo staff accounts (ADR-0015): one owner, one employee.
 // Passwords come from DEMO_OWNER_PASSWORD / DEMO_EMPLOYEE_PASSWORD; when unset, random ones are
-// generated and written to .demo-credentials.local (git-ignored), never to the repository.
+// generated and written to .demo-credentials.local (git-ignored), never to the repository;
+// DEMO_CREDENTIALS_FILE names another git-ignored file, e.g. for the production database.
 // Run: npm run seed:staff -w @bakery/web
 import { randomBytes } from "node:crypto";
 import { chmodSync, writeFileSync } from "node:fs";
@@ -25,10 +26,10 @@ for (const a of ACCOUNTS) {
 }
 
 if (generated.length) {
-  const file = new URL("../.demo-credentials.local", import.meta.url);
+  const file = new URL(`../${process.env.DEMO_CREDENTIALS_FILE ?? ".demo-credentials.local"}`, import.meta.url);
   writeFileSync(file, generated.join("\n") + "\n");
   chmodSync(file, 0o600);
-  process.stdout.write(`created ${generated.length} account(s); credentials in apps/web/.demo-credentials.local\n`);
+  process.stdout.write(`created ${generated.length} account(s); credentials in ${file.pathname}\n`);
 } else {
   process.stdout.write("staff accounts present\n");
 }

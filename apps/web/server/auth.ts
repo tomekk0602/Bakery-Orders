@@ -16,10 +16,21 @@ const roles = Object.fromEntries(ROLES.map((r) => [r, ac.newRole(statementsOf(r)
   ReturnType<typeof ac.newRole>
 >;
 
+/**
+ * The app's public URL: BETTER_AUTH_URL when set, else the production domain Vercel provides to every
+ * deployment (`VERCEL_PROJECT_PRODUCTION_URL`, research R28), else localhost in development.
+ */
+function appUrl(): string {
+  const vercel = process.env.VERCEL_PROJECT_PRODUCTION_URL;
+  return (
+    process.env.BETTER_AUTH_URL ?? (vercel ? `https://${vercel}` : required("BETTER_AUTH_URL", "http://localhost:3000"))
+  );
+}
+
 function createAuth() {
   return betterAuth({
     secret: required("BETTER_AUTH_SECRET", "development-only-secret-at-least-32-characters"),
-    baseURL: required("BETTER_AUTH_URL", "http://localhost:3000"),
+    baseURL: appUrl(),
     database: drizzleAdapter(db(), {
       provider: "pg",
       schema: {

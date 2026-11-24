@@ -514,3 +514,34 @@ intervals.
 - **Retention** (T073): nightly at 02:00 UTC through Vercel Cron with `CRON_SECRET`; a transcript goes
   30 days after its call's last pickup day, or 30 days after a call without an order; expired drafts
   go; rate-limit counters older than the longest limit window (1 hour) go. Tested with a fixed clock.
+
+## R28 — Deployment: one Vercel project, the staff web app under `/staff`, Neon in Frankfurt
+
+- **Decision**: one Vercel project (root `apps/web`, functions in `fra1`) serves the customer site,
+  the API and the staff app's web build. The build (`npm run build:deploy`) exports the Expo web app
+  with `baseUrl` `/staff` into `apps/web/public/staff`, then builds Next.js; Next serves those files
+  and rewrites every other `/staff/*` path to its `index.html` (a single-page app). The staff web
+  build calls the API on its own origin (`EXPO_PUBLIC_API_SAME_ORIGIN`). PostgreSQL is Neon in AWS
+  eu-central-1 (Frankfurt), reached with `pg` through Neon's pooled connection string.
+- **Rationale**: staff sign in with a session cookie. In development `localhost:8081` and
+  `localhost:3000` are one site, so it works; two `*.vercel.app` domains are two sites, where Safari
+  blocks the cookie and Chrome does not send a `SameSite=Lax` one. Serving the staff app from the
+  API's origin makes the cookie first-party everywhere, removes CORS from the web path and is one
+  deployment. Checked 2026-11-24 on a local production build: `/staff`, `/staff/plan` and the bundles
+  load; sign-in on the same origin sets the cookie and `/api/staff/me` returns the owner's permissions.
+  The production build refuses to serve without `DATABASE_URL`, `BETTER_AUTH_SECRET` and
+  `IP_HASH_SALT` (no development defaults) — checked on the same run.
+- **Alternatives rejected**: a second Vercel project for the staff app with `SameSite=None` cookies —
+  blocked by Safari's tracking prevention, and staff use iPads; a shared custom domain for two
+  projects — a domain the owner does not have; `@neondatabase/serverless` — `pg` with the pooled
+  string works from Node functions and is what the code and the tests already use.
+- **Not set up** (ADR-0013, T079): a Neon branch per preview — changes go straight to `main`, so there
+  are no pull-request previews to give a database; EAS Update for Expo Go — reviewers use the staff app
+  in the browser; the native build stays a development path.
+- **The app's public URL** for sign-in is `BETTER_AUTH_URL` when set, else Vercel's system variable
+  `VERCEL_PROJECT_PRODUCTION_URL`, so the first deployment needs no URL that does not exist yet.
+- **Production data** (2026-11-24): Neon project `bakery-orders`, Postgres 17.12, `eu-central-1`;
+  migrated and seeded from this machine (12 products, demo orders and requests, an owner and an
+  employee); the demo passwords are in a git-ignored file and go to the reviewers separately.
+- **The eval gate's filter** leaves out `packages/core/src/agent/prices.ts`: a price change does not
+  change what the agent does (research R26); the push of R27 ran the gate for nothing.
