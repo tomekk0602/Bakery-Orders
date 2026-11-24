@@ -1,7 +1,7 @@
 import { buildToolSchemas, PROMPT_VERSION, prepareOrder, TOOL_NAMES, type ToolName } from "@bakery/core";
 import { confirmDraft, createStaffRequest, remainingCapacity, saveDraft } from "@bakery/db";
-import { activeCall } from "@/lib/active-call";
-import { db, json, LIVE_MODEL } from "@/lib/server";
+import { activeCall } from "@/server/active-call";
+import { db, json, LIVE_MODEL } from "@/server/runtime";
 
 type Ctx = { params: Promise<{ id: string; name: string }> };
 

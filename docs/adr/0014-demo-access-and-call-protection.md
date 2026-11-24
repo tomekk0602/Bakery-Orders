@@ -103,3 +103,6 @@ replaced by values from the traces of the first week (ADR-0013, constitution IV)
 - `date-holidays`: https://github.com/commenthol/date-holidays
 - Gemini ephemeral tokens: https://ai.google.dev/gemini-api/docs/live-api/ephemeral-tokens
 - Related: ADR-0006, ADR-0008, ADR-0009, ADR-0011, ADR-0013.
+
+## Relations
+- Amended by ADR-0015 (2026-11-24): roles owner and employee with server-checked permissions; two demo logins.

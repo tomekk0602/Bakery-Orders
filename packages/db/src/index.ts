@@ -4,3 +4,4 @@ export * from "./bakery.repo.ts";
 export * from "./orders.repo.ts";
 export * from "./calls.repo.ts";
 export * from "./seed.ts";
+export * from "./auth-schema.ts";

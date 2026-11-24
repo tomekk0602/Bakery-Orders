@@ -1,10 +1,10 @@
 import { eq, sql } from "drizzle-orm";
 import type { Db } from "./client.ts";
+import { firstRow } from "./rows.ts";
 import { call, rateLimit, staffRequest } from "./schema.ts";
 
 export async function createCall(db: Db, v: { callerPhone: string; ipHash: string; promptVersion: string; model: string }): Promise<string> {
-  const [row] = await db.insert(call).values(v).returning({ id: call.id });
-  return row!.id;
+  return firstRow(await db.insert(call).values(v).returning({ id: call.id }), "call").id;
 }
 
 export async function getCall(db: Db, id: string) {
@@ -28,11 +28,11 @@ export async function createStaffRequest(
   db: Db,
   v: { kind: "callback" | "change" | "cancel"; origin: "agent" | "promised_not_recorded" | "web"; customerName?: string | null; customerPhone?: string | null; note: string; callId?: string | null },
 ): Promise<string> {
-  const [row] = await db
+  const rows = await db
     .insert(staffRequest)
     .values({ ...v, customerName: v.customerName ?? null, customerPhone: v.customerPhone ?? null, callId: v.callId ?? null })
     .returning({ id: staffRequest.id });
-  return row!.id;
+  return firstRow(rows, "staff_request").id;
 }
 
 export async function hasStaffRequest(db: Db, callId: string): Promise<boolean> {

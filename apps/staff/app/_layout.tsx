@@ -1,0 +1,38 @@
+import "@/shared/i18n";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { Stack } from "expo-router";
+import { StatusBar } from "expo-status-bar";
+import { useState } from "react";
+import { ActivityIndicator } from "react-native";
+import { SafeAreaProvider } from "react-native-safe-area-context";
+import { createQueryClient } from "@/shared/api/query-client";
+import { useSession } from "@/shared/auth/client";
+import { colors } from "@/shared/ui";
+
+export default function RootLayout() {
+  const [queryClient] = useState(createQueryClient);
+  return (
+    <SafeAreaProvider>
+      <QueryClientProvider client={queryClient}>
+        <SessionGate />
+        <StatusBar style="dark" />
+      </QueryClientProvider>
+    </SafeAreaProvider>
+  );
+}
+
+/** One guard for the whole app: signed in → the tabs, signed out → the login (ADR-0015). */
+function SessionGate() {
+  const { data: session, isPending } = useSession();
+  if (isPending) return <ActivityIndicator style={{ flex: 1 }} color={colors.primary} />;
+  return (
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Protected guard={!!session}>
+        <Stack.Screen name="(app)" />
+      </Stack.Protected>
+      <Stack.Protected guard={!session}>
+        <Stack.Screen name="login" />
+      </Stack.Protected>
+    </Stack>
+  );
+}

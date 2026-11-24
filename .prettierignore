@@ -1,0 +1,5 @@
+migrations/
+.next/
+.expo/
+spikes/czech-voice/out/
+package-lock.json

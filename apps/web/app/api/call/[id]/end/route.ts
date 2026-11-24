@@ -1,8 +1,8 @@
 import { promisesCallback } from "@bakery/core";
 import { createStaffRequest, endCall, hasStaffRequest, orderNumbersForCall } from "@bakery/db";
 import { z } from "zod";
-import { activeCall } from "@/lib/active-call";
-import { db, fail, json } from "@/lib/server";
+import { activeCall } from "@/server/active-call";
+import { db, fail, json } from "@/server/runtime";
 
 type Ctx = { params: Promise<{ id: string }> };
 

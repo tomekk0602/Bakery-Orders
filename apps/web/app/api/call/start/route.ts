@@ -1,8 +1,9 @@
 import { PROMPT_VERSION } from "@bakery/core";
 import { createCall, hitRateLimit, loadBakery } from "@bakery/db";
 import { z } from "zod";
-import { CALL_START_LIMIT, liveConfig } from "@/lib/call-session";
-import { db, fail, genai, ipHash, json, LIVE_MODEL } from "@/lib/server";
+import { CALL_START_LIMIT, liveConfig } from "@/server/call-session";
+import { log } from "@/server/log";
+import { db, fail, genai, ipHash, json, LIVE_MODEL } from "@/server/runtime";
 
 const Body = z.object({ caller_phone: z.string().trim().regex(/^\+?[0-9 ]{9,16}$/, "phone") });
 
@@ -32,7 +33,7 @@ export async function POST(req: Request) {
     if (!token.name) throw new Error("empty token");
     return json({ call_id: callId, token: token.name, model: LIVE_MODEL, cap_seconds: bakery.callCapSeconds });
   } catch (e) {
-    console.error("call token failed", e instanceof Error ? e.message : e);
+    log.error({ err: e instanceof Error ? e.message : String(e) }, "call token failed");
     const quota = e instanceof Error && /quota|RESOURCE_EXHAUSTED|429/.test(e.message);
     return quota
       ? fail("quota_exhausted", "Hlasový asistent je teď vytížený. Objednejte prosím přes formulář.", 503)

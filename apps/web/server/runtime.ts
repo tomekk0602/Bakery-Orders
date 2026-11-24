@@ -8,7 +8,7 @@ export const LIVE_MODEL = "gemini-3.8-live";
 
 const isProduction = process.env.NODE_ENV === "production";
 
-function required(name: string, devDefault?: string): string {
+export function required(name: string, devDefault?: string): string {
   const v = process.env[name];
   if (v) return v;
   if (!isProduction && devDefault !== undefined) return devDefault;

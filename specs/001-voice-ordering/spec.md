@@ -206,8 +206,9 @@ the cut-off is accepted; marking a pickup changes its status.
 - **FR-013**: Staff MUST be able to add and edit orders, including after the cut-off; the override
   MUST be granted by the server from the staff login, never by the client (ADR-0009).
 - **FR-014**: The public web form MUST obey FR-007.
-- **FR-015**: The staff app MUST require login; the form and the browser call MUST NOT. One demo
-  account serves staff and owner; there are no roles (ADR-0009).
+- **FR-015**: The staff app MUST require login; the form and the browser call MUST NOT. There are two
+  roles, `owner` (UI: Majitel) and `employee` (UI: Prodavač), one demo account each (ADR-0015;
+  permissions in FR-043–FR-045).
 - **FR-017**: The staff app MUST offer two equal ways to create an order: one spoken sentence, or a
   form (name, optional phone, quantity per product, pickup day from the open days).
 - **FR-018**: A spoken sentence MUST be turned into text by the device's speech recogniser (the
@@ -259,6 +260,12 @@ the cut-off is accepted; marking a pickup changes its status.
 - **FR-041**: New callback and change requests MUST show as a badge in the staff app; there are no
   push notifications (ADR-0014).
 - **FR-042**: A "Reset demo" action MUST restore the seeded bakery, catalogue and orders (ADR-0014).
+- **FR-043**: Every staff API route MUST check the caller's permission on the server: no session →
+  401, missing permission → 403 (ADR-0015).
+- **FR-044**: Employees MUST see the baking plan read-only; settings, "Provoz", "Reset demo" and
+  turning calls into test cases are for the owner only (ADR-0015).
+- **FR-045**: The app MUST hide tabs and actions the signed-in role cannot use, from the same
+  permission map the server uses (ADR-0015).
 - **FR-029**: The agent's behaviour MUST be covered by a simulated-customer suite: a model plays a
   Czech customer from a goal; the saved order is compared in code with the expected order; the suite
   includes an unavailable product and a failing tool (ADR-0010).
@@ -291,6 +298,8 @@ the cut-off is accepted; marking a pickup changes its status.
 - **SC-009**: The simulated-customer suite passes every scenario in at least 4 of 5 runs, and in no
   run is an order saved that differs from the expected order without the customer having confirmed
   it.
+- **SC-012**: Every staff route has a test for 401 without a session and, where restricted, 403 for an
+  employee (ADR-0015).
 - **SC-007**: Staff take an order from one sentence or the form in under 30 seconds, one tap to
   confirm (proposed target, to be timed in the demo).
 - **SC-008**: The same order entered through each of the three channels yields identical lines,

@@ -19,11 +19,11 @@ they cover and must fail first.
 
 ## Phase 1: Setup
 
-- [ ] T001 Create the npm-workspaces monorepo: root `package.json` (workspaces `apps/*`, `packages/*`), `tsconfig.base.json` (strict), `.nvmrc` (24), `.editorconfig` (R13)
-- [ ] T002 [P] Configure ESLint (typescript-eslint) and Prettier at the root; scripts `lint`, `format`, `typecheck`
-- [ ] T003 [P] Create `packages/core` (TypeScript, Vitest, zod 4, date-fns 4, `@date-fns/tz`, date-holidays) with an empty public index
-- [ ] T004 [P] Create `packages/db` (drizzle-orm 0.45, drizzle-kit, `pg`, `@neondatabase/serverless`) and `docker-compose.yml` with PostgreSQL for local runs and tests (R14)
-- [ ] T005 [P] Create `apps/web` with Next.js 16 (App Router, Tailwind 4), Czech `lang="cs"`, depending on `@bakery/core` and `@bakery/db`
+- [x] T001 Create the npm-workspaces monorepo: root `package.json` (workspaces `apps/*`, `packages/*`), `tsconfig.base.json` (strict), `.nvmrc` (24), `.editorconfig` (R13)
+- [x] T002 [P] Configure ESLint (typescript-eslint) and Prettier at the root; scripts `lint`, `format`, `typecheck`
+- [x] T003 [P] Create `packages/core` (TypeScript, Vitest, zod 4, date-fns 4, `@date-fns/tz`, date-holidays) with an empty public index
+- [x] T004 [P] Create `packages/db` (drizzle-orm 0.45, drizzle-kit, `pg`, `@neondatabase/serverless`) and `docker-compose.yml` with PostgreSQL for local runs and tests (R14)
+- [x] T005 [P] Create `apps/web` with Next.js 16 (App Router, Tailwind 4), Czech `lang="cs"`, depending on `@bakery/core` and `@bakery/db`
 - [ ] T006 [P] Create `apps/staff` with Expo SDK 58 + Expo Router (iOS, Android, web), depending on `@bakery/core`; verify it starts in Expo Go and as a web build (FR-023, ADR-0009)
 - [ ] T007 [P] Create `packages/evals` with Evalite 0.19 and Vitest (ADR-0012, R18)
 - [ ] T008 Add root scripts `dev`, `test`, `eval`, `e2e`, `db:up`, `db:migrate`, `db:seed`; extend `.gitignore` (`.env*`, build output, Expo caches)
@@ -34,39 +34,39 @@ they cover and must fail first.
 
 ### Core rules — tests first
 
-- [ ] T009 [P] Calendar tests in `packages/core/src/calendar.test.ts`: 14 days from a fixed Prague clock, today/tomorrow/the day after, closed weekdays, Czech holidays, owner's closed days, DST boundaries (FR-004, FR-038, R1, R20)
-- [ ] T010 [P] Pricing tests in `packages/core/src/pricing.test.ts`: line and order totals; fast-check property — total = Σ quantity × unit price (FR-005)
-- [ ] T011 [P] Order-rule tests in `packages/core/src/orders.test.ts`: unknown or inactive product, past or closed day, outside the window, cut-off for customer vs staff, missing name/day, phone required for phone/web but optional for staff (FR-003, FR-007, FR-013, FR-021)
+- [x] T009 [P] Calendar tests in `packages/core/src/calendar.test.ts`: 14 days from a fixed Prague clock, today/tomorrow/the day after, closed weekdays, Czech holidays, owner's closed days, DST boundaries (FR-004, FR-038, R1, R20)
+- [x] T010 [P] Pricing tests in `packages/core/src/pricing.test.ts`: line and order totals; fast-check property — total = Σ quantity × unit price (FR-005)
+- [x] T011 [P] Order-rule tests in `packages/core/src/orders.test.ts`: unknown or inactive product, past or closed day, outside the window, cut-off for customer vs staff, missing name/day, phone required for phone/web but optional for staff (FR-003, FR-007, FR-013, FR-021)
 - [ ] T012 [P] Baking-plan tests in `packages/core/src/baking-plan.test.ts`: reserved + buffer = to bake; cancelled orders excluded; fast-check property over random orders and buffers (FR-010, SC-003)
 
 ### Core rules — implementation
 
-- [ ] T013 [P] `packages/core/src/catalogue.ts`: product type, active filter, spoken forms (data-model `product`)
-- [ ] T014 [P] `packages/core/src/calendar.ts`: open-day calendar in Europe/Prague with date-holidays (CZ) (makes T009 pass)
-- [ ] T015 [P] `packages/core/src/pricing.ts` (makes T010 pass)
-- [ ] T016 `packages/core/src/orders.ts`: `prepareOrder(input, context)` → draft with summary or a closed-set refusal (makes T011 pass)
+- [x] T013 [P] `packages/core/src/catalogue.ts`: product type, active filter, spoken forms (data-model `product`)
+- [x] T014 [P] `packages/core/src/calendar.ts`: open-day calendar in Europe/Prague with date-holidays (CZ) (makes T009 pass)
+- [x] T015 [P] `packages/core/src/pricing.ts` (makes T010 pass)
+- [x] T016 `packages/core/src/orders.ts`: `prepareOrder(input, context)` → draft with summary or a closed-set refusal (makes T011 pass)
 - [ ] T017 [P] `packages/core/src/baking-plan.ts` (makes T012 pass)
 
 ### Agent definitions
 
-- [ ] T018 [P] `packages/core/src/agent/tools.ts`: zod schemas of `prepare_order`, `confirm_order`, `request_staff`; product enum built from the active catalogue; JSON Schema export with `z.toJSONSchema`; Czech descriptions including "do not infer, ask" (contracts/agent-tools.md, FR-024, FR-025, ADR-0010)
-- [ ] T019 [P] `packages/core/src/agent/prompt.cs.md` + `prompt.ts`: instructions with the greeting and AI notice, the calendar block, the catalogue with prices, read-back from the tool result only, callback after two misunderstandings, customer and staff modes; `VERSION` file (FR-001, FR-002, FR-005, FR-008, FR-030, R5)
-- [ ] T020 [P] `packages/core/src/agent/vocabulary.ts`: vocabulary from product spoken forms, capped in size (FR-026, research R12 over-correction note)
-- [ ] T021 [P] Tests for T018–T020 in `packages/core/src/agent/agent.test.ts`: the enum equals the active catalogue; the prompt contains the 14-day calendar and no inactive product; changing any agent file without bumping `VERSION` fails a test
+- [x] T018 [P] `packages/core/src/agent/tools.ts`: zod schemas of `prepare_order`, `confirm_order`, `request_staff`; product enum built from the active catalogue; JSON Schema export with `z.toJSONSchema`; Czech descriptions including "do not infer, ask" (contracts/agent-tools.md, FR-024, FR-025, ADR-0010)
+- [x] T019 [P] `packages/core/src/agent/prompt.cs.md` + `prompt.ts`: instructions with the greeting and AI notice, the calendar block, the catalogue with prices, read-back from the tool result only, callback after two misunderstandings, customer and staff modes; `VERSION` file (FR-001, FR-002, FR-005, FR-008, FR-030, R5)
+- [x] T020 [P] `packages/core/src/agent/vocabulary.ts`: vocabulary from product spoken forms, capped in size (FR-026, research R12 over-correction note)
+- [x] T021 [P] Tests for T018–T020 in `packages/core/src/agent/agent.test.ts`: the enum equals the active catalogue; the prompt contains the 14-day calendar and no inactive product; changing any agent file without bumping `VERSION` fails a test
 - [ ] T022 [P] `packages/core/src/contracts/`: zod request/response schemas of every route in contracts/http-api.md and the closed error codes
 
 ### Database
 
-- [ ] T023 Drizzle schema in `packages/db/src/schema.ts` for every table in data-model.md, plus the Better Auth tables; first migration
-- [ ] T024 Integration tests in `packages/db/src/orders.repo.test.ts` on PostgreSQL via `@testcontainers/postgresql`: confirm saves lines and capacity in one transaction; **two concurrent confirms for the last piece → exactly one saved** (SC-004, R14); staff edit adjusts capacity by the difference; cancel releases capacity
-- [ ] T025 `packages/db/src/orders.repo.ts`: drafts, confirm with the conditional capacity update, edit, cancel, pick-up, order numbers from a sequence (makes T024 pass; FR-006, FR-007, FR-040)
+- [x] T023 Drizzle schema in `packages/db/src/schema.ts` for every table in data-model.md, plus the Better Auth tables; first migration
+- [x] T024 Integration tests in `packages/db/src/orders.repo.test.ts` on PostgreSQL via `@testcontainers/postgresql`: confirm saves lines and capacity in one transaction; **two concurrent confirms for the last piece → exactly one saved** (SC-004, R14); staff edit adjusts capacity by the difference; cancel releases capacity
+- [x] T025 `packages/db/src/orders.repo.ts`: drafts, confirm with the conditional capacity update, edit, cancel, pick-up, order numbers from a sequence (makes T024 pass; FR-006, FR-007, FR-040)
 - [ ] T026 [P] `packages/db/src/requests.repo.ts`, `calls.repo.ts`, `settings.repo.ts`, `rate-limit.repo.ts` (upsert counter per window), each with an integration test
 - [ ] T027 [P] `packages/db/src/seed.ts`: "Pekárna U Lípy", ~12 products with spoken forms and limits, buffers per weekday, orders for the coming week, the demo staff user with the password from `DEMO_STAFF_PASSWORD` (ADR-0014)
 - [ ] T028 `packages/db/src/reset.ts` + test: truncates bakery data and re-runs the seed (FR-042)
 
 ### Web app foundation
 
-- [ ] T029 Better Auth in `apps/web/lib/auth.ts` and `app/api/auth/[...all]/route.ts` with the drizzle adapter and the Expo plugin; a `requireStaff()` helper for staff routes (FR-015, R15)
+- [x] T029 Better Auth in `apps/web/lib/auth.ts` and `app/api/auth/[...all]/route.ts` with the drizzle adapter and the Expo plugin; a `requireStaff()` helper for staff routes (FR-015, R15)
 - [ ] T030 [P] Route-handler helpers in `apps/web/lib/http.ts`: zod parsing of bodies with the shared contracts, the error envelope, IP hashing with `IP_HASH_SALT`
 - [ ] T031 [P] Observability in `apps/web/instrumentation.ts`: OpenTelemetry with the Langfuse span processor (EU), a masking processor for names and phones, Sentry for Next.js (FR-032, ADR-0013, R19)
 - [ ] T032 [P] Test of the masking processor in `apps/web/lib/telemetry.test.ts`: no phone number or customer name survives export
@@ -108,14 +108,14 @@ they cover and must fail first.
 **Goal**: a browser call to Gemini Live that ends in a confirmed order with a number.
 **Independent test**: quickstart scenario 4.
 
-- [ ] T044 [US1] Spike: check `ai.authTokens.create` and `liveConnectConstraints` field names against `@google/genai` 3.6 types; record the result in research R16 (open item)
+- [x] T044 [US1] Spike: check `ai.authTokens.create` and `liveConnectConstraints` field names against `@google/genai` 3.6 types; record the result in research R16 (open item)
 - [ ] T045 [P] [US1] Tests in `apps/web/app/api/call/call.test.ts`: `/start` issues a token bound to our model, instructions, tools and vocabulary; refuses above the per-IP limit; tool route validates arguments with the shared schemas, refuses `confirm_order` without a draft from the same call, takes the phone from the call record (FR-006, FR-035, FR-036)
-- [ ] T046 [US1] `POST /api/call/start`: per-IP limit, call record, ephemeral Live token locked to the bakery config, cap seconds (R16, FR-036)
-- [ ] T047 [US1] `POST /api/call/[id]/tools/[name]`: runs `prepare_order`, `confirm_order`, `request_staff` through the core and repositories; span `tool.<name>` (contracts/agent-tools.md)
+- [x] T046 [US1] `POST /api/call/start`: per-IP limit, call record, ephemeral Live token locked to the bakery config, cap seconds (R16, FR-036)
+- [x] T047 [US1] `POST /api/call/[id]/tools/[name]`: runs `prepare_order`, `confirm_order`, `request_staff` through the core and repositories; span `tool.<name>` (contracts/agent-tools.md)
 - [ ] T048 [P] [US1] `POST /api/call/[id]/events`: first-audio latency, fallback and error events into the call record and trace (FR-032)
-- [ ] T049 [US1] `POST /api/call/[id]/end`: stores the transcript, runs the promised-callback check, sets the outcome, closes the trace (FR-008, FR-009)
-- [ ] T050 [P] [US1] Test of the promised-callback check: "zavolá vám kolega" without a record → a `promised_not_recorded` request (FR-008, research R3)
-- [ ] T051 [US1] Call client `apps/web/components/call/live-client.ts`: Live session with the token, AudioWorklet capture at 16 kHz with echo cancellation, 24 kHz playback, tool calls forwarded to the API, first-audio timing, cap timer with a polite end (FR-027, FR-036, FR-037, R16)
+- [x] T049 [US1] `POST /api/call/[id]/end`: stores the transcript, runs the promised-callback check, sets the outcome, closes the trace (FR-008, FR-009)
+- [x] T050 [P] [US1] Test of the promised-callback check: "zavolá vám kolega" without a record → a `promised_not_recorded` request (FR-008, research R3)
+- [x] T051 [US1] Call client `apps/web/components/call/live-client.ts`: Live session with the token, AudioWorklet capture at 16 kHz with echo cancellation, 24 kHz playback, tool calls forwarded to the API, first-audio timing, cap timer with a polite end (FR-027, FR-036, FR-037, R16)
 - [ ] T052 [US1] Silence and slow-tool handling: the prompt's "Jste tam ještě?" after silence and "Moment, ověřuji" when a tool exceeds the threshold (thresholds proposed, unmeasured) (FR-027, FR-028, ADR-0010)
 - [ ] T053 [US1] Customer page `apps/web/app/(customer)/page.tsx`: phone field, "Zavolat do pekárny", AI and retention notice under the button, live captions, headphones hint, error states for rate limit, quota and unavailable voice with a link to the form (FR-016, FR-035, FR-037, FR-039)
 - [ ] T054 [US1] Fallback cascade `apps/web/components/call/cascade.ts` + `POST /api/call/[id]/turn`: Transcribe Live → Flash-Lite with the same tools → browser speech synthesis; the page says the call continues in a simpler mode (ADR-0011, FR-016)
@@ -195,6 +195,27 @@ order first; nothing outside them is built in this pass. Chrome allows the micro
    checks the order in the database.
 
 Then: T031–T032 (traces), Phases 3–4 (staff app, plan), the rest of Phase 5, Phases 6–10.
+
+## Staff app pass — roles and clean structure (owner, 2026-11-24; ADR-0015)
+
+New tasks for roles and code hygiene:
+
+- [x] T083 [P] Permission map in `packages/core/src/permissions.ts` (roles `owner`, `employee`; permissions of ADR-0015) with a `can(role, permission)` helper and tests (FR-043–FR-045)
+- [x] T084 Better Auth with the `admin` plugin and access control built from T083, drizzle adapter, Expo plugin and trusted origins for the staff app; the seed creates one `owner` and one `employee` with passwords from `DEMO_OWNER_PASSWORD` and `DEMO_EMPLOYEE_PASSWORD` (replaces T029; FR-015)
+- [x] T085 `requirePermission(request, permission)` in `apps/web/server/auth.ts` returning 401/403 in the error envelope; integration tests on PostgreSQL for 401 without a session and 403 for an employee on owner-only routes (FR-043, SC-012)
+- [x] T086 `apps/staff` scaffold with ESLint (typescript-eslint strict, `no-explicit-any`, `no-console` as errors, `max-lines` 300), Prettier, jest-expo + React Native Testing Library + MSW (extends T002, T006)
+- [x] T087 Staff app shared layer: `src/shared/api` (one HTTP client validated by the `@bakery/core` contracts), `src/shared/auth` (Better Auth Expo client, SecureStore, no stored password), `src/shared/i18n` (i18next, `cs.json`), `src/shared/ui` (tokens, Button, Card, Screen, Badge), TanStack Query provider
+- [x] T088 Login screen, `Stack.Protected` for the signed-in app, tabs shown by permission with `Tabs.Protected`; component test: an employee does not see "Nastavení" and "Provoz", an owner does (FR-045, replaces T036)
+
+Order of this pass — each step can be tried in the app:
+
+1. T083–T088 — sign in as Majitel or Prodavač, see the tabs of the role.
+2. "Dnes": T058 (list and pick-up part), T059 — today's pick-ups, order detail with the call transcript.
+3. "Plán": T040, T042 — read-only baking plan (FR-044).
+4. "Nová objednávka" by form: T035, the form part of T037, T039.
+5. "Nová objednávka" by voice: T033, T034, the voice part of T037, T038.
+6. "Požadavky": T056, T057.
+7. "Nastavení" and "Reset demo" (owner only): T041, T043, T077. "Provoz" (T075) waits for traces.
 
 ## Dependencies & Execution Order
 

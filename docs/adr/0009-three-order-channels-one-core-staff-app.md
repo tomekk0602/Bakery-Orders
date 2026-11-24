@@ -122,3 +122,6 @@ web form (channel 3). After step 2 there is a working product to show even if ti
 - Amends ADR-0002 (adds channel 2 and merges the panel into the staff app) and ADR-0007 (adds Expo
   for the staff app next to Next.js).
 - Expo web: https://docs.expo.dev/workflow/web/ ; Expo Go: https://docs.expo.dev/get-started/expo-go/
+
+## Relations
+- Amended by ADR-0015 (2026-11-24): roles owner and employee with server-checked permissions; two demo logins.

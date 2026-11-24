@@ -48,7 +48,7 @@ export async function openMicrophone(onChunk: (base64: string, rms: number) => v
         const pcm = new Int16Array(CHUNK_SAMPLES);
         let sum = 0;
         for (let i = 0; i < CHUNK_SAMPLES; i++) {
-          const v = Math.max(-1, Math.min(1, buf[i]!));
+          const v = Math.max(-1, Math.min(1, buf[i] ?? 0));
           sum += v * v;
           pcm[i] = v < 0 ? v * 0x8000 : v * 0x7fff;
         }
@@ -80,7 +80,7 @@ export function openSpeaker(): Speaker {
       const pcm = new Int16Array(bytes.buffer, 0, Math.floor(bytes.length / 2));
       const buffer = ctx.createBuffer(1, pcm.length, OUTPUT_RATE);
       const ch = buffer.getChannelData(0);
-      for (let i = 0; i < pcm.length; i++) ch[i] = pcm[i]! / 0x8000;
+      for (let i = 0; i < pcm.length; i++) ch[i] = (pcm[i] ?? 0) / 0x8000;
       const src = ctx.createBufferSource();
       src.buffer = buffer;
       src.connect(ctx.destination);

@@ -1,7 +1,7 @@
 import "server-only";
 import { getCall, loadBakery } from "@bakery/db";
 import { CALL_GRACE_MS } from "./call-session";
-import { db, ipHash } from "./server";
+import { db, ipHash } from "./runtime";
 
 /** The call record if this request may act on it: not ended, within cap + grace, same IP hash. */
 export async function activeCall(req: Request, id: string) {

@@ -1,6 +1,7 @@
 import type { OrderChannel, PreparedOrder } from "@bakery/core";
 import { and, eq, gt, isNull, sql, TransactionRollbackError } from "drizzle-orm";
 import type { Db } from "./client.ts";
+import { firstRow } from "./rows.ts";
 import { dailyCapacity, order, orderDraft, orderLine, product } from "./schema.ts";
 
 /** A prepared order waits this long for confirmation (data-model `order_draft`). */
@@ -13,11 +14,11 @@ export async function saveDraft(
   callId: string | null,
   now = new Date(),
 ): Promise<string> {
-  const [row] = await db
+  const rows = await db
     .insert(orderDraft)
     .values({ channel, callId, payload: prepared, expiresAt: new Date(now.getTime() + DRAFT_TTL_MS) })
     .returning({ id: orderDraft.id });
-  return row!.id;
+  return firstRow(rows, "order_draft").id;
 }
 
 export type ConfirmMeta = { callId: string | null; promptVersion: string | null; model: string | null };
@@ -63,7 +64,7 @@ export async function confirmDraft(db: Db, draftId: string, callId: string | nul
       }
     }
 
-    const [saved] = await tx
+    const savedRows = await tx
       .insert(order)
       .values({
         source: draft.channel,
@@ -76,9 +77,10 @@ export async function confirmDraft(db: Db, draftId: string, callId: string | nul
         callId: meta.callId,
       })
       .returning({ id: order.id, number: order.number });
-    await tx.insert(orderLine).values(p.lines.map((l) => ({ orderId: saved!.id, productId: l.productId, quantity: l.quantity, unitPriceCzk: l.unitPriceCzk })));
-    await tx.update(orderDraft).set({ confirmedOrderId: saved!.id }).where(eq(orderDraft.id, draft.id));
-    return { ok: true, orderNumber: saved!.number, orderId: saved!.id } as const;
+    const saved = firstRow(savedRows, "order");
+    await tx.insert(orderLine).values(p.lines.map((l) => ({ orderId: saved.id, productId: l.productId, quantity: l.quantity, unitPriceCzk: l.unitPriceCzk })));
+    await tx.update(orderDraft).set({ confirmedOrderId: saved.id }).where(eq(orderDraft.id, draft.id));
+    return { ok: true, orderNumber: saved.number, orderId: saved.id } as const;
   }).catch((e: unknown) => {
     // tx.rollback() above throws TransactionRollbackError; that is the over-limit path.
     if (e instanceof TransactionRollbackError) return { ok: false, reason: "over_limit" } as const;

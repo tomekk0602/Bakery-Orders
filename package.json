@@ -2,8 +2,13 @@
   "name": "bakery-voice-orders",
   "private": true,
   "type": "module",
-  "workspaces": ["packages/*", "apps/*"],
-  "engines": { "node": ">=24" },
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "engines": {
+    "node": ">=24"
+  },
   "scripts": {
     "dev": "npm run dev -w @bakery/web",
     "test": "npm run test --workspaces --if-present",
@@ -11,6 +16,20 @@
     "db:up": "docker compose up -d db",
     "db:migrate": "npm run migrate -w @bakery/db",
     "db:seed": "npm run seed -w @bakery/db",
-    "db:studio": "npm run studio -w @bakery/db"
+    "db:studio": "npm run studio -w @bakery/db",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "overrides": {
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
+  },
+  "devDependencies": {
+    "eslint": "^9.39.5",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "globals": "^17.14.0",
+    "prettier": "^3.10.1",
+    "typescript-eslint": "^8.74.0"
   }
 }

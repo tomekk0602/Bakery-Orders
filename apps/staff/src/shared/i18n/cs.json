@@ -1,0 +1,22 @@
+{
+  "app": { "title": "Pekárna U Lípy" },
+  "roles": { "owner": "Majitel", "employee": "Prodavač" },
+  "login": {
+    "title": "Přihlášení obsluhy",
+    "email": "E-mail",
+    "password": "Heslo",
+    "submit": "Přihlásit",
+    "failed": "Nesprávný e-mail nebo heslo.",
+    "invalidEmail": "Zadejte platný e-mail.",
+    "passwordRequired": "Zadejte heslo."
+  },
+  "tabs": {
+    "today": "Dnes",
+    "newOrder": "Nová objednávka",
+    "plan": "Plán",
+    "requests": "Požadavky",
+    "settings": "Nastavení",
+    "ops": "Provoz"
+  },
+  "common": { "signOut": "Odhlásit", "loading": "Načítám…", "retry": "Zkusit znovu", "comingSoon": "Tato část se připravuje." }
+}

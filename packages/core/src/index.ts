@@ -7,3 +7,5 @@ export * from "./agent/prompt.ts";
 export * from "./agent/vocabulary.ts";
 export * from "./agent/version.ts";
 export * from "./agent/callback.ts";
+export * from "./permissions.ts";
+export * from "./contracts/index.ts";
