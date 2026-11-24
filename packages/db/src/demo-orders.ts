@@ -3,7 +3,7 @@ import { sql } from "drizzle-orm";
 import { loadBakery } from "./bakery.repo.ts";
 import type { Db } from "./client.ts";
 import { firstRow } from "./rows.ts";
-import { call, dailyCapacity, order, orderLine } from "./schema.ts";
+import { call, dailyCapacity, order, orderLine, staffRequest } from "./schema.ts";
 
 type DemoOrder = { name: string; phone: string | null; source: "phone" | "web" | "staff"; items: OrderItem[]; pickedUp?: boolean; transcript?: { role: "customer" | "agent"; text: string }[] };
 
@@ -61,4 +61,35 @@ export async function seedDemoOrders(db: Db, now = new Date()): Promise<void> {
     const batch = day.relative === "today" ? TODAY : LATER.slice(0, 1 + (i % LATER.length));
     for (const o of batch) await insertOrder(db, day.date, o);
   }
+}
+
+/** Requests for staff, so "Požadavky" is not empty in the demo: one per kind and origin (FR-008, FR-034). */
+export async function seedDemoRequests(db: Db, now = new Date()): Promise<void> {
+  const minutesAgo = (m: number) => new Date(now.getTime() - m * 60_000);
+  const callRow = firstRow(
+    await db
+      .insert(call)
+      .values({
+        callerPhone: "+420604555666",
+        ipHash: "demo",
+        promptVersion: "demo",
+        model: "demo",
+        outcome: "request",
+        endedAt: minutesAgo(40),
+        transcript: [
+          { role: "agent", text: "Dobrý den, Pekárna U Lípy, tady automatický asistent. Co si přejete?" },
+          { role: "customer", text: "Dobrý den, chtěla bych objednat dort na narozeniny, ale nevím jaký." },
+          { role: "agent", text: "Dorty v nabídce nemáme. Mám zapsat, aby vám zavolal kolega?" },
+          { role: "customer", text: "Ano, prosím. Bartošová." },
+          { role: "agent", text: "Zapsáno, kolega se vám ozve. Na shledanou." },
+        ],
+      })
+      .returning({ id: call.id }),
+    "demo request call",
+  );
+  await db.insert(staffRequest).values([
+    { kind: "callback", origin: "agent", customerName: "Bartošová", customerPhone: "+420604555666", note: "Ptá se na dort k narozeninám, není v nabídce.", callId: callRow.id, createdAt: minutesAgo(40) },
+    { kind: "change", origin: "agent", customerName: "Dvořák", customerPhone: "+420731444555", note: "Chce místo dvou kmínových chlebů dva žitné.", createdAt: minutesAgo(25) },
+    { kind: "callback", origin: "promised_not_recorded", customerName: null, customerPhone: "+420775888999", note: "Asistent slíbil zpětné zavolání, ale požadavek nezapsal.", createdAt: minutesAgo(10) },
+  ]);
 }

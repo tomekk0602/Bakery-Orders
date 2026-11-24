@@ -1,5 +1,3 @@
-import { ComingSoonScreen } from "@/features/navigation/ComingSoonScreen";
+import { RequestsScreen } from "@/features/requests/RequestsScreen";
 
-export default function Route() {
-  return <ComingSoonScreen titleKey="tabs.requests" />;
-}
+export default RequestsScreen;

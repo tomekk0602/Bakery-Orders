@@ -2,6 +2,7 @@ import { Tabs, useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 import { useMe } from "@/features/auth/use-me";
+import { useRequests } from "@/features/requests/api";
 import { authClient } from "@/shared/auth/client";
 import { Button, colors, font, Screen, space } from "@/shared/ui";
 import { TABS } from "./tabs";
@@ -10,6 +11,9 @@ import { TABS } from "./tabs";
 export function StaffTabs() {
   const { t } = useTranslation();
   const me = useMe();
+  // The badge on "Požadavky": open requests, re-read while the app is open (FR-041).
+  const requests = useRequests(me.data?.permissions.includes("request:view") ?? false);
+  const openRequests = requests.data?.open.length ?? 0;
   const router = useRouter();
 
   if (me.isPending) return <ActivityIndicator style={styles.center} color={colors.primary} accessibilityLabel={t("common.loading")} />;
@@ -52,7 +56,7 @@ export function StaffTabs() {
       />
       {TABS.map((tab) => (
         <Tabs.Protected key={tab.name} guard={granted.has(tab.permission)}>
-          <Tabs.Screen name={tab.name} options={{ title: t(tab.titleKey) }} />
+          <Tabs.Screen name={tab.name} options={{ title: t(tab.titleKey), tabBarBadge: tab.name === "pozadavky" && openRequests > 0 ? openRequests : undefined }} />
         </Tabs.Protected>
       ))}
     </Tabs>

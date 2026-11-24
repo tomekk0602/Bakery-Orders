@@ -127,8 +127,8 @@ they cover and must fail first.
 
 ## Phase 6: User Story 3 — The customer gets a human when needed (P2)
 
-- [ ] T056 [P] [US3] `GET /api/staff/requests`, `POST /api/staff/requests/[id]/done` + test (FR-012, FR-034, FR-041)
-- [ ] T057 [US3] "Požadavky" screen `apps/staff/app/(tabs)/pozadavky.tsx` with the badge count on the tab (FR-041)
+- [x] T056 [P] [US3] `GET /api/staff/requests`, `POST /api/staff/requests/[id]/done` + test (FR-012, FR-034, FR-041)
+- [x] T057 [US3] "Požadavky" screen `apps/staff/app/(tabs)/pozadavky.tsx` with the badge count on the tab (FR-041)
 
 ---
 

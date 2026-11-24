@@ -31,7 +31,7 @@ The call routes accept only a `call_id` issued by `/start` within its cap, from 
 | `PATCH /api/staff/orders/{id}` | edit lines/day or status (`picked_up`, `cancelled`) | FR-012, FR-013 |
 | `GET /api/staff/plan?day=` | baking plan | FR-010 |
 | `GET/PUT /api/staff/settings` | cut-off, closed weekdays and days, buffers, limits | FR-011 |
-| `GET /api/staff/requests` / `POST …/{id}/done` | callback, change, cancel requests; badge count | FR-041 |
+| `GET /api/staff/requests` / `PATCH /api/staff/requests/{id}` `{ done }` | callback, change, cancel requests (open oldest first, call transcript included); mark handled or reopen; badge count | FR-008, FR-034, FR-041 |
 | `GET /api/staff/provoz?from=&to=` | metrics | FR-033 |
 | `POST /api/staff/eval-cases` | `{ call_id \| order_id }` → anonymised eval case candidate | FR-031 |
 | `POST /api/staff/reset` | restore the seed | FR-042 |

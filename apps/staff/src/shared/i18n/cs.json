@@ -109,5 +109,20 @@
       "day": "den",
       "items": "výrobky"
     }
+  },
+  "requests": {
+    "kind": {
+      "callback": "Zavolat zpět",
+      "change": "Změna objednávky",
+      "cancel": "Zrušení objednávky"
+    },
+    "promised": "Asistent slíbil, nezapsal",
+    "noName": "Jméno neuvedeno",
+    "showTranscript": "Zobrazit přepis hovoru",
+    "hideTranscript": "Skrýt přepis",
+    "done": "Vyřízeno",
+    "reopen": "Vrátit mezi otevřené",
+    "none": "Žádné otevřené požadavky.",
+    "handled": "Vyřízené"
   }
 }

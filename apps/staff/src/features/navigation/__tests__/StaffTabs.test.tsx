@@ -8,6 +8,7 @@ import { StaffTabs } from "../StaffTabs";
 jest.mock("@/shared/auth/client", () => ({ authClient: { signOut: jest.fn() }, useSession: jest.fn() }));
 const mockMe = jest.fn();
 jest.mock("@/features/auth/use-me", () => ({ useMe: () => mockMe() }));
+jest.mock("@/features/requests/api", () => ({ useRequests: () => ({ data: { open: [{ id: "a" }, { id: "b" }], done: [] } }) }));
 
 async function signInAs(role: Role) {
   mockMe.mockReturnValue({ isPending: false, isError: false, data: { user: { id: "1", name: role, email: `${role}@x`, role }, permissions: ROLE_PERMISSIONS[role] } });
@@ -32,5 +33,10 @@ describe("StaffTabs (FR-045)", () => {
     expect(screen.getAllByText("Nastavení").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Provoz").length).toBeGreaterThan(0);
     expect(screen.getByText("Majitel")).toBeTruthy();
+  });
+
+  it("shows the number of open requests on the Požadavky tab (FR-041)", async () => {
+    const screen = await signInAs("employee");
+    expect(screen.getAllByText("2").length).toBeGreaterThan(0);
   });
 });
