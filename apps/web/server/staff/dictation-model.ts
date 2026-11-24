@@ -1,5 +1,5 @@
 import "server-only";
-import { DICTATION_CONFIG, DICTATION_MODEL } from "@bakery/core";
+import { DICTATION_CONFIG, DICTATION_MODEL, type ProviderUsage } from "@bakery/core";
 import { genai } from "../runtime";
 
 /** The model could not be reached or gave nothing usable; the app then offers the form (FR-022). */
@@ -18,13 +18,14 @@ export class DictationUnavailable extends Error {
   }
 }
 
-/** One call with the response constrained to the dictation JSON Schema (research R22). */
+/** One call with the response constrained to the dictation JSON Schema (research R22); usage for the trace. */
 export async function extractOrder(input: {
   text: string;
   instructions: string;
   jsonSchema: Record<string, unknown>;
-}): Promise<unknown> {
+}): Promise<{ value: unknown; usage: ProviderUsage }> {
   let raw: string | undefined;
+  let usage: ProviderUsage = {};
   try {
     const r = await genai().models.generateContent({
       model: DICTATION_MODEL,
@@ -32,6 +33,7 @@ export async function extractOrder(input: {
       config: { ...DICTATION_CONFIG, systemInstruction: input.instructions, responseJsonSchema: input.jsonSchema },
     });
     raw = r.text;
+    usage = r.usageMetadata ?? {};
   } catch (e) {
     throw new DictationUnavailable(
       e instanceof Error && /quota|RESOURCE_EXHAUSTED|429/.test(e.message) ? "quota" : "provider",
@@ -39,7 +41,7 @@ export async function extractOrder(input: {
     );
   }
   try {
-    return JSON.parse(raw ?? "");
+    return { value: JSON.parse(raw ?? ""), usage };
   } catch (e) {
     throw new DictationUnavailable("invalid_output", e);
   }

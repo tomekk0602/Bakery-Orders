@@ -1,5 +1,3 @@
-import { ComingSoonScreen } from "@/features/navigation/ComingSoonScreen";
+import { ProvozScreen } from "@/features/ops/ProvozScreen";
 
-export default function Route() {
-  return <ComingSoonScreen titleKey="tabs.ops" />;
-}
+export default ProvozScreen;

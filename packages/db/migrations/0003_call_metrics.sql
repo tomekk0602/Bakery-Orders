@@ -1,0 +1,1 @@
+ALTER TABLE "call" ADD COLUMN "first_audio_ms" integer[];

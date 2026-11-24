@@ -113,20 +113,21 @@ FR-019).
 
 ### call
 
-| Field                                  | Type                                                        | Rules                                                                          |
-| -------------------------------------- | ----------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| id                                     | uuid (PK)                                                   |                                                                                |
-| caller_phone                           | text                                                        | from the field before the call (FR-035)                                        |
-| ip_hash                                | text                                                        | salted hash, for per-IP limits; never the raw IP                               |
-| started_at, ended_at                   | timestamptz                                                 |                                                                                |
-| mode                                   | enum `live` · `cascade` · `cascade_paid`                    | which path served the call (ADR-0011)                                          |
-| outcome                                | enum `order` · `request` · `abandoned` · `error` · `capped` |                                                                                |
-| first_audio_ms_p50, first_audio_ms_max | integer null                                                | from browser events (FR-032)                                                   |
-| tokens_in, tokens_out                  | integer null                                                | from provider usage metadata                                                   |
-| shadow_cost_usd                        | numeric null                                                | (ADR-0013)                                                                     |
-| prompt_version, model                  | text                                                        |                                                                                |
-| transcript                             | jsonb null                                                  | turns of both sides; deleted 30 days after the pickup day or the call (FR-009) |
-| trace_id                               | text                                                        | Langfuse trace (SC-011)                                                        |
+| Field                                  | Type                                                        | Rules                                                                                                 |
+| -------------------------------------- | ----------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| id                                     | uuid (PK)                                                   |                                                                                                       |
+| caller_phone                           | text                                                        | from the field before the call (FR-035)                                                               |
+| ip_hash                                | text                                                        | salted hash, for per-IP limits; never the raw IP                                                      |
+| started_at, ended_at                   | timestamptz                                                 |                                                                                                       |
+| mode                                   | enum `live` · `cascade` · `cascade_paid`                    | which path served the call (ADR-0011)                                                                 |
+| outcome                                | enum `order` · `request` · `abandoned` · `error` · `capped` |                                                                                                       |
+| first_audio_ms_p50, first_audio_ms_max | integer null                                                | from browser events (FR-032)                                                                          |
+| first_audio_ms                         | integer[] null                                              | every end-of-speech → first-audio sample of the call, for p50/p95 across calls (FR-033, research R27) |
+| tokens_in, tokens_out                  | integer null                                                | from provider usage metadata                                                                          |
+| shadow_cost_usd                        | numeric null                                                | (ADR-0013)                                                                                            |
+| prompt_version, model                  | text                                                        |                                                                                                       |
+| transcript                             | jsonb null                                                  | turns of both sides; deleted 30 days after the pickup day or the call (FR-009)                        |
+| trace_id                               | text                                                        | Langfuse trace id, derived from the call id (SC-011, research R27)                                    |
 
 ### rate_limit
 

@@ -3,12 +3,17 @@ import {
   buildCalendar,
   buildDictationSchema,
   buildInstructions,
+  DICTATION_MODEL,
   dictationJsonSchema,
   missingFields,
+  shadowCostUsd,
+  usageFromProvider,
 } from "@bakery/core";
 import { DictationResponse } from "@bakery/core/contracts";
 import { loadBakery } from "@bakery/db";
+import { startObservation } from "@langfuse/tracing";
 import { db } from "../runtime";
+import { inTrace } from "../telemetry";
 import { DictationUnavailable, extractOrder } from "./dictation-model";
 import { prepareStaffOrder, REFUSAL_MESSAGES } from "./new-order";
 
@@ -17,7 +22,11 @@ import { prepareStaffOrder, REFUSAL_MESSAGES } from "./new-order";
  * order card when nothing is missing or unmatched (FR-018–FR-021). The model only fills a schema;
  * the card is prepared by the core like a form order.
  */
-export async function dictate(text: string, userId: string, now = new Date()): Promise<DictationResponse> {
+export function dictate(text: string, userId: string, now = new Date()): Promise<DictationResponse> {
+  return inTrace("dictation", userId, () => dictateTraced(text, userId, now));
+}
+
+async function dictateTraced(text: string, userId: string, now: Date): Promise<DictationResponse> {
   const bakery = await loadBakery(db());
   const calendar = buildCalendar(now, bakery.schedule);
   const schema = buildDictationSchema(bakery.catalogue, calendar);
@@ -28,7 +37,29 @@ export async function dictate(text: string, userId: string, now = new Date()): P
     catalogue: bakery.catalogue,
   });
 
-  const parsed = schema.safeParse(await extractOrder({ text, instructions, jsonSchema: dictationJsonSchema(schema) }));
+  // The sentence holds the customer's name, so the trace gets its length, never its text (research R27).
+  const generation = startObservation(
+    "dictation",
+    { model: DICTATION_MODEL, input: { characters: text.length }, modelParameters: { temperature: 0 } },
+    { asType: "generation" },
+  );
+  let extracted: Awaited<ReturnType<typeof extractOrder>>;
+  try {
+    extracted = await extractOrder({ text, instructions, jsonSchema: dictationJsonSchema(schema) });
+  } catch (err) {
+    generation.update({ level: "ERROR", statusMessage: DictationUnavailable.is(err) ? err.reason : "provider" }).end();
+    throw err;
+  }
+  const tokens = usageFromProvider(extracted.usage);
+  const parsed = schema.safeParse(extracted.value);
+  generation
+    .update({
+      output: parsed.success ? parsed.data : { invalid: true },
+      usageDetails: { ...tokens },
+      costDetails: { total: shadowCostUsd(DICTATION_MODEL, tokens) },
+      level: parsed.success ? "DEFAULT" : "ERROR",
+    })
+    .end();
   if (!parsed.success) throw new DictationUnavailable("invalid_output", parsed.error);
   const e = parsed.data;
 

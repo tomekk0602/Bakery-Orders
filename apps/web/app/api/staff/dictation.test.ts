@@ -8,7 +8,10 @@ const extract = vi.fn();
 let providerFailure: unknown = null;
 vi.mock("@/server/staff/dictation-model", async (original) => ({
   ...(await original<object>()),
-  extractOrder: (...a: unknown[]) => (providerFailure ? Promise.reject(providerFailure) : extract(...a)),
+  extractOrder: (...a: unknown[]) =>
+    providerFailure
+      ? Promise.reject(providerFailure)
+      : Promise.resolve(extract(...a)).then((value: unknown) => ({ value, usage: {} })),
 }));
 
 let env: Awaited<ReturnType<typeof startStaffDb>>;

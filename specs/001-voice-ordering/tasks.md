@@ -68,7 +68,7 @@ they cover and must fail first.
 
 - [x] T029 Better Auth in `apps/web/lib/auth.ts` and `app/api/auth/[...all]/route.ts` with the drizzle adapter and the Expo plugin; a `requireStaff()` helper for staff routes (FR-015, R15)
 - [ ] T030 [P] Route-handler helpers in `apps/web/lib/http.ts`: zod parsing of bodies with the shared contracts, the error envelope, IP hashing with `IP_HASH_SALT`
-- [ ] T031 [P] Observability in `apps/web/instrumentation.ts`: OpenTelemetry with the Langfuse span processor (EU), a masking processor for names and phones, Sentry for Next.js (FR-032, ADR-0013, R19)
+- [x] T031 [P] Observability in `apps/web/instrumentation.ts`: OpenTelemetry with the Langfuse span processor (EU), a masking processor for names and phones, Sentry for Next.js (FR-032, ADR-0013, R19) — _Langfuse done (R27); Sentry moved to T076_
 - [ ] T032 [P] Test of the masking processor in `apps/web/lib/telemetry.test.ts`: no phone number or customer name survives export
 
 **Checkpoint**: core, database and web foundation pass their tests.
@@ -112,7 +112,7 @@ they cover and must fail first.
 - [ ] T045 [P] [US1] Tests in `apps/web/app/api/call/call.test.ts`: `/start` issues a token bound to our model, instructions, tools and vocabulary; refuses above the per-IP limit; tool route validates arguments with the shared schemas, refuses `confirm_order` without a draft from the same call, takes the phone from the call record (FR-006, FR-035, FR-036)
 - [x] T046 [US1] `POST /api/call/start`: per-IP limit, call record, ephemeral Live token locked to the bakery config, cap seconds (R16, FR-036)
 - [x] T047 [US1] `POST /api/call/[id]/tools/[name]`: runs `prepare_order`, `confirm_order`, `request_staff` through the core and repositories; span `tool.<name>` (contracts/agent-tools.md)
-- [ ] T048 [P] [US1] `POST /api/call/[id]/events`: first-audio latency, fallback and error events into the call record and trace (FR-032)
+- [x] T048 [P] [US1] ~~`POST /api/call/[id]/events`~~ — not built: first-audio samples and usage arrive with `end` (research R27). Was: `POST /api/call/[id]/events`: first-audio latency, fallback and error events into the call record and trace (FR-032)
 - [x] T049 [US1] `POST /api/call/[id]/end`: stores the transcript, runs the promised-callback check, sets the outcome, closes the trace (FR-008, FR-009)
 - [x] T050 [P] [US1] Test of the promised-callback check: "zavolá vám kolega" without a record → a `promised_not_recorded` request (FR-008, research R3)
 - [x] T051 [US1] Call client `apps/web/components/call/live-client.ts`: Live session with the token, AudioWorklet capture at 16 kHz with echo cancellation, 24 kHz playback, tool calls forwarded to the API, first-audio timing, cap timer with a polite end (FR-027, FR-036, FR-037, R16)
@@ -165,9 +165,9 @@ they cover and must fail first.
 
 - [x] T071 [P] `.github/workflows/ci.yml`: install, typecheck, lint, format check, unit and integration tests (PostgreSQL through Testcontainers); the eval gate in `eval-gate.yml` when the agent changes (research R26), `GEMINI_API_KEY` from secrets; exit 2 on quota exhaustion
 - [ ] T072 [P] `.github/workflows/evals-nightly.yml`: full eval suite and the voice eval; report as an artifact and a run summary — _workflow with the text suite done; the voice eval waits for T069_
-- [ ] T073 [P] `GET /api/cron/retention` + Vercel Cron: delete transcripts after 30 days, expired drafts and old rate-limit rows; test with a fixed clock (FR-009, ADR-0008)
-- [ ] T074 [P] Shadow cost: `packages/core/src/agent/prices.ts` with source URL and date; cost per call and per dictation on the trace and the call record (ADR-0013)
-- [ ] T075 [US4] "Provoz" screen `apps/staff/app/(tabs)/provoz.tsx` + `GET /api/staff/provoz`: first-audio p50/p95, outcome shares, share of phone orders edited by staff (FR-033)
+- [x] T073 [P] `GET /api/cron/retention` + Vercel Cron: delete transcripts after 30 days, expired drafts and old rate-limit rows; test with a fixed clock (FR-009, ADR-0008)
+- [x] T074 [P] Shadow cost: `packages/core/src/agent/prices.ts` with source URL and date; cost per call and per dictation on the trace and the call record (ADR-0013)
+- [x] T075 [US4] "Provoz" screen `apps/staff/app/(tabs)/provoz.tsx` + `GET /api/staff/provoz`: first-audio p50/p95, outcome shares, share of phone orders edited by staff (FR-033)
 - [ ] T076 [P] Sentry for the Expo app with the same masking; alerts (latency p95, failed calls, quota, order-path errors) to e-mail with proposed thresholds marked as debt (ADR-0013)
 - [x] T077 [P] "Reset demo" in the staff app settings calling `POST /api/staff/reset` (FR-042)
 - [ ] T078 [P] Playwright smoke `apps/web/tests/e2e/`: web form order; staff login (quickstart 11)

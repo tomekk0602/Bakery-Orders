@@ -26,8 +26,7 @@
   "common": {
     "signOut": "Odhlásit",
     "loading": "Načítám…",
-    "retry": "Zkusit znovu",
-    "comingSoon": "Tato část se připravuje."
+    "retry": "Zkusit znovu"
   },
   "orders": {
     "todayTitle": "Dnes {{day}}",
@@ -174,5 +173,41 @@
       "cancel": "Zrušit",
       "done": "Demo je obnovené."
     }
+  },
+  "ops": {
+    "title": "Provoz",
+    "period": "{{days}} dní",
+    "periodRange": "{{from}} – {{to}}",
+    "calls": "Hovory",
+    "callsTotal": "Celkem hovorů",
+    "outcome": {
+      "order": "Objednávka",
+      "request": "Požadavek pro obsluhu",
+      "abandoned": "Bez objednávky",
+      "capped": "Časový limit",
+      "error": "Chyba",
+      "open": "Neukončeno"
+    },
+    "latency": "Odezva asistenta",
+    "latencyHint": "Od konce řeči zákazníka po první slovo asistenta, ze všech vět za období.",
+    "p50": "Medián",
+    "p95": "95 % odpovědí do",
+    "samples": "Měření",
+    "noSamples": "Zatím žádné měření.",
+    "orders": "Objednávky podle kanálu",
+    "source": {
+      "phone": "Telefon",
+      "web": "Web",
+      "staff": "Obsluha"
+    },
+    "corrected": "Telefonické objednávky opravené obsluhou",
+    "notMeasured": "zatím neměřeno",
+    "cost": "Náklady při placeném tarifu",
+    "costTotal": "Celkem",
+    "perCall": "Na hovor",
+    "perOrder": "Na telefonickou objednávku",
+    "costHint": "Dnes běží zdarma; toto by stálo placené API (ceny k {{date}}).",
+    "versions": "Verze asistenta",
+    "versionCalls": "{{count}} hovorů"
   }
 }

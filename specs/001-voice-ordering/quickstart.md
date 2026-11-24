@@ -5,7 +5,7 @@
 - Node.js 24, npm; Docker (PostgreSQL for tests); a phone with Expo Go (optional).
 - Keys created and entered by the owner into `.env` files (never committed): `GEMINI_API_KEY`,
   `DATABASE_URL`, `BETTER_AUTH_SECRET`, `DEMO_STAFF_PASSWORD`, `LANGFUSE_PUBLIC_KEY`,
-  `LANGFUSE_SECRET_KEY`, `LANGFUSE_BASE_URL` (EU), `SENTRY_DSN`, `IP_HASH_SALT`.
+  `LANGFUSE_SECRET_KEY`, `LANGFUSE_BASE_URL` (EU; without the Langfuse keys tracing is off and says so in the log), `SENTRY_DSN`, `IP_HASH_SALT`, `CRON_SECRET` (the nightly retention job).
 
 ## Run locally
 

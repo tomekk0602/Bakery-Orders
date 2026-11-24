@@ -21,8 +21,13 @@ export async function endCall(
   v: {
     outcome: "order" | "request" | "abandoned" | "error" | "capped";
     transcript: unknown;
+    firstAudioMs: number[];
     firstAudioMsP50?: number | null;
     firstAudioMsMax?: number | null;
+    tokensIn: number;
+    tokensOut: number;
+    shadowCostUsd: number;
+    traceId: string | null;
   },
   now = new Date(),
 ): Promise<void> {
@@ -32,8 +37,13 @@ export async function endCall(
       endedAt: now,
       outcome: v.outcome,
       transcript: v.transcript,
+      firstAudioMs: v.firstAudioMs,
       firstAudioMsP50: v.firstAudioMsP50 ?? null,
       firstAudioMsMax: v.firstAudioMsMax ?? null,
+      tokensIn: v.tokensIn,
+      tokensOut: v.tokensOut,
+      shadowCostUsd: v.shadowCostUsd.toFixed(6),
+      traceId: v.traceId,
     })
     .where(eq(call.id, id));
 }

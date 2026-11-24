@@ -22,6 +22,8 @@ export class LiveCall {
   private speaker: Speaker | null = null;
   private turns: Turn[] = [];
   private firstAudioMs: number[] = [];
+  /** Every usage report as sent; the server prices them (research R27: per response or cumulative is checked there). */
+  private usage: NonNullable<LiveServerMessage["usageMetadata"]>[] = [];
   private lastSpeechAt = 0;
   private awaitingReply = false;
   private capTimer: ReturnType<typeof setTimeout> | null = null;
@@ -74,6 +76,7 @@ export class LiveCall {
   }
 
   private async onMessage(m: LiveServerMessage) {
+    if (m.usageMetadata) this.usage.push(m.usageMetadata);
     const sc = m.serverContent;
     if (sc?.interrupted) this.speaker?.interrupt();
     for (const part of sc?.modelTurn?.parts ?? []) {
@@ -118,7 +121,7 @@ export class LiveCall {
     const r = await fetch(`/api/call/${this.callId}/end`, {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ reason, transcript: this.turns, first_audio_ms: this.firstAudioMs }),
+      body: JSON.stringify({ reason, transcript: this.turns, first_audio_ms: this.firstAudioMs, usage: this.usage }),
     })
       .then((x) => x.json() as Promise<{ order_numbers?: number[] }>)
       .catch(() => ({ order_numbers: [] }));

@@ -89,6 +89,8 @@ export const call = pgTable("call", {
   outcome: callOutcome("outcome"),
   firstAudioMsP50: integer("first_audio_ms_p50"),
   firstAudioMsMax: integer("first_audio_ms_max"),
+  /** every end-of-speech → first-audio sample of the call, for p50/p95 across calls (FR-033) */
+  firstAudioMs: integer("first_audio_ms").array(),
   tokensIn: integer("tokens_in"),
   tokensOut: integer("tokens_out"),
   shadowCostUsd: numeric("shadow_cost_usd"),

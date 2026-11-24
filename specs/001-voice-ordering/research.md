@@ -460,3 +460,57 @@ intervals.
   drop order-saving cases, which SC-010 requires; N = 3 — pass^3 = 3/3 is weak evidence (Wilson lower
   bound 0.44).
 - **The secret**: `GEMINI_API_KEY` is a repository secret, entered by the owner.
+
+## R27 — Traces, shadow cost and "Provoz" (2026-11-24)
+
+- **One trace per call across requests.** A call is several serverless requests (start, each tool,
+  end). The trace id is derived from the call id (`createTraceId(callId)`, Langfuse's documented way
+  to link to an external id) and every request adds its observation under it: `call.start`,
+  `tool.<name>` (input, result; a refusal is marked WARNING, it is the agent's to explain),
+  `live.session` (a generation with usage, cost, outcome, first-audio p50/p95). The trace id is stored
+  on the call (SC-011). A staff dictation is its own trace (`dictation` generation, user = the opaque
+  staff id). Spans go through a tracer provider of our own (`setLangfuseTracerProvider`), so Next.js'
+  own spans are not exported; each request flushes its spans in `after()`, because a serverless
+  function may freeze once the response is sent.
+- **Masking.** The span processor's mask replaces every value under a key ending in `name` or `phone`
+  and every phone-like number in any string (`apps/web/server/mask.ts`, tested). Free text that may
+  hold a name is never put into a trace at all: not the call transcript (it stays in our database, 30
+  days, FR-009), not the staff sentence (its length only). No regular expression finds "Novák" in a
+  sentence; leaving the text out is the only mask that cannot miss.
+- **Shadow cost** (T074): `packages/core/src/agent/prices.ts`, the Standard-tier prices of
+  https://aistudio.google.com/docs/pricing read 2026-11-24 — Live 0.75 / 3.00 USD per million input
+  text / audio tokens, 4.50 / 12.00 output text / audio; Flash-Lite 0.30 in, 2.50 out. Usage is split
+  by the modality details the provider reports; thinking tokens are priced as output text. A model
+  without a price throws rather than costing zero.
+- **Live usage is per response — measured 2026-11-24** (second traced call, 61 s, six reports):
+  `responseTokenCount` 219, 202, 64, 290, 45, 181 — not growing, so each report is one response and
+  the sum is right; `promptTokenCount` grew 2439 → 3886 because every response is billed for the whole
+  context so far. The call: 21,014 tokens, 0.038 USD on the paid tier. The reference does not say it
+  ("Usage metadata about the response(s)"); the per-report series stay on the trace, so a change in
+  the API would show.
+- **Found on the first traced call: the mask missed names.** The span processor hands input and output
+  to the mask already serialised as JSON strings, so a mask that walks objects saw only text and the
+  name went out. Fixed — a JSON string is parsed, masked and serialised again; the key pattern was
+  narrowed to customer and caller name and phone, so product names stay. The two traces with names
+  were deleted (the API accepted it at once; the public read API still listed them minutes later —
+  Langfuse deletes asynchronously). Re-measured: `customer_name` and `customerName` arrive as
+  `[masked]`.
+- **One first-audio sample of 92 ms** in the second call: too fast for a reply, most likely speaker echo
+  or noise above the speech threshold just before the agent's audio. Debt: the browser's speech
+  threshold (`SPEECH_RMS`) is unmeasured; with headphones the median 1.8 s and p95 3.0 s look real.
+- **`/api/call/{id}/events` is not built** (T048). First-audio samples and usage arrive with `end`, and
+  a failed call ends with `reason: "error"`; a separate events route would add a request per turn
+  without adding information. A call whose browser closes without `end` stays open — "Provoz" counts
+  it as "Neukončeno" instead of hiding it.
+- **"Provoz"** (T075, FR-033): outcomes, first-audio p50/p95 over every sample of the period (a new
+  `call.first_audio_ms` array — percentiles of per-call medians would hide slow turns), orders per
+  channel, shadow cost per call and per phone order, prompt versions. The share of phone orders
+  corrected by staff is `null`, shown as "zatím neměřeno", until orders can be edited (T058) — a 0 %
+  there would be a claim, not a measurement.
+- **Versions**: `@langfuse/otel` 6.1 requires `@opentelemetry/core` 2.x and the OTLP exporter below
+  0.300, and core 2.x requires `@opentelemetry/api` below 1.10; the newest compatible versions are
+  pinned (api 1.9, core and SDK 2.12, exporter 0.223).
+- **Sentry** (the other half of T031) moves to T076 with the staff app's Sentry.
+- **Retention** (T073): nightly at 02:00 UTC through Vercel Cron with `CRON_SECRET`; a transcript goes
+  30 days after its call's last pickup day, or 30 days after a call without an order; expired drafts
+  go; rate-limit counters older than the longest limit window (1 hour) go. Tested with a fixed clock.
