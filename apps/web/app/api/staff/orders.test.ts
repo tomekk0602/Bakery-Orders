@@ -94,7 +94,41 @@ describe("staff orders (FR-012, FR-043)", () => {
     expect((await get("/api/staff/orders/not-a-uuid", env.cookies.employee)).status).toBe(404);
   });
 
-  it("refuses a status other than hand-over or undo", async () => {
-    expect((await patch(orders[0]!.id, "cancelled", env.cookies.employee)).status).toBe(400);
+  it("an employee cancels an order: it leaves the list and gives its quantities back (FR-013)", async () => {
+    const { db } = await import("@/server/runtime");
+    const { dailyCapacity } = await import("@bakery/db");
+    const { and, eq } = await import("drizzle-orm");
+    const reserved = async () =>
+      (
+        await db()
+          .select({ n: dailyCapacity.reserved })
+          .from(dailyCapacity)
+          .where(and(eq(dailyCapacity.productId, "chleb-kminovy"), eq(dailyCapacity.day, day)))
+      )[0]?.n ?? 0;
+    const dvorak = orders.find((o) => o.customerName === "Dvořák")!; // 2 kmínové chleby
+    const before = await reserved();
+
+    expect((await patch(dvorak.id, "cancelled", env.cookies.employee)).status).toBe(200);
+    expect(await reserved()).toBe(before - 2);
+    const list = StaffOrdersResponse.parse(
+      await (await get(`/api/staff/orders?day=${day}`, env.cookies.employee)).json(),
+    );
+    expect(list.orders.some((o) => o.id === dvorak.id)).toBe(false);
+    // a second cancel changes nothing
+    expect((await patch(dvorak.id, "cancelled", env.cookies.employee)).status).toBe(409);
+    expect(await reserved()).toBe(before - 2);
+  });
+
+  it("a handed-over order cannot be cancelled", async () => {
+    const id = orders[0]!.id;
+    await patch(id, "picked_up", env.cookies.employee);
+    const res = await patch(id, "cancelled", env.cookies.employee);
+    expect(res.status).toBe(409);
+    expect(((await res.json()) as { error: { code: string } }).error.code).toBe("picked_up");
+    await patch(id, "confirmed", env.cookies.employee);
+  });
+
+  it("refuses an unknown status", async () => {
+    expect((await patch(orders[0]!.id, "lost", env.cookies.employee)).status).toBe(400);
   });
 });

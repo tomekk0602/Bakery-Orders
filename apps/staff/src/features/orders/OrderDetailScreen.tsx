@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { ActivityIndicator, Linking, StyleSheet, Text, View } from "react-native";
 import { Badge, Button, Card, colors, font, Screen, space } from "@/shared/ui";
 import { useOrder, useSetHandedOver } from "./api";
+import { CancelOrder } from "./CancelOrder";
 import { formatCzk, formatDay } from "./format";
 
 /** One order: items and prices, the customer, and for phone orders what was said on the call (FR-012). */
@@ -54,6 +55,7 @@ export function OrderDetailScreen({ id }: { id: string }) {
           onPress={() => setHandedOver.mutate({ id: o.id, status: handedOver ? "confirmed" : "picked_up" })}
         />
       ) : null}
+      {o.status === "confirmed" ? <CancelOrder id={o.id} /> : null}
       {o.transcript ? <Transcript turns={o.transcript} /> : null}
     </Screen>
   );

@@ -30,3 +30,13 @@ export function useSetHandedOver() {
     onSettled: () => queryClient.invalidateQueries({ queryKey: orderKeys.all }),
   });
 }
+
+/** Cancel an order; the server gives its quantities back to the day's limits (FR-013). */
+export function useCancelOrder() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) =>
+      api(`/api/staff/orders/${id}`, Ok, { method: "PATCH", body: JSON.stringify({ status: "cancelled" }) }),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: orderKeys.all }),
+  });
+}

@@ -1,8 +1,8 @@
 import type { OrderStatus, StaffOrder, StaffOrderDetail, TranscriptTurn } from "@bakery/core/contracts";
-import { and, asc, eq, inArray, ne } from "drizzle-orm";
+import { and, asc, eq, inArray, ne, sql } from "drizzle-orm";
 import type { Db } from "./client.ts";
 import { firstRow } from "./rows.ts";
-import { call, order, orderLine, product } from "./schema.ts";
+import { call, dailyCapacity, order, orderLine, product } from "./schema.ts";
 
 type OrderRow = typeof order.$inferSelect;
 
@@ -76,4 +76,34 @@ export async function setOrderHandedOver(
   if (updated.length > 0) return { ok: true };
   const [exists] = await db.select({ id: order.id }).from(order).where(eq(order.id, id));
   return { ok: false, reason: exists ? "cancelled" : "not_found" };
+}
+
+export type CancelResult = { ok: true } | { ok: false; reason: "not_found" | "cancelled" | "picked_up" };
+
+/**
+ * Cancels an order and gives its quantities back to the day's limits, in one transaction, so the
+ * baking plan and the remaining capacity change together (FR-013, research R31). A handed-over order
+ * is not cancelled: the bread has left the shop.
+ */
+export async function cancelOrder(db: Db, id: string, now = new Date()): Promise<CancelResult> {
+  return db.transaction(async (tx) => {
+    const [current] = await tx
+      .select({ status: order.status, day: order.pickupDay })
+      .from(order)
+      .where(eq(order.id, id))
+      .for("update");
+    if (!current) return { ok: false, reason: "not_found" } as const;
+    if (current.status !== "confirmed") return { ok: false, reason: current.status } as const;
+    await tx.update(order).set({ status: "cancelled", updatedAt: now }).where(eq(order.id, id));
+    const lines = await tx
+      .select({ productId: orderLine.productId, quantity: orderLine.quantity })
+      .from(orderLine)
+      .where(eq(orderLine.orderId, id));
+    for (const l of lines)
+      await tx
+        .update(dailyCapacity)
+        .set({ reserved: sql`greatest(${dailyCapacity.reserved} - ${l.quantity}, 0)` })
+        .where(and(eq(dailyCapacity.productId, l.productId), eq(dailyCapacity.day, current.day)));
+    return { ok: true } as const;
+  });
 }

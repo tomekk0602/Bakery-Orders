@@ -39,5 +39,6 @@ export const StaffOrderDetail = StaffOrder.extend({ transcript: z.array(Transcri
 export type StaffOrderDetail = z.infer<typeof StaffOrderDetail>;
 
 /** PATCH /api/staff/orders/:id — hand an order over, or undo a mistaken hand-over. */
-export const SetOrderStatusBody = z.object({ status: z.enum(["picked_up", "confirmed"]) });
+/** Hand over, undo a hand-over, or cancel — cancelling releases the reserved quantities (FR-012, FR-013). */
+export const SetOrderStatusBody = z.object({ status: z.enum(["picked_up", "confirmed", "cancelled"]) });
 export type SetOrderStatusBody = z.infer<typeof SetOrderStatusBody>;

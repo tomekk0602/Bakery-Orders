@@ -56,7 +56,12 @@
     "open": "Otevřít objednávku č. {{number}}",
     "notFound": "Objednávka neexistuje.",
     "back": "‹ Zpět",
-    "detailTitle": "Objednávka"
+    "detailTitle": "Objednávka",
+    "cancel": "Zrušit objednávku",
+    "cancelQuestion": "Opravdu zrušit tuto objednávku?",
+    "cancelHint": "Pečivo se uvolní pro další zákazníky a zmizí z plánu pečení. Zrušení nejde vrátit.",
+    "cancelYes": "Ano, zrušit",
+    "cancelNo": "Ne, ponechat"
   },
   "plan": {
     "title": "Plán pečení: {{day}}",
