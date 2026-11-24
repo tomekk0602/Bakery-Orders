@@ -74,5 +74,21 @@
       "tomorrow": "Zítra",
       "day_after": "Pozítří"
     }
+  },
+  "newOrder": {
+    "name": "Jméno zákazníka",
+    "phone": "Telefon (nepovinný)",
+    "day": "Den vyzvednutí",
+    "review": "Zkontrolovat objednávku",
+    "confirm": "Potvrdit",
+    "edit": "Upravit",
+    "saved": "Objednávka č. {{number}} je uložená.",
+    "another": "Nová objednávka",
+    "nameRequired": "Zadejte jméno zákazníka.",
+    "phoneInvalid": "Zadejte telefon ve tvaru +420 777 123 456, nebo ho nechte prázdný.",
+    "itemsRequired": "Přidejte alespoň jeden výrobek.",
+    "less": "Ubrat: {{product}}",
+    "more": "Přidat: {{product}}",
+    "quantityOf": "{{product}}: {{count}}"
   }
 }

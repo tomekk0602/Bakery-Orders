@@ -1,6 +1,7 @@
 import { sql } from "drizzle-orm";
 import {
   boolean,
+  check,
   date,
   integer,
   jsonb,
@@ -14,6 +15,7 @@ import {
   timestamp,
   uuid,
 } from "drizzle-orm/pg-core";
+import { user } from "./auth-schema.ts";
 
 // Tables of data-model.md. Better Auth tables are added with the staff app (Phase 3).
 
@@ -41,7 +43,10 @@ export const closedDay = pgTable("closed_day", {
 export const product = pgTable("product", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
-  spokenForms: text("spoken_forms").array().notNull().default(sql`'{}'::text[]`),
+  spokenForms: text("spoken_forms")
+    .array()
+    .notNull()
+    .default(sql`'{}'::text[]`),
   priceCzk: integer("price_czk").notNull(),
   dailyLimit: integer("daily_limit"),
   active: boolean("active").notNull().default(true),
@@ -51,7 +56,9 @@ export const product = pgTable("product", {
 export const walkInBuffer = pgTable(
   "walk_in_buffer",
   {
-    productId: text("product_id").notNull().references(() => product.id),
+    productId: text("product_id")
+      .notNull()
+      .references(() => product.id),
     weekday: integer("weekday").notNull(),
     quantity: integer("quantity").notNull(),
   },
@@ -61,7 +68,9 @@ export const walkInBuffer = pgTable(
 export const dailyCapacity = pgTable(
   "daily_capacity",
   {
-    productId: text("product_id").notNull().references(() => product.id),
+    productId: text("product_id")
+      .notNull()
+      .references(() => product.id),
     day: date("day").notNull(),
     reserved: integer("reserved").notNull().default(0),
   },
@@ -91,7 +100,10 @@ export const call = pgTable("call", {
 
 export const order = pgTable("order", {
   id: uuid("id").primaryKey().defaultRandom(),
-  number: integer("number").notNull().unique().default(sql`nextval('order_number_seq')`),
+  number: integer("number")
+    .notNull()
+    .unique()
+    .default(sql`nextval('order_number_seq')`),
   source: orderSource("source").notNull(),
   status: orderStatus("status").notNull().default("confirmed"),
   customerName: text("customer_name").notNull(),
@@ -101,6 +113,8 @@ export const order = pgTable("order", {
   promptVersion: text("prompt_version"),
   model: text("model"),
   callId: uuid("call_id").references(() => call.id),
+  /** the staff member who took a staff order (FR-012) */
+  createdBy: text("created_by").references(() => user.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
@@ -108,22 +122,33 @@ export const order = pgTable("order", {
 export const orderLine = pgTable(
   "order_line",
   {
-    orderId: uuid("order_id").notNull().references(() => order.id, { onDelete: "cascade" }),
-    productId: text("product_id").notNull().references(() => product.id),
+    orderId: uuid("order_id")
+      .notNull()
+      .references(() => order.id, { onDelete: "cascade" }),
+    productId: text("product_id")
+      .notNull()
+      .references(() => product.id),
     quantity: integer("quantity").notNull(),
     unitPriceCzk: integer("unit_price_czk").notNull(),
   },
   (t) => [primaryKey({ columns: [t.orderId, t.productId] })],
 );
 
-export const orderDraft = pgTable("order_draft", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  channel: orderSource("channel").notNull(),
-  callId: uuid("call_id").references(() => call.id),
-  payload: jsonb("payload").notNull(),
-  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
-  confirmedOrderId: uuid("confirmed_order_id").references(() => order.id),
-});
+export const orderDraft = pgTable(
+  "order_draft",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    channel: orderSource("channel").notNull(),
+    callId: uuid("call_id").references(() => call.id),
+    /** a staff draft belongs to the staff member who prepared it; only they can confirm it (FR-019) */
+    createdBy: text("created_by").references(() => user.id, { onDelete: "cascade" }),
+    payload: jsonb("payload").notNull(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    confirmedOrderId: uuid("confirmed_order_id").references(() => order.id),
+  },
+  // exactly one owner: the call it was prepared in, or the staff member (FR-006, FR-019)
+  (t) => [check("order_draft_one_owner", sql`(${t.callId} IS NULL) <> (${t.createdBy} IS NULL)`)],
+);
 
 export const staffRequest = pgTable("staff_request", {
   id: uuid("id").primaryKey().defaultRandom(),

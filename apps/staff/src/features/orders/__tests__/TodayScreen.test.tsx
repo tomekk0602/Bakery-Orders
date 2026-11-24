@@ -1,7 +1,6 @@
 import type { StaffOrdersResponse } from "@bakery/core/contracts";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react-native";
-import "@/shared/i18n";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react-native";
+import { renderWithQuery } from "@/test/render";
 import { TodayScreen } from "../TodayScreen";
 
 const mockApi = jest.fn();
@@ -18,14 +17,7 @@ const day: StaffOrdersResponse = {
   ],
 };
 
-async function renderScreen() {
-  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  return await render(
-    <QueryClientProvider client={client}>
-      <TodayScreen />
-    </QueryClientProvider>,
-  );
-}
+const renderScreen = () => renderWithQuery(<TodayScreen />);
 
 beforeEach(() => {
   mockApi.mockReset();
@@ -44,7 +36,7 @@ describe("TodayScreen (FR-012)", () => {
 
   it("hands an order over with one tap", async () => {
     await renderScreen();
-    fireEvent.press(await screen.findByText("Vydat"));
+    await fireEvent.press(await screen.findByText("Vydat"));
     await waitFor(() =>
       expect(mockApi).toHaveBeenCalledWith("/api/staff/orders/22222222-2222-4222-8222-222222222222", expect.anything(), expect.objectContaining({ method: "PATCH", body: JSON.stringify({ status: "picked_up" }) })),
     );
@@ -52,7 +44,7 @@ describe("TodayScreen (FR-012)", () => {
 
   it("opens the order detail", async () => {
     await renderScreen();
-    fireEvent.press(await screen.findByLabelText("Otevřít objednávku č. 1001"));
+    await fireEvent.press(await screen.findByLabelText("Otevřít objednávku č. 1001"));
     expect(mockPush).toHaveBeenCalledWith("/objednavka/22222222-2222-4222-8222-222222222222");
   });
 

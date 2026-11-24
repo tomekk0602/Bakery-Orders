@@ -7,28 +7,31 @@ import { dailyCapacity, order, orderDraft, orderLine, product } from "./schema.t
 /** A prepared order waits this long for confirmation (data-model `order_draft`). */
 export const DRAFT_TTL_MS = 24 * 60 * 60 * 1000;
 
-export async function saveDraft(
-  db: Db,
-  prepared: PreparedOrder,
-  channel: OrderChannel,
-  callId: string | null,
-  now = new Date(),
-): Promise<string> {
+/** Who may confirm a draft: the call it was prepared in, or the staff member who prepared it (FR-006, FR-019). */
+export type DraftOwner = { callId: string } | { userId: string };
+
+const ownerColumns = (owner: DraftOwner) => ("callId" in owner ? { callId: owner.callId, createdBy: null } : { callId: null, createdBy: owner.userId });
+
+const ownedBy = (owner: DraftOwner) =>
+  "callId" in owner ? eq(orderDraft.callId, owner.callId) : and(isNull(orderDraft.callId), eq(orderDraft.createdBy, owner.userId));
+
+export async function saveDraft(db: Db, prepared: PreparedOrder, channel: OrderChannel, owner: DraftOwner, now = new Date()): Promise<string> {
   const rows = await db
     .insert(orderDraft)
-    .values({ channel, callId, payload: prepared, expiresAt: new Date(now.getTime() + DRAFT_TTL_MS) })
+    .values({ channel, ...ownerColumns(owner), payload: prepared, expiresAt: new Date(now.getTime() + DRAFT_TTL_MS) })
     .returning({ id: orderDraft.id });
   return firstRow(rows, "order_draft").id;
 }
 
-export type ConfirmMeta = { callId: string | null; promptVersion: string | null; model: string | null };
+export type ConfirmMeta = { promptVersion: string | null; model: string | null };
 export type ConfirmResult = { ok: true; orderNumber: number; orderId: string } | { ok: false; reason: "no_draft" | "over_limit" };
 
 /**
  * Saves a draft as an order. Capacity is taken with a conditional update inside the transaction, so
  * two concurrent orders can never take the same last pieces (research R14, spec E4).
  */
-export async function confirmDraft(db: Db, draftId: string, callId: string | null, meta: ConfirmMeta, now = new Date()): Promise<ConfirmResult> {
+export async function confirmDraft(db: Db, draftId: string, owner: DraftOwner, meta: ConfirmMeta, now = new Date()): Promise<ConfirmResult> {
+  const who = ownerColumns(owner);
   return db.transaction(async (tx) => {
     const [draft] = await tx
       .select()
@@ -38,7 +41,7 @@ export async function confirmDraft(db: Db, draftId: string, callId: string | nul
           eq(orderDraft.id, draftId),
           gt(orderDraft.expiresAt, now),
           isNull(orderDraft.confirmedOrderId),
-          callId === null ? isNull(orderDraft.callId) : eq(orderDraft.callId, callId),
+          ownedBy(owner),
         ),
       )
       .for("update");
@@ -74,7 +77,8 @@ export async function confirmDraft(db: Db, draftId: string, callId: string | nul
         totalCzk: p.totalCzk,
         promptVersion: meta.promptVersion,
         model: meta.model,
-        callId: meta.callId,
+        callId: who.callId,
+        createdBy: who.createdBy,
       })
       .returning({ id: order.id, number: order.number });
     const saved = firstRow(savedRows, "order");

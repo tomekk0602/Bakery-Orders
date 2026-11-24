@@ -25,7 +25,8 @@ The call routes accept only a `call_id` issued by `/start` within its cap, from 
 | `POST /api/auth/*` | Better Auth (sign-in, session) | FR-015 |
 | `POST /api/staff/dictation` | `{ text }` → order card `{ draft_id, lines[], total_czk, pickup_date, customer_name, unmatched[]: { word, candidates[] }, missing[] }` | FR-017–FR-021 |
 | `POST /api/staff/orders` | form order → draft card (same shape) | FR-017 |
-| `POST /api/staff/orders/{draftId}/confirm` | save, with cut-off override | FR-013, FR-019 |
+| `GET /api/staff/order-form` | active products and open days for the form | FR-017 |
+| `POST /api/staff/drafts/{draftId}/confirm` | save the staff member's own draft (409 when the limit is gone) | FR-013, FR-019 |
 | `GET /api/staff/orders?day=` | orders with source, status, transcript link | FR-012 |
 | `PATCH /api/staff/orders/{id}` | edit lines/day or status (`picked_up`, `cancelled`) | FR-012, FR-013 |
 | `GET /api/staff/plan?day=` | baking plan | FR-010 |

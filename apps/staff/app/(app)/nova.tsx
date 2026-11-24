@@ -1,5 +1,3 @@
-import { ComingSoonScreen } from "@/features/navigation/ComingSoonScreen";
+import { NewOrderScreen } from "@/features/orders/new/NewOrderScreen";
 
-export default function Route() {
-  return <ComingSoonScreen titleKey="tabs.newOrder" />;
-}
+export default NewOrderScreen;

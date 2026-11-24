@@ -82,11 +82,11 @@ they cover and must fail first.
 
 - [ ] T033 [P] [US6] API tests in `apps/web/app/api/staff/staff.test.ts`: dictation returns a card with unmatched words and candidates and missing fields; form order returns the same card shape; confirm after the cut-off works with a staff session and is refused without one (FR-013, FR-017–FR-021)
 - [ ] T034 [US6] `POST /api/staff/dictation` in `apps/web/app/api/staff/dictation/route.ts`: Gemini 3.5 Flash-Lite with the tool definitions in staff mode; `prepare_order` runs through the core; unmatched words → candidates by spoken-form similarity; trace span `dictation` (R17, FR-019, FR-020)
-- [ ] T035 [P] [US6] `POST /api/staff/orders` (form → draft card) and `POST /api/staff/orders/[draftId]/confirm` (FR-017, FR-019)
+- [x] T035 [P] [US6] `POST /api/staff/orders` (form → draft card) and `POST /api/staff/orders/[draftId]/confirm` (FR-017, FR-019)
 - [ ] T036 [P] [US6] Staff login screen `apps/staff/app/(auth)/login.tsx` with `@better-auth/expo`
 - [ ] T037 [US6] "Nová objednávka" screen `apps/staff/app/(tabs)/nova.tsx`: voice button with expo-speech-recognition (cs-CZ, vocabulary as contextual strings where supported), editable text, form mode, the order card with unmatched-word pickers and missing-field highlights, one-tap confirm (FR-017, FR-018, FR-020, FR-021)
 - [ ] T038 [US6] No-microphone / no-recogniser path: the screen says so and opens the form (FR-022)
-- [ ] T039 [P] [US6] Component tests for the card states in `apps/staff/components/OrderCard.test.tsx`
+- [x] T039 [P] [US6] Component tests for the card states in `apps/staff/components/OrderCard.test.tsx`
 
 **Checkpoint**: staff can take an order end to end — a working product.
 

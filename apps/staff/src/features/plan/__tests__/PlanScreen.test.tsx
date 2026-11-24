@@ -1,7 +1,6 @@
 import type { BakingPlanResponse } from "@bakery/core/contracts";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react-native";
-import "@/shared/i18n";
+import { fireEvent, screen, waitFor } from "@testing-library/react-native";
+import { renderWithQuery } from "@/test/render";
 import { PlanScreen } from "../PlanScreen";
 
 const mockApi = jest.fn();
@@ -22,14 +21,7 @@ const plan = (date: string): BakingPlanResponse => ({
   days: [...days],
 });
 
-async function renderScreen() {
-  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  return await render(
-    <QueryClientProvider client={client}>
-      <PlanScreen />
-    </QueryClientProvider>,
-  );
-}
+const renderScreen = () => renderWithQuery(<PlanScreen />);
 
 beforeEach(() => {
   mockApi.mockReset();
@@ -48,7 +40,7 @@ describe("PlanScreen (FR-010, FR-044)", () => {
     await renderScreen();
     await screen.findByLabelText("Kmínový chléb, 12, 15, 27");
     expect(mockApi).toHaveBeenCalledWith("/api/staff/plan", expect.anything());
-    fireEvent.press(screen.getByLabelText(/neděle|29\. 11\..*zavřeno/));
+    await fireEvent.press(screen.getByLabelText(/neděle|29\. 11\..*zavřeno/));
     await waitFor(() => expect(mockApi).toHaveBeenCalledWith("/api/staff/plan?day=2026-11-29", expect.anything()));
   });
 });

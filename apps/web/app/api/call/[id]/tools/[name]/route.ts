@@ -29,7 +29,7 @@ export async function POST(req: Request, { params }: Ctx) {
       { now: new Date(), channel: "phone", catalogue: bakery.catalogue, schedule: bakery.schedule, staffOverride: false, remaining },
     );
     if (!prepared.ok) return json(prepared);
-    const draftId = await saveDraft(db(), prepared, "phone", call.id);
+    const draftId = await saveDraft(db(), prepared, "phone", { callId: call.id });
     return json({
       ok: true,
       draft_id: draftId,
@@ -42,7 +42,7 @@ export async function POST(req: Request, { params }: Ctx) {
 
   if (tool === "confirm_order") {
     const a = schemas.confirm_order.parse(args.data);
-    const r = await confirmDraft(db(), a.draft_id, call.id, { callId: call.id, promptVersion: PROMPT_VERSION, model: LIVE_MODEL });
+    const r = await confirmDraft(db(), a.draft_id, { callId: call.id }, { promptVersion: PROMPT_VERSION, model: LIVE_MODEL });
     return json(r.ok ? { ok: true, order_number: r.orderNumber } : r);
   }
 
