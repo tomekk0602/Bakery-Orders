@@ -144,7 +144,7 @@ they cover and must fail first.
 
 - [x] T061 [P] [US5] `GET /api/catalogue`, `POST /api/orders/preview`, `POST /api/orders` + tests: same rules as the agent, order number, 10 orders per IP per hour (FR-014, FR-040)
 - [x] T062 [US5] Form on the customer page with a review step and an inline confirmation with the order number; no public page per order number (R23) (FR-014, FR-040)
-- [ ] T090 [US5] Customer page as a shop: header, "how to order", product grid with photos and prices from the catalogue, call and form, notice; photos in `apps/web/public/images/` supplied by the owner (FR-046, research R29)
+- [ ] T090 [US5] Customer page as a shop: header, "how to order", product grid with photos and prices from the catalogue, call and form, notice; generated illustrative photos in `apps/web/public/images/` (R32) (FR-046, research R29)
 
 ---
 
@@ -250,3 +250,18 @@ screens.
 4. Phase 10 → CI, operations, deployment (with the owner's yes), README, walkthrough, video.
 
 No task is committed, pushed or deployed without the owner's explicit yes (constitution, Process).
+
+## Homepage implementation (owner-approved plan, 2026-11-24)
+
+- [ ] T091 Generate and optimize 12 consistent product photographs and one hero; save prompts and asset mapping (FR-046).
+- [ ] T092 Build responsive bakery navigation, hero, ordering guidance, call section and disclosure (FR-046).
+- [ ] T093 Unify product-card quantities with the existing preview/confirmation flow, accessible mobile summary and failure states (FR-046).
+- [ ] T094 Verify types, lint, selection logic and browser layouts/preview flow; document verification limits (FR-046).
+
+## Later — notifications (owner, 2026-11-24)
+
+Not specified yet: each needs its requirements in `spec.md` (what triggers a notification, who
+receives it, quiet hours, what it may contain) and a decision record before any code.
+
+- [ ] T095 Notifications for staff in the app: a new order, a callback / change / cancel request, an order close to the day's limit — shown in the app while it is open (spec first)
+- [ ] T096 Push notifications to the staff mobile app (Expo push; device registration per signed-in staff member; personal data kept out of the notification text) — spec and ADR first

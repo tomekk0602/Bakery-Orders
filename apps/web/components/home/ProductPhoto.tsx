@@ -1,30 +1,31 @@
 "use client";
-
 import { useState } from "react";
+import { PRODUCT_IMAGES } from "./product-images";
+import { Icon } from "./Icon";
 
-/**
- * A product photo from `public/images/products/<id>.jpg`, supplied by the owner (research R29).
- * Until the file exists the tile shows the product's initial on a warm background, never a broken image.
- */
 export function ProductPhoto({ id, name }: { id: string; name: string }) {
-  const [missing, setMissing] = useState(false);
-  if (missing)
-    return (
-      <div
-        aria-hidden
-        className="flex aspect-[4/3] w-full items-center justify-center bg-gradient-to-br from-amber-100 to-amber-200 text-4xl font-semibold text-amber-800/70"
-      >
-        {name.charAt(0)}
-      </div>
-    );
+  const [failed, setFailed] = useState<string | null>(null);
+  const asset = PRODUCT_IMAGES[id];
   return (
-    // a plain img: the placeholder needs its onError, and the photos are already sized by the owner
-    <img
-      src={`/images/products/${id}.jpg`}
-      alt={name}
-      loading="lazy"
-      onError={() => setMissing(true)}
-      className="aspect-[4/3] w-full object-cover"
-    />
+    <div className="product-photo">
+      {!asset || failed === id ? (
+        <div className="photo-placeholder" role="img" aria-label={`${name} — fotografie není k dispozici`}>
+          <Icon kind="wheat" />
+          <span>Fotografii připravujeme</span>
+        </div>
+      ) : (
+        <img
+          src={`/images/products/${asset}.webp`}
+          srcSet={`/images/products/${asset}-480.webp 480w, /images/products/${asset}.webp 960w`}
+          sizes="(max-width: 600px) 46vw, (max-width: 1000px) 30vw, 23vw"
+          alt={name}
+          width={960}
+          height={720}
+          loading="lazy"
+          decoding="async"
+          onError={() => setFailed(id)}
+        />
+      )}
+    </div>
   );
 }

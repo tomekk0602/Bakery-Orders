@@ -35,8 +35,8 @@ export function CallPanel() {
   const inCall = status === "connecting" || status === "live";
 
   return (
-    <section className="rounded-2xl border border-stone-200 bg-white p-6 shadow-sm">
-      <h2 className="text-xl font-semibold">Objednat telefonem</h2>
+    <section className="call-panel">
+      <h2 className="text-xl font-semibold">Zavolejte nám z webu</h2>
       <p className="mt-1 text-stone-600">Zavolejte nám přímo z prohlížeče. Rezervace pečiva zabere chvilku.</p>
 
       <label className="mt-5 block text-sm font-medium" htmlFor="phone">
@@ -72,8 +72,7 @@ export function CallPanel() {
       )}
 
       <p className="mt-3 text-sm text-stone-500">
-        Hovor vyřizuje asistent s umělou inteligencí (Google Gemini). Přepis hovoru uchováváme 30 dní. Nejlépe se
-        sluchátky.
+        Hovor vyřizuje asistent s umělou inteligencí. Přepis hovoru uchováváme 30 dní. Nejlépe se sluchátky.
       </p>
 
       {error && (

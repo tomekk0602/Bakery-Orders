@@ -1,49 +1,34 @@
-const WAYS = [
+import { Icon } from "./Icon";
+const STEPS = [
   {
-    icon: "📞",
-    title: "Zavolejte",
-    text: "Asistent vezme hovor hned, zopakuje objednávku s cenou a dá vám číslo objednávky.",
-    href: "#telefon",
+    icon: "phone",
+    title: "Vyberte, nebo zavolejte",
+    text: "Pečivo si rezervujete tady na webu, v hovoru s asistentem i u nás v prodejně.",
   },
   {
-    icon: "📝",
-    title: "Vyplňte formulář",
-    text: "Vyberte pečivo a den vyzvednutí, za minutu je hotovo.",
-    href: "#formular",
+    icon: "check",
+    title: "Potvrďte si objednávku",
+    text: "Zkontrolujete pečivo, cenu a den vyzvednutí. Pak dostanete číslo objednávky.",
   },
-  { icon: "🥖", title: "V prodejně", text: "Řekněte nám u pultu — zapíšeme vás do stejného seznamu.", href: null },
+  {
+    icon: "bag",
+    title: "Vyzvedněte v pekárně",
+    text: "Při vyzvednutí řeknete své jméno nebo číslo objednávky. Zaplatíte na místě.",
+  },
 ] as const;
-
-/** The three ways to order, in the customer's words (FR-046). */
 export function HowToOrder() {
   return (
-    <section aria-labelledby="jak-title">
-      <h2 id="jak-title" className="text-2xl font-bold">
-        Jak objednat
-      </h2>
-      <ul className="mt-6 grid gap-4 md:grid-cols-3">
-        {WAYS.map((w) => {
-          const body = (
-            <>
-              <span className="text-3xl" aria-hidden>
-                {w.icon}
-              </span>
-              <span className="mt-3 block text-lg font-semibold">{w.title}</span>
-              <span className="mt-1 block text-stone-600">{w.text}</span>
-            </>
-          );
-          return (
-            <li key={w.title} className="rounded-2xl border border-stone-200 bg-white p-5 shadow-sm">
-              {w.href ? (
-                <a href={w.href} className="block hover:opacity-80">
-                  {body}
-                </a>
-              ) : (
-                body
-              )}
-            </li>
-          );
-        })}
+    <section id="jak-objednat" className="how-section shell" aria-label="Jak objednat">
+      <ul>
+        {STEPS.map((s) => (
+          <li key={s.title}>
+            <Icon kind={s.icon} />
+            <div>
+              <h2>{s.title}</h2>
+              <p>{s.text}</p>
+            </div>
+          </li>
+        ))}
       </ul>
     </section>
   );

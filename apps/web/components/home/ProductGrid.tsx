@@ -1,25 +1,65 @@
 import type { CatalogueResponse } from "@bakery/core/contracts";
 import { ProductPhoto } from "./ProductPhoto";
+import { money } from "./format";
 
-/** The offer with photo, name and price — the same catalogue the phone agent works from (FR-046). */
-export function ProductGrid({ products }: { products: CatalogueResponse["products"] }) {
+export function ProductGrid({
+  products,
+  quantities,
+  onChange,
+  disabled = false,
+}: {
+  products: CatalogueResponse["products"];
+  quantities: Record<string, number>;
+  onChange: (id: string, delta: number) => void;
+  disabled?: boolean;
+}) {
   return (
-    <section id="pecivo" aria-labelledby="pecivo-title" className="scroll-mt-6">
-      <h2 id="pecivo-title" className="text-2xl font-bold">
-        Naše pečivo
-      </h2>
-      <p className="mt-1 text-stone-600">Vše, co si u nás můžete rezervovat. Ceny jsou za kus.</p>
-      <ul className="mt-6 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
-        {products.map((p) => (
-          <li key={p.id} className="overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-sm">
+    <ul className="product-grid">
+      {products.map((p) => {
+        const quantity = quantities[p.id] ?? 0;
+        return (
+          <li key={p.id} className={`product-card ${quantity ? "is-selected" : ""}`}>
             <ProductPhoto id={p.id} name={p.name} />
-            <div className="flex items-baseline justify-between gap-2 px-4 py-3">
-              <span className="font-medium">{p.name}</span>
-              <span className="whitespace-nowrap font-semibold text-amber-800">{p.priceCzk} Kč</span>
+            <div className="product-info">
+              <h3>{p.name}</h3>
+              <p className="product-price">
+                {money(p.priceCzk)} <span>/ ks</span>
+              </p>
+              {quantity ? (
+                <div className="quantity-control">
+                  <button
+                    type="button"
+                    disabled={disabled}
+                    onClick={() => onChange(p.id, -1)}
+                    aria-label={`Ubrat: ${p.name}`}
+                  >
+                    −
+                  </button>
+                  <output aria-label={`${p.name}: počet kusů`}>{quantity}</output>
+                  <button
+                    type="button"
+                    disabled={disabled || quantity >= 200}
+                    onClick={() => onChange(p.id, 1)}
+                    aria-label={`Přidat: ${p.name}`}
+                  >
+                    +
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  className="product-add"
+                  disabled={disabled}
+                  onClick={() => onChange(p.id, 1)}
+                  aria-label={`Přidat: ${p.name}`}
+                >
+                  <span aria-hidden="true">+</span> Přidat
+                </button>
+              )}
             </div>
           </li>
-        ))}
-      </ul>
-    </section>
+        );
+      })}
+    </ul>
   );
 }

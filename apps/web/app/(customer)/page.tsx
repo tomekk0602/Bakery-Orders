@@ -1,39 +1,47 @@
 import { CallPanel } from "@/components/call/CallPanel";
 import { Hero } from "@/components/home/Hero";
 import { HowToOrder } from "@/components/home/HowToOrder";
-import { ProductGrid } from "@/components/home/ProductGrid";
+import { Icon } from "@/components/home/Icon";
+import { deadline } from "@/components/home/format";
 import { WebOrderForm } from "@/components/order/WebOrderForm";
 import { catalogue } from "@/server/customer/orders";
 
-// The offer and prices are read on every visit: the owner can change them in the staff app.
 export const dynamic = "force-dynamic";
 
-const deadline = (daysBefore: number, time: string) =>
-  `Objednávky přijímáme do ${time} ${daysBefore === 1 ? "den předem" : `${daysBefore} dny předem`}.`;
-
-/** The customer page (FR-046): the bakery, how to order, the offer, then the call and the form. */
 export default async function Home() {
   const c = await catalogue();
   return (
     <>
       <Hero name={c.bakeryName} deadline={deadline(c.cutoffDaysBefore, c.cutoffTime)} />
-      <main className="mx-auto max-w-5xl space-y-16 px-4 py-12">
+      <main>
         <HowToOrder />
-        <ProductGrid products={c.products} />
-        <section id="objednat" aria-label="Objednávka" className="scroll-mt-6">
-          <h2 className="text-2xl font-bold">Objednat</h2>
-          <div className="mt-6 grid items-start gap-6 lg:grid-cols-2">
-            <div id="telefon" className="scroll-mt-6">
-              <CallPanel />
-            </div>
-            <WebOrderForm />
+        <section id="telefon" className="voice-section shell" aria-label="Objednat hovorem">
+          <div className="voice-copy">
+            <p className="eyebrow">Raději si popovídáte?</p>
+            <h2>
+              Řekněte nám,
+              <br />
+              <em>na co máte chuť.</em>
+            </h2>
+            <p>
+              Náš hlasový asistent si zapíše vaši objednávku a přečte vám ji ke kontrole. Stačí mikrofon v prohlížeči.
+            </p>
+            <blockquote>„Dva kmínové chleby a šest rohlíků na zítra, prosím.“</blockquote>
+            <p className="fine-print">Chcete mluvit s člověkem? Požádejte asistenta o zpětné zavolání.</p>
           </div>
+          <CallPanel />
         </section>
+        <WebOrderForm catalogue={c} />
       </main>
-      <footer className="border-t border-stone-200 bg-white">
-        <div className="mx-auto max-w-5xl px-4 py-6 text-sm text-stone-500">
-          {c.bakeryName} je ukázková pekárna. Hovory vyřizuje asistent s umělou inteligencí; přepis hovoru uchováváme 30
-          dní, pak ho mažeme.
+      <footer className="site-footer">
+        <div className="shell footer-content">
+          <div className="brand">
+            <Icon kind="wheat" />
+            {c.bakeryName}
+          </div>
+          <p>Ukázková pekárna · Fotografie jsou ilustrativní a vytvořené pomocí AI.</p>
+          <p>Hovory vyřizuje AI asistent. Přepisy uchováváme 30 dní, poté je mažeme.</p>
+          <a href="/staff">Vstup pro obsluhu</a>
         </div>
       </footer>
     </>

@@ -208,11 +208,14 @@ the cut-off is accepted; marking a pickup changes its status.
 - **FR-013**: Staff MUST be able to add and edit orders, including after the cut-off; the override
   MUST be granted by the server from the staff login, never by the client (ADR-0009).
 - **FR-014**: The public web form MUST obey FR-007.
-- **FR-046**: The customer page MUST present the bakery like a real shop before any form: its name
-  and the order deadline; the three ways to order (call, web form, in the shop); the active products
-  with photo, name and price from the same catalogue the agent uses; then the call and the form; and
-  the AI and transcript notice. A missing photo MUST show a neutral placeholder, never a broken image.
-  _Added 2026-11-24 (owner): the page looked like a technical form (research R29)._
+- **FR-046**: The customer page MUST offer direct call and catalogue entry points, a warm bakery
+  identity, 12 generated illustrative product photographs and a hero image. Names, prices, days and
+  cut-off come from the shared catalogue. The product cards and reservation form MUST share one
+  quantity state; no second product selector. The customer reviews a server-priced summary before
+  saving. Missing images show a neutral placeholder, never a broken image. No invented address,
+  reviews, opening hours or ingredient claims. The footer discloses the demo and illustrative images.
+  The mobile summary MUST NOT cover form inputs; keyboard focus and errors remain accessible.
+  _Updated 2026-11-24: owner approved the detailed homepage and image plan (research R32)._
 - **FR-015**: The staff app MUST require login; the form and the browser call MUST NOT. There are two
   roles, `owner` (UI: Majitel) and `employee` (UI: Prodavač), one demo account each (ADR-0015;
   permissions in FR-043–FR-045).

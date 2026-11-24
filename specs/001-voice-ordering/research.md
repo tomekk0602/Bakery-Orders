@@ -605,3 +605,18 @@ intervals.
   order leaves the list, a second cancel is refused and changes nothing; a handed-over order is
   refused; the app sends nothing until the second tap.
 - **Still open**: editing an order's lines or day (T058).
+
+## R32 — An illustrated catalogue that is also the order form (2026-11-24)
+
+- **Decision**: implement the owner's approved detailed homepage plan: generated bakery photographs,
+  cream/brown editorial styling, direct voice entry, one shared product selection and server preview.
+- **Why**: localhost showed a gradient-only hero, broken product images, and a duplicated product list.
+- **Alternatives**: merely filling the old grid leaves customers selecting the same products again;
+  building a new checkout/backend increases scope without helping the homepage.
+- **Assets**: built-in image generation, one image per product, same limestone surface and daylight;
+  WebP variants, explicit ID mapping, neutral missing-image fallback. Images are illustrative, not
+  evidence of recipes. No calls to the bakery's paid voice APIs are needed for this work.
+- **Scope**: local implementation and verification only; no commit, push or deployment.
+- **Verification**: types/lint, selection regression checks and browser QA. Backend reservation rules
+  remain authoritative. Existing public POST has no idempotency-key contract; this UI does not add
+  automatic retries or claim that lost-response retries are safe. Backend idempotency remains separate.
