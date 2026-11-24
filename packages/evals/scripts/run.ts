@@ -1,5 +1,5 @@
 import { spawnSync } from "node:child_process";
-import { appendFileSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { appendFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { AGENT_FINGERPRINT, PROMPT_VERSION } from "@bakery/core";
 import type { Evalite } from "evalite/types";
 import { type Baseline, type CaseResult, caseKey, compare } from "../src/gate.ts";
@@ -24,12 +24,19 @@ const baselinePath = new URL("baseline.json", root).pathname;
 mkdirSync(outDir, { recursive: true });
 
 const started = Date.now();
+// A result from an earlier run must never be read as this run's.
+rmSync(resultsPath, { force: true });
 const evalite = spawnSync("npx", ["evalite", "run", "--outputPath", resultsPath], {
   cwd: root.pathname,
   stdio: "inherit",
   env: process.env,
 });
 if (evalite.error) throw evalite.error;
+if (!existsSync(resultsPath)) {
+  // Evalite itself failed (setup, Docker, a crash): no evidence, which is not a regression (exit 2).
+  console.error(`evalite produced no results (exit ${String(evalite.status)}) — see the output above`);
+  process.exit(2);
+}
 
 const output = JSON.parse(readFileSync(resultsPath, "utf8")) as Evalite.Exported.Output;
 const results = summarise(output);
