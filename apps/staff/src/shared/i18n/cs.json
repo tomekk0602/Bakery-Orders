@@ -58,5 +58,21 @@
     "notFound": "Objednávka neexistuje.",
     "back": "‹ Zpět",
     "detailTitle": "Objednávka"
+  },
+  "plan": {
+    "title": "Plán pečení: {{day}}",
+    "product": "Výrobek",
+    "reserved": "Objednáno",
+    "buffer": "Do prodejny",
+    "toBake": "Upéct",
+    "total": "Celkem",
+    "closed": "zavřeno",
+    "closedNote": "V tento den je zavřeno — počítají se jen objednávky, bez prodeje v prodejně.",
+    "explain": "Upéct = objednáno + odhad prodeje v prodejně. Odhad nastavuje majitel.",
+    "relative": {
+      "today": "Dnes",
+      "tomorrow": "Zítra",
+      "day_after": "Pozítří"
+    }
   }
 }

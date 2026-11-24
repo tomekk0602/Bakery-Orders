@@ -37,7 +37,7 @@ they cover and must fail first.
 - [x] T009 [P] Calendar tests in `packages/core/src/calendar.test.ts`: 14 days from a fixed Prague clock, today/tomorrow/the day after, closed weekdays, Czech holidays, owner's closed days, DST boundaries (FR-004, FR-038, R1, R20)
 - [x] T010 [P] Pricing tests in `packages/core/src/pricing.test.ts`: line and order totals; fast-check property — total = Σ quantity × unit price (FR-005)
 - [x] T011 [P] Order-rule tests in `packages/core/src/orders.test.ts`: unknown or inactive product, past or closed day, outside the window, cut-off for customer vs staff, missing name/day, phone required for phone/web but optional for staff (FR-003, FR-007, FR-013, FR-021)
-- [ ] T012 [P] Baking-plan tests in `packages/core/src/baking-plan.test.ts`: reserved + buffer = to bake; cancelled orders excluded; fast-check property over random orders and buffers (FR-010, SC-003)
+- [x] T012 [P] Baking-plan tests in `packages/core/src/baking-plan.test.ts`: reserved + buffer = to bake; cancelled orders excluded; fast-check property over random orders and buffers (FR-010, SC-003)
 
 ### Core rules — implementation
 
@@ -45,7 +45,7 @@ they cover and must fail first.
 - [x] T014 [P] `packages/core/src/calendar.ts`: open-day calendar in Europe/Prague with date-holidays (CZ) (makes T009 pass)
 - [x] T015 [P] `packages/core/src/pricing.ts` (makes T010 pass)
 - [x] T016 `packages/core/src/orders.ts`: `prepareOrder(input, context)` → draft with summary or a closed-set refusal (makes T011 pass)
-- [ ] T017 [P] `packages/core/src/baking-plan.ts` (makes T012 pass)
+- [x] T017 [P] `packages/core/src/baking-plan.ts` (makes T012 pass)
 
 ### Agent definitions
 
@@ -94,9 +94,9 @@ they cover and must fail first.
 
 ## Phase 4: User Story 2 — The owner sees what to bake (P1)
 
-- [ ] T040 [P] [US2] `GET /api/staff/plan` + test (FR-010)
+- [x] T040 [P] [US2] `GET /api/staff/plan` + test (FR-010)
 - [ ] T041 [P] [US2] `GET/PUT /api/staff/settings` + test: cut-off, closed weekdays and days, buffers, limits (FR-011)
-- [ ] T042 [US2] "Plán" screen `apps/staff/app/(tabs)/plan.tsx`: day picker, per product reserved / buffer / to bake, totals (FR-010, SC-003)
+- [x] T042 [US2] "Plán" screen `apps/staff/app/(tabs)/plan.tsx`: day picker, per product reserved / buffer / to bake, totals (FR-010, SC-003)
 - [ ] T043 [P] [US2] Settings screen `apps/staff/app/nastaveni.tsx` (FR-011)
 
 **Checkpoint**: channel 2 and the baking plan work — both jobs of the brief, without any voice.

@@ -1,5 +1,3 @@
-import { ComingSoonScreen } from "@/features/navigation/ComingSoonScreen";
+import { PlanScreen } from "@/features/plan/PlanScreen";
 
-export default function Route() {
-  return <ComingSoonScreen titleKey="tabs.plan" />;
-}
+export default PlanScreen;

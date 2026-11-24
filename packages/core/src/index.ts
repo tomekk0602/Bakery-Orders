@@ -2,6 +2,7 @@ export * from "./catalogue.ts";
 export * from "./calendar.ts";
 export * from "./pricing.ts";
 export * from "./orders.ts";
+export * from "./baking-plan.ts";
 export * from "./agent/tools.ts";
 export * from "./agent/prompt.ts";
 export * from "./agent/vocabulary.ts";

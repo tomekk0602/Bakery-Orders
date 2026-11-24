@@ -7,3 +7,4 @@ export * from "./seed.ts";
 export * from "./auth-schema.ts";
 export * from "./staff-orders.repo.ts";
 export * from "./demo-orders.ts";
+export * from "./plan.repo.ts";
