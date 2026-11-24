@@ -1,4 +1,4 @@
-import { ConfirmDraftResponse, OrderCard, OrderFormResponse, type StaffOrderInput } from "@bakery/core/contracts";
+import { ConfirmDraftResponse, DictationResponse, OrderCard, OrderFormResponse, type StaffOrderInput } from "@bakery/core/contracts";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { planKeys } from "@/features/plan/api";
 import { api } from "@/shared/api/http";
@@ -18,3 +18,7 @@ export function useConfirmDraft() {
     onSuccess: () => Promise.all([queryClient.invalidateQueries({ queryKey: orderKeys.all }), queryClient.invalidateQueries({ queryKey: planKeys.all })]),
   });
 }
+
+/** One staff sentence → card, or the fields to finish in the form (FR-017–FR-021). */
+export const useDictate = () =>
+  useMutation({ mutationFn: (text: string) => api("/api/staff/dictation", DictationResponse, { method: "POST", body: JSON.stringify({ text }) }) });

@@ -36,11 +36,12 @@ ${catalogueBlock(catalogue)}`;
     return `Pomáháš zaměstnanci ${bakeryName} zapsat objednávku z jedné věty, např. "Nováková, dva kmínové chleby na zítra".
 ${shared}
 
-Pravidla:
-- Zavolej prepare_order jednou se všemi produkty, které věta jasně jmenuje, s datem z kalendáře a jménem zákazníka.
-- Slovo, které neodpovídá žádnému produktu z nabídky, do objednávky NEDÁVEJ. Napiš ho do odpovědi jako: NEZNÁMÉ: <slovo>.
-- Chybí-li jméno nebo den, prepare_order nevolej a napiš: CHYBÍ: jméno / den.
-- Nic si nedomýšlej.`;
+Vrať JSON podle schématu:
+- customerName: jméno zákazníka z věty, jinak null.
+- pickupDate: den vyzvednutí vyhledaný v kalendáři, jinak null. Zavřené dny nevybírej.
+- items: jen produkty, které věta jasně jmenuje, s id z nabídky a množstvím. "Tucet" je 12.
+- unmatched: každé slovo pro produkt, který v nabídce není nebo mu nerozumíš, s množstvím (nebo null) a nejvýše třemi nejbližšími id z nabídky jako candidateIds. Takové slovo NEDÁVEJ do items.
+Nic si nedomýšlej: co ve větě není, je null nebo prázdné.`;
   }
 
   return `Jsi telefonní asistent ${bakeryName}. Mluvíš vždy česky, krátce, přirozeně a zdvořile. Rozumíš i slovensky.

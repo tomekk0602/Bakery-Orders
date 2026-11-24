@@ -36,10 +36,15 @@ beforeEach(() => {
 });
 
 const renderScreen = () => renderWithQuery(<NewOrderScreen />);
+async function renderForm() {
+  const screen = await renderScreen();
+  await fireEvent.press(await screen.findByText("Formulářem"));
+  return screen;
+}
 
 describe("NewOrderScreen (US6, FR-017, FR-019, FR-021)", () => {
   it("form → card priced by the server → saved, with tomorrow preselected and no phone", async () => {
-    const screen = await renderScreen();
+    const screen = await renderForm();
     await fireEvent.changeText(await screen.findByLabelText("Jméno zákazníka"), "Nováková");
     await fireEvent.press(screen.getByLabelText("Přidat: Kmínový chléb"));
     await fireEvent.press(screen.getByLabelText("Přidat: Kmínový chléb"));
@@ -59,7 +64,7 @@ describe("NewOrderScreen (US6, FR-017, FR-019, FR-021)", () => {
   });
 
   it("asks for a name and at least one product before sending anything", async () => {
-    const screen = await renderScreen();
+    const screen = await renderForm();
     await fireEvent.press(await screen.findByText("Zkontrolovat objednávku"));
     expect(await screen.findByText("Zadejte jméno zákazníka.")).toBeTruthy();
     expect(screen.getByText("Přidejte alespoň jeden výrobek.")).toBeTruthy();
@@ -68,10 +73,60 @@ describe("NewOrderScreen (US6, FR-017, FR-019, FR-021)", () => {
 
   it("shows the server's refusal on the form", async () => {
     mockApi.mockImplementation((path: string) => (path === "/api/staff/order-form" ? Promise.resolve(form) : Promise.reject(new Error("V tento den je zavřeno."))));
-    const screen = await renderScreen();
+    const screen = await renderForm();
     await fireEvent.changeText(await screen.findByLabelText("Jméno zákazníka"), "Novák");
     await fireEvent.press(screen.getByLabelText("Přidat: Rohlík"));
     await fireEvent.press(screen.getByText("Zkontrolovat objednávku"));
     expect(await screen.findByText("V tento den je zavřeno.")).toBeTruthy();
+  });
+
+  it("by voice: a complete sentence goes straight to the order card (FR-018, FR-019)", async () => {
+    mockApi.mockImplementation((path: string) =>
+      Promise.resolve(path === "/api/staff/order-form" ? form : { text: "x", extraction: { customerName: "Nováková", pickupDate: "2026-11-25", items: [] }, unmatched: [], missing: [], card, refusal: null }),
+    );
+    const screen = await renderScreen();
+    await fireEvent.changeText(await screen.findByLabelText("Objednávka"), "Nováková, dva kmínové na zítra");
+    await fireEvent.press(screen.getByText("Zpracovat"));
+    expect(await screen.findByText("Celkem 138 Kč")).toBeTruthy();
+    expect(mockApi).toHaveBeenCalledWith("/api/staff/dictation", expect.anything(), expect.objectContaining({ body: JSON.stringify({ text: "Nováková, dva kmínové na zítra" }) }));
+  });
+
+  it("by voice: an unknown word is never guessed — staff pick the product, and the form is prefilled (FR-020)", async () => {
+    mockApi.mockImplementation((path: string) => {
+      if (path === "/api/staff/order-form") return Promise.resolve(form);
+      if (path === "/api/staff/dictation")
+        return Promise.resolve({
+          text: "x",
+          extraction: { customerName: "Nováková", pickupDate: "2026-11-25", items: [{ productId: "rohlik", quantity: 6 }] },
+          unmatched: [{ word: "razowy", quantity: 1, candidates: [{ id: "chleb-kminovy", name: "Kmínový chléb" }] }],
+          missing: [],
+          card: null,
+          refusal: null,
+        });
+      return Promise.resolve(card);
+    });
+    const screen = await renderScreen();
+    await fireEvent.changeText(await screen.findByLabelText("Objednávka"), "Nováková, šest rohlíků a razowy");
+    await fireEvent.press(screen.getByText("Zpracovat"));
+    expect(await screen.findByText("Nerozpoznáno: „razowy“ (1×). Vyberte výrobek:")).toBeTruthy();
+    expect(screen.getByLabelText("Jméno zákazníka").props.value).toBe("Nováková");
+    await fireEvent.press(screen.getByRole("button", { name: "Kmínový chléb" }));
+    await fireEvent.press(screen.getByText("Zkontrolovat objednávku"));
+    await waitFor(() =>
+      expect(mockApi).toHaveBeenCalledWith(
+        "/api/staff/orders",
+        expect.anything(),
+        expect.objectContaining({ body: JSON.stringify({ customerName: "Nováková", customerPhone: null, pickupDate: "2026-11-25", items: [{ productId: "rohlik", quantity: 6 }, { productId: "chleb-kminovy", quantity: 1 }] }) }),
+      ),
+    );
+  });
+
+  it("by voice: when dictation is unavailable the message says so and the form remains (FR-022)", async () => {
+    mockApi.mockImplementation((path: string) => (path === "/api/staff/order-form" ? Promise.resolve(form) : Promise.reject(new Error("Diktování je teď nedostupné. Použijte formulář."))));
+    const screen = await renderScreen();
+    await fireEvent.changeText(await screen.findByLabelText("Objednávka"), "dva chleby");
+    await fireEvent.press(screen.getByText("Zpracovat"));
+    expect(await screen.findByText("Diktování je teď nedostupné. Použijte formulář.")).toBeTruthy();
+    expect(screen.getByText("Formulářem")).toBeTruthy();
   });
 });

@@ -90,5 +90,24 @@
     "less": "Ubrat: {{product}}",
     "more": "Přidat: {{product}}",
     "quantityOf": "{{product}}: {{count}}"
+  },
+  "dictation": {
+    "byVoice": "Hlasem",
+    "byForm": "Formulářem",
+    "example": "Řekněte jednu větu, např. „Nováková, dva kmínové chleby a šest rohlíků na zítra“.",
+    "start": "🎤 Diktovat",
+    "stop": "Zastavit",
+    "keyboardHint": "Klepněte do pole a použijte mikrofon na klávesnici.",
+    "micError": "Mikrofon nefunguje. Napište objednávku, nebo použijte formulář.",
+    "text": "Objednávka",
+    "process": "Zpracovat",
+    "unmatched": "Nerozpoznáno: „{{word}}“ ({{count}}×). Vyberte výrobek:",
+    "dismiss": "Vynechat",
+    "complete": "Doplňte: {{fields}}.",
+    "missing": {
+      "name": "jméno",
+      "day": "den",
+      "items": "výrobky"
+    }
   }
 }

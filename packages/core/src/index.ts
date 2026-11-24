@@ -10,3 +10,4 @@ export * from "./agent/version.ts";
 export * from "./agent/callback.ts";
 export * from "./permissions.ts";
 export * from "./contracts/index.ts";
+export * from "./agent/dictation.ts";

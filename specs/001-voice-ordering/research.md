@@ -334,3 +334,31 @@ version `2026-11-24.1`.
   (`\b` treats "á" as a non-letter); unit tests include the greeting (`packages/core/src/agent/callback.test.ts`).
 - **Noted, not changed**: after the customer's "Dobrý den" the agent repeated the second half of the
   greeting. Harmless; left for the simulated-customer suite to judge.
+
+## R22 — Staff dictation: keyboard dictation on the phone, one structured call to the model
+
+- **Decision 1 — speech to text.** The web build uses the browser's recogniser (Web Speech API,
+  `cs-CZ`). On the phone, staff dictate with the **keyboard's own microphone** into the text field.
+- **Why**: `expo-speech-recognition` needs a development build and does not run in Expo Go, which the
+  reviewers use (ADR-0014; checked in its README on 2026-11-24). Keyboard dictation is the operating
+  system's standard, works in every app and needs no native module. A development build with the
+  module stays possible later; the screen already treats the recogniser as optional.
+- **Decision 2 — one call with a constrained answer, not a tool loop.** The sentence goes to Gemini
+  3.5 Flash-Lite once, with the response constrained to a JSON Schema: products are an **enum of the
+  active catalogue**, the day an **enum of the open days**, and a word that matches no product goes to
+  `unmatched` with up to three catalogue candidates. The server checks the answer against the same
+  zod schema; anything outside it is refused (never turned into an order). The core then prepares the
+  card exactly as for a form order.
+- **Why**: staff confirm in the app anyway (FR-019), so the model does not need `confirm_order` or
+  a conversation; one request instead of two or three keeps the free tier's 500 a day for more
+  dictations (R10); a schema makes a guessed product impossible to express, as ADR-0010 asks.
+- **Alternatives rejected**: the plan's tool loop (R17) — more requests, no gain without a
+  conversation; fuzzy matching of words in our own code — a parser of our own, while the model with
+  the catalogue in its instructions already proposes candidates and a person picks.
+- **Measured 2026-11-24 (real model, through the API)**:
+  - "Nováková, dva kmínové chleby a jeden razowy na zítra" → 2 × Kmínový chléb, tomorrow, name;
+    "razowy" in `unmatched` with candidates Žitný, Kmínový, Celozrnný chléb; no card. 2.3 s.
+  - "pět kaiserek a tucet tvarohových koláčů na pátek, pan Dvořák" → card 5 × Kaiserka + 12 ×
+    Tvarohový koláč, Friday 27.11, 251 Kč. 1.7 s.
+  - One run each; the staff-sentence cases join the eval suite (T063).
+- The staff instructions changed, so the agent version is `2026-11-24.2` (the fingerprint test).

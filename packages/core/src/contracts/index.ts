@@ -3,3 +3,4 @@ export * from "./staff.ts";
 export * from "./orders.ts";
 export * from "./plan.ts";
 export * from "./new-order.ts";
+export * from "./dictation.ts";

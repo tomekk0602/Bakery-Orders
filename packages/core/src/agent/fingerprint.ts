@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { buildCalendar, type BakerySchedule } from "../calendar.ts";
 import type { Product } from "../catalogue.ts";
+import { buildDictationSchema, dictationJsonSchema } from "./dictation.ts";
 import { buildInstructions } from "./prompt.ts";
 import { buildToolSchemas, toolDeclarations } from "./tools.ts";
 import { buildVocabulary } from "./vocabulary.ts";
@@ -23,6 +24,7 @@ export function agentFingerprint(): string {
     staff: buildInstructions({ mode: "staff", bakeryName: "Pekárna U Lípy", calendar, catalogue: FIXTURE_CATALOGUE }),
     tools: [toolDeclarations(schemas, "customer"), toolDeclarations(schemas, "staff")],
     vocabulary: buildVocabulary(FIXTURE_CATALOGUE, "Pekárna U Lípy"),
+    dictation: dictationJsonSchema(buildDictationSchema(FIXTURE_CATALOGUE, calendar)),
   });
   return createHash("sha256").update(payload).digest("hex").slice(0, 16);
 }
