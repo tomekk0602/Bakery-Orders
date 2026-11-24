@@ -17,7 +17,14 @@ const list = async (cookie?: string) => {
 };
 const patch = async (id: string, done: unknown, cookie?: string) => {
   const { PATCH } = await import("./requests/[id]/route");
-  return PATCH(request(`/api/staff/requests/${id}`, { method: "PATCH", body: JSON.stringify({ done }), ...(cookie ? { cookie } : {}) }), { params: Promise.resolve({ id }) });
+  return PATCH(
+    request(`/api/staff/requests/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify({ done }),
+      ...(cookie ? { cookie } : {}),
+    }),
+    { params: Promise.resolve({ id }) },
+  );
 };
 
 describe("staff requests (FR-008, FR-034, FR-041)", () => {

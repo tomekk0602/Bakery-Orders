@@ -10,7 +10,8 @@ export function RequestsScreen() {
   const requests = useRequests();
   const setDone = useSetRequestDone();
 
-  if (requests.isPending) return <ActivityIndicator style={styles.center} color={colors.primary} accessibilityLabel={t("common.loading")} />;
+  if (requests.isPending)
+    return <ActivityIndicator style={styles.center} color={colors.primary} accessibilityLabel={t("common.loading")} />;
   if (requests.isError)
     return (
       <Screen title={t("tabs.requests")}>

@@ -9,10 +9,21 @@ type OrderRow = typeof order.$inferSelect;
 async function withLines(db: Db, rows: OrderRow[]): Promise<StaffOrder[]> {
   if (rows.length === 0) return [];
   const lines = await db
-    .select({ orderId: orderLine.orderId, productId: orderLine.productId, name: product.name, quantity: orderLine.quantity, unitPriceCzk: orderLine.unitPriceCzk })
+    .select({
+      orderId: orderLine.orderId,
+      productId: orderLine.productId,
+      name: product.name,
+      quantity: orderLine.quantity,
+      unitPriceCzk: orderLine.unitPriceCzk,
+    })
     .from(orderLine)
     .innerJoin(product, eq(product.id, orderLine.productId))
-    .where(inArray(orderLine.orderId, rows.map((r) => r.id)))
+    .where(
+      inArray(
+        orderLine.orderId,
+        rows.map((r) => r.id),
+      ),
+    )
     .orderBy(asc(product.sortOrder));
   return rows.map((r) => ({
     id: r.id,
@@ -42,14 +53,21 @@ export async function getOrderDetail(db: Db, id: string): Promise<StaffOrderDeta
   const [row] = await db.select().from(order).where(eq(order.id, id));
   if (!row) return null;
   const withItems = firstRow(await withLines(db, [row]), `order ${id} with lines`);
-  const [callRow] = row.callId ? await db.select({ transcript: call.transcript }).from(call).where(eq(call.id, row.callId)) : [];
+  const [callRow] = row.callId
+    ? await db.select({ transcript: call.transcript }).from(call).where(eq(call.id, row.callId))
+    : [];
   return { ...withItems, transcript: (callRow?.transcript as TranscriptTurn[] | null | undefined) ?? null };
 }
 
 export type SetStatusResult = { ok: true } | { ok: false; reason: "not_found" | "cancelled" };
 
 /** Hands an order over (or undoes it). A cancelled order cannot be handed over. */
-export async function setOrderHandedOver(db: Db, id: string, status: Extract<OrderStatus, "picked_up" | "confirmed">, now = new Date()): Promise<SetStatusResult> {
+export async function setOrderHandedOver(
+  db: Db,
+  id: string,
+  status: Extract<OrderStatus, "picked_up" | "confirmed">,
+  now = new Date(),
+): Promise<SetStatusResult> {
   const updated = await db
     .update(order)
     .set({ status, updatedAt: now })

@@ -4,7 +4,13 @@ import { useTranslation } from "react-i18next";
 import { Linking, Pressable, StyleSheet, Text, View } from "react-native";
 import { Badge, Button, Card, colors, font, space } from "@/shared/ui";
 
-const TIME = new Intl.DateTimeFormat("cs-CZ", { day: "numeric", month: "numeric", hour: "numeric", minute: "2-digit", timeZone: "Europe/Prague" });
+const TIME = new Intl.DateTimeFormat("cs-CZ", {
+  day: "numeric",
+  month: "numeric",
+  hour: "numeric",
+  minute: "2-digit",
+  timeZone: "Europe/Prague",
+});
 
 type Props = { item: StaffRequestItem; onToggle: () => void; busy: boolean };
 
@@ -22,10 +28,18 @@ export function RequestCard({ item, onToggle, busy }: Props) {
       </View>
       <Text style={styles.name}>{item.customerName ?? t("requests.noName")}</Text>
       <Text style={styles.note}>{item.note}</Text>
-      {item.customerPhone ? <Button label={t("orders.call", { phone: item.customerPhone })} variant="secondary" onPress={() => void Linking.openURL(`tel:${item.customerPhone}`)} /> : null}
+      {item.customerPhone ? (
+        <Button
+          label={t("orders.call", { phone: item.customerPhone })}
+          variant="secondary"
+          onPress={() => void Linking.openURL(`tel:${item.customerPhone}`)}
+        />
+      ) : null}
       {item.transcript ? (
         <Pressable accessibilityRole="button" onPress={() => setShowTranscript((v) => !v)} hitSlop={8}>
-          <Text style={styles.link}>{showTranscript ? t("requests.hideTranscript") : t("requests.showTranscript")}</Text>
+          <Text style={styles.link}>
+            {showTranscript ? t("requests.hideTranscript") : t("requests.showTranscript")}
+          </Text>
         </Pressable>
       ) : null}
       {showTranscript && item.transcript
@@ -36,7 +50,12 @@ export function RequestCard({ item, onToggle, busy }: Props) {
             </Text>
           ))
         : null}
-      <Button label={done ? t("requests.reopen") : t("requests.done")} variant={done ? "secondary" : "primary"} onPress={onToggle} busy={busy} />
+      <Button
+        label={done ? t("requests.reopen") : t("requests.done")}
+        variant={done ? "secondary" : "primary"}
+        onPress={onToggle}
+        busy={busy}
+      />
     </Card>
   );
 }

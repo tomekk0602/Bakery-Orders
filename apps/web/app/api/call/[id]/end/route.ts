@@ -39,7 +39,21 @@ export async function POST(req: Request, { params }: Ctx) {
   }
 
   const orders = await orderNumbersForCall(db(), id);
-  const outcome = orders.length > 0 ? "order" : (await hasStaffRequest(db(), id)) ? "request" : reason === "capped" ? "capped" : reason === "error" ? "error" : "abandoned";
-  await endCall(db(), id, { outcome, transcript, firstAudioMsP50: median(first_audio_ms), firstAudioMsMax: first_audio_ms.length ? Math.max(...first_audio_ms) : null });
+  const outcome =
+    orders.length > 0
+      ? "order"
+      : (await hasStaffRequest(db(), id))
+        ? "request"
+        : reason === "capped"
+          ? "capped"
+          : reason === "error"
+            ? "error"
+            : "abandoned";
+  await endCall(db(), id, {
+    outcome,
+    transcript,
+    firstAudioMsP50: median(first_audio_ms),
+    firstAudioMsMax: first_audio_ms.length ? Math.max(...first_audio_ms) : null,
+  });
   return json({ outcome, order_numbers: orders });
 }

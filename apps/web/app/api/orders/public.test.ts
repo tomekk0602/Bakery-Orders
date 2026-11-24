@@ -22,7 +22,13 @@ const post = async (path: "/api/orders" | "/api/orders/preview", body: unknown, 
   req.headers.set("x-forwarded-for", ip);
   return POST(req);
 };
-const order = (over: Record<string, unknown> = {}) => ({ customerName: "Malá", customerPhone: "+420 777 123 456", pickupDate: day, items: [{ productId: "houska", quantity: 5 }], ...over });
+const order = (over: Record<string, unknown> = {}) => ({
+  customerName: "Malá",
+  customerPhone: "+420 777 123 456",
+  pickupDate: day,
+  items: [{ productId: "houska", quantity: 5 }],
+  ...over,
+});
 
 describe("public web form (FR-014, FR-040)", () => {
   it("the catalogue offers only days still open for orders — never today, never a closed day", async () => {
@@ -38,7 +44,9 @@ describe("public web form (FR-014, FR-040)", () => {
     expect(preview.totalCzk).toBe(30);
     expect(preview.customerPhone).toBe("+420777123456");
     const { GET } = await import("../staff/orders/route");
-    const list = StaffOrdersResponse.parse(await (await GET(request(`/api/staff/orders?day=${day}`, { cookie: env.cookies.employee }))).json());
+    const list = StaffOrdersResponse.parse(
+      await (await GET(request(`/api/staff/orders?day=${day}`, { cookie: env.cookies.employee }))).json(),
+    );
     expect(list.orders).toHaveLength(0);
   });
 
@@ -46,13 +54,20 @@ describe("public web form (FR-014, FR-040)", () => {
     const placed = WebOrderPlaced.parse(await (await post("/api/orders", order())).json());
     expect(placed.orderNumber).toBeGreaterThan(1000);
     const { GET } = await import("../staff/orders/route");
-    const list = StaffOrdersResponse.parse(await (await GET(request(`/api/staff/orders?day=${day}`, { cookie: env.cookies.employee }))).json());
+    const list = StaffOrdersResponse.parse(
+      await (await GET(request(`/api/staff/orders?day=${day}`, { cookie: env.cookies.employee }))).json(),
+    );
     expect(list.orders.find((o) => o.number === placed.orderNumber)?.source).toBe("web");
   });
 
   it.each([
     ["today (after the cut-off)", () => order({ pickupDate: today }), 422, "after_cutoff"],
-    ["a product outside the offer", () => order({ items: [{ productId: "bageta", quantity: 1 }] }), 422, "unknown_product"],
+    [
+      "a product outside the offer",
+      () => order({ items: [{ productId: "bageta", quantity: 1 }] }),
+      422,
+      "unknown_product",
+    ],
     ["no phone", () => order({ customerPhone: "" }), 400, "invalid"],
     ["no items", () => order({ items: [] }), 400, "invalid"],
   ])("refuses %s", async (_label, body, status, code) => {

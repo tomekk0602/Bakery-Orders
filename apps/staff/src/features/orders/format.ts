@@ -8,4 +8,5 @@ export const formatDay = (day: string): string => DAY.format(new Date(`${day}T12
 export const formatCzk = (amount: number): string => `${amount.toLocaleString("cs-CZ")} Kč`;
 
 /** "2× Kmínový chléb, 6× Rohlík" */
-export const itemsSummary = (order: Pick<StaffOrder, "lines">): string => order.lines.map((l) => `${l.quantity}× ${l.name}`).join(", ");
+export const itemsSummary = (order: Pick<StaffOrder, "lines">): string =>
+  order.lines.map((l) => `${l.quantity}× ${l.name}`).join(", ");

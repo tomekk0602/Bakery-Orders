@@ -14,7 +14,8 @@ const TURN_TIMEOUT_MS = 30000;
 const KEY = process.env.ELEVENLABS_API_KEY;
 if (!KEY) throw new Error("ELEVENLABS_API_KEY missing in spikes/czech-voice/.env");
 const API = "https://api.elevenlabs.io/v1/convai";
-const GREETING = "Dobrý den, Pekárna U Lípy, tady automatický asistent. Rád vám zarezervuju pečivo, nebo vám může zavolat kolega. Co si přejete?";
+const GREETING =
+  "Dobrý den, Pekárna U Lípy, tady automatický asistent. Rád vám zarezervuju pečivo, nebo vám může zavolat kolega. Co si přejete?";
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 mkdirSync(new URL("./out/audio/", import.meta.url), { recursive: true });
@@ -38,7 +39,10 @@ async function agentId() {
           },
         },
         asr: { user_input_audio_format: "pcm_16000" },
-        tts: { model_id: process.env.ELEVENLABS_TTS_MODEL ?? "eleven_flash_v2_5", agent_output_audio_format: "pcm_16000" },
+        tts: {
+          model_id: process.env.ELEVENLABS_TTS_MODEL ?? "eleven_flash_v2_5",
+          agent_output_audio_format: "pcm_16000",
+        },
       },
     }),
   });
@@ -49,7 +53,9 @@ async function agentId() {
 }
 
 async function runOne(id, u) {
-  const signed = await fetch(`${API}/conversation/get-signed-url?agent_id=${id}`, { headers: { "xi-api-key": KEY } }).then((r) => r.json());
+  const signed = await fetch(`${API}/conversation/get-signed-url?agent_id=${id}`, {
+    headers: { "xi-api-key": KEY },
+  }).then((r) => r.json());
   const ws = new WebSocket(signed.signed_url);
   const send = (o) => ws.send(JSON.stringify(o));
   const calls = [];
@@ -84,12 +90,20 @@ async function runOne(id, u) {
       case "client_tool_call": {
         const c = ev.client_tool_call;
         calls.push({ name: c.tool_name, args: c.parameters });
-        send({ type: "client_tool_result", tool_call_id: c.tool_call_id, result: JSON.stringify(runTool(c.tool_name, c.parameters)), is_error: false });
+        send({
+          type: "client_tool_result",
+          tool_call_id: c.tool_call_id,
+          result: JSON.stringify(runTool(c.tool_name, c.parameters)),
+          is_error: false,
+        });
         break;
       }
     }
   });
-  await new Promise((r, j) => { ws.once("open", r); ws.once("error", j); });
+  await new Promise((r, j) => {
+    ws.once("open", r);
+    ws.once("error", j);
+  });
   send({ type: "conversation_initiation_client_data" });
 
   // Let the greeting play out before the caller speaks.
@@ -110,12 +124,26 @@ async function runOne(id, u) {
     send({ user_audio_chunk: silence });
     await sleep(CHUNK_MS);
     if (performance.now() - speechEnd < TRAILING_SILENCE_MS) continue;
-    if (firstAudio && performance.now() - lastEvent > QUIET_END_MS) { outcome = "done"; break; }
+    if (firstAudio && performance.now() - lastEvent > QUIET_END_MS) {
+      outcome = "done";
+      break;
+    }
   }
   ws.close();
-  writeFileSync(new URL(`./out/audio/elevenlabs-${VARIANT}-${u.id}.wav`, import.meta.url), pcm16ToWav(Buffer.concat(audio), RATE));
+  writeFileSync(
+    new URL(`./out/audio/elevenlabs-${VARIANT}-${u.id}.wav`, import.meta.url),
+    pcm16ToWav(Buffer.concat(audio), RATE),
+  );
   const s = score(u, calls);
-  return { id: u.id, outcome, latencyMs: firstAudio ? Math.round(firstAudio - speechEnd) : null, heard, reply: reply.trim(), calls, ...s };
+  return {
+    id: u.id,
+    outcome,
+    latencyMs: firstAudio ? Math.round(firstAudio - speechEnd) : null,
+    heard,
+    reply: reply.trim(),
+    calls,
+    ...s,
+  };
 }
 
 const id = await agentId();

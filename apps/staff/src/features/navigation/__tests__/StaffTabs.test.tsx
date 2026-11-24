@@ -8,13 +8,27 @@ import { StaffTabs } from "../StaffTabs";
 jest.mock("@/shared/auth/client", () => ({ authClient: { signOut: jest.fn() }, useSession: jest.fn() }));
 const mockMe = jest.fn();
 jest.mock("@/features/auth/use-me", () => ({ useMe: () => mockMe() }));
-jest.mock("@/features/requests/api", () => ({ useRequests: () => ({ data: { open: [{ id: "a" }, { id: "b" }], done: [] } }) }));
+jest.mock("@/features/requests/api", () => ({
+  useRequests: () => ({ data: { open: [{ id: "a" }, { id: "b" }], done: [] } }),
+}));
 
 async function signInAs(role: Role) {
-  mockMe.mockReturnValue({ isPending: false, isError: false, data: { user: { id: "1", name: role, email: `${role}@x`, role }, permissions: ROLE_PERMISSIONS[role] } });
+  mockMe.mockReturnValue({
+    isPending: false,
+    isError: false,
+    data: { user: { id: "1", name: role, email: `${role}@x`, role }, permissions: ROLE_PERMISSIONS[role] },
+  });
   const tab = () => <Text>tab</Text>;
   return await renderRouter(
-    { "(app)/_layout": StaffTabs, "(app)/dnes": tab, "(app)/nova": tab, "(app)/plan": tab, "(app)/pozadavky": tab, "(app)/nastaveni": tab, "(app)/provoz": tab },
+    {
+      "(app)/_layout": StaffTabs,
+      "(app)/dnes": tab,
+      "(app)/nova": tab,
+      "(app)/plan": tab,
+      "(app)/pozadavky": tab,
+      "(app)/nastaveni": tab,
+      "(app)/provoz": tab,
+    },
     { initialUrl: "/dnes" },
   );
 }
@@ -22,7 +36,8 @@ async function signInAs(role: Role) {
 describe("StaffTabs (FR-045)", () => {
   it("an employee sees the counter tabs but not Nastavení or Provoz", async () => {
     const screen = await signInAs("employee");
-    for (const title of ["Dnes", "Nová objednávka", "Plán", "Požadavky"]) expect(screen.getAllByText(title).length).toBeGreaterThan(0);
+    for (const title of ["Dnes", "Nová objednávka", "Plán", "Požadavky"])
+      expect(screen.getAllByText(title).length).toBeGreaterThan(0);
     expect(screen.queryByText("Nastavení")).toBeNull();
     expect(screen.queryByText("Provoz")).toBeNull();
     expect(screen.getByText("Prodavač")).toBeTruthy();

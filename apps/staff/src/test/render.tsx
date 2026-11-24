@@ -8,6 +8,8 @@ import "@/shared/i18n";
  * which would otherwise keep Jest running after the tests finish.
  */
 export async function renderWithQuery(ui: ReactElement) {
-  const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: Infinity }, mutations: { gcTime: Infinity } } });
+  const client = new QueryClient({
+    defaultOptions: { queries: { retry: false, gcTime: Infinity }, mutations: { gcTime: Infinity } },
+  });
   return await render(<QueryClientProvider client={client}>{ui}</QueryClientProvider>);
 }

@@ -27,7 +27,14 @@ export function Badge({ label, tone = "neutral" }: { label: string; tone?: keyof
 }
 
 const styles = StyleSheet.create({
-  card: { backgroundColor: colors.surface, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.border, padding: space.md, gap: space.sm },
+  card: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: space.md,
+    gap: space.sm,
+  },
   muted: { opacity: 0.65 },
   badge: { alignSelf: "flex-start", borderRadius: radius.md, paddingHorizontal: space.sm, paddingVertical: 2 },
   badgeText: { fontSize: font.label, fontWeight: "600" },

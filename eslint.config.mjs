@@ -5,7 +5,18 @@ import globals from "globals";
 import tseslint from "typescript-eslint";
 
 export default tseslint.config(
-  { ignores: ["**/node_modules/**", "**/.next/**", "**/.expo/**", "**/dist/**", "spikes/**", "**/migrations/**", "**/next-env.d.ts", "**/expo-env.d.ts"] },
+  {
+    ignores: [
+      "**/node_modules/**",
+      "**/.next/**",
+      "**/.expo/**",
+      "**/dist/**",
+      "spikes/**",
+      "**/migrations/**",
+      "**/next-env.d.ts",
+      "**/expo-env.d.ts",
+    ],
+  },
   ...tseslint.configs.strict,
   {
     files: ["**/*.{ts,tsx}"],

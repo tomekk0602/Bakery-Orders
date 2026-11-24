@@ -26,5 +26,7 @@ export async function PATCH(req: Request, { params }: Ctx) {
   if (!isId(id)) return fail("not_found", "Objednávka neexistuje.", 404);
   const result = await setHandedOver(id, body.data);
   if (result.ok) return json({ ok: true });
-  return result.reason === "cancelled" ? fail("cancelled", "Zrušenou objednávku nelze vydat.", 409) : fail("not_found", "Objednávka neexistuje.", 404);
+  return result.reason === "cancelled"
+    ? fail("cancelled", "Zrušenou objednávku nelze vydat.", 409)
+    : fail("not_found", "Objednávka neexistuje.", 404);
 }

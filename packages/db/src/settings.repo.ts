@@ -41,13 +41,20 @@ export async function saveSettings(db: Db, s: BakerySettings): Promise<SaveSetti
   await db.transaction(async (tx) => {
     await tx
       .update(bakerySettings)
-      .set({ cutoffDaysBefore: s.cutoffDaysBefore, cutoffTime: s.cutoffTime, closedWeekdays: [...new Set(s.closedWeekdays)].sort() })
+      .set({
+        cutoffDaysBefore: s.cutoffDaysBefore,
+        cutoffTime: s.cutoffTime,
+        closedWeekdays: [...new Set(s.closedWeekdays)].sort(),
+      })
       .where(eq(bakerySettings.id, 1));
     await tx.delete(closedDay);
     const days = [...new Map(s.closedDays.map((d) => [d.day, d])).values()];
     if (days.length > 0) await tx.insert(closedDay).values(days.map((d) => ({ day: d.day, reason: d.reason || null })));
     for (const p of s.products) {
-      await tx.update(product).set({ priceCzk: p.priceCzk, dailyLimit: p.dailyLimit, active: p.active }).where(eq(product.id, p.id));
+      await tx
+        .update(product)
+        .set({ priceCzk: p.priceCzk, dailyLimit: p.dailyLimit, active: p.active })
+        .where(eq(product.id, p.id));
       for (const [i, quantity] of p.buffers.entries())
         await tx
           .insert(walkInBuffer)

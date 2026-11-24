@@ -13,7 +13,8 @@ export function PlanScreen() {
   const [day, setDay] = useState<string | null>(null);
   const plan = usePlan(day);
 
-  if (plan.isPending) return <ActivityIndicator style={styles.center} color={colors.primary} accessibilityLabel={t("common.loading")} />;
+  if (plan.isPending)
+    return <ActivityIndicator style={styles.center} color={colors.primary} accessibilityLabel={t("common.loading")} />;
   if (plan.isError)
     return (
       <Screen title={t("tabs.plan")}>
@@ -24,7 +25,11 @@ export function PlanScreen() {
 
   const p = plan.data;
   return (
-    <Screen title={t("plan.title", { day: formatDay(p.day.date) })} refreshing={plan.isRefetching} onRefresh={() => void plan.refetch()}>
+    <Screen
+      title={t("plan.title", { day: formatDay(p.day.date) })}
+      refreshing={plan.isRefetching}
+      onRefresh={() => void plan.refetch()}
+    >
       <DayPicker days={p.days} selected={p.day.date} onSelect={setDay} />
       {p.day.closed ? <Text style={styles.note}>{t("plan.closedNote")}</Text> : null}
       <PlanTable plan={p} />
@@ -41,7 +46,10 @@ function PlanTable({ plan }: { plan: BakingPlanResponse }) {
       {plan.lines.map((l) => (
         <Row key={l.productId} cells={[l.name, String(l.reserved), String(l.buffer), String(l.toBake)]} />
       ))}
-      <Row cells={[t("plan.total"), String(plan.totals.reserved), String(plan.totals.buffer), String(plan.totals.toBake)]} header />
+      <Row
+        cells={[t("plan.total"), String(plan.totals.reserved), String(plan.totals.buffer), String(plan.totals.toBake)]}
+        header
+      />
     </Card>
   );
 }

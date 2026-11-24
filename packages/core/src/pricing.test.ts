@@ -24,10 +24,16 @@ describe("priceLines", () => {
   it("total is the sum of quantity × unit price for any order", () => {
     fc.assert(
       fc.property(
-        fc.array(fc.record({ productId: fc.constantFrom("chleb-kminovy", "rohlik"), quantity: fc.integer({ min: 1, max: 200 }) }), {
-          minLength: 1,
-          maxLength: 20,
-        }),
+        fc.array(
+          fc.record({
+            productId: fc.constantFrom("chleb-kminovy", "rohlik"),
+            quantity: fc.integer({ min: 1, max: 200 }),
+          }),
+          {
+            minLength: 1,
+            maxLength: 20,
+          },
+        ),
         (items) => {
           const lines = priceLines(items, catalogue);
           const expected = items.reduce((s, i) => s + i.quantity * (i.productId === "rohlik" ? 4 : 69), 0);

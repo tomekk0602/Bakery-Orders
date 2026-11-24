@@ -19,12 +19,12 @@ incomplete spec is fixed first — with the decision recorded — and only then 
 
 ## Where things live
 
-| What | Where |
-|---|---|
-| Rules that hold everywhere | `.specify/memory/constitution.md` |
-| Cross-cutting decisions (MADR) | `docs/adr/NNNN-*.md` |
-| Decisions and measurements inside one feature | `specs/NNN-*/research.md` |
-| Czech understanding and voice test harness | `spikes/czech-voice/` |
+| What                                          | Where                             |
+| --------------------------------------------- | --------------------------------- |
+| Rules that hold everywhere                    | `.specify/memory/constitution.md` |
+| Cross-cutting decisions (MADR)                | `docs/adr/NNNN-*.md`              |
+| Decisions and measurements inside one feature | `specs/NNN-*/research.md`         |
+| Czech understanding and voice test harness    | `spikes/czech-voice/`             |
 
 A decision recorded anywhere else — a commit message, a code comment, chat — is a defect
 (ADR-0001).

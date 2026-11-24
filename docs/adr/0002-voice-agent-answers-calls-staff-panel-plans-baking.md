@@ -8,8 +8,8 @@ decision-makers: owner
 
 ## Context and Problem Statement
 
-The brief: *"People call us to reserve bread and pastry. Managing the reservations and working out
-what to bake takes a lot of our time."* It names two costs — the calls and the counting — and one
+The brief: _"People call us to reserve bread and pastry. Managing the reservations and working out
+what to bake takes a lot of our time."_ It names two costs — the calls and the counting — and one
 fact about the customers: they call. What should be built so both costs go away without asking the
 customers to change?
 

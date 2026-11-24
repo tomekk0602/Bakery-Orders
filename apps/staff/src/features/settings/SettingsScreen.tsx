@@ -14,7 +14,8 @@ import { ScheduleSection } from "./ScheduleSection";
 export function SettingsScreen() {
   const { t } = useTranslation();
   const settings = useSettings();
-  if (settings.isPending) return <ActivityIndicator style={styles.center} color={colors.primary} accessibilityLabel={t("common.loading")} />;
+  if (settings.isPending)
+    return <ActivityIndicator style={styles.center} color={colors.primary} accessibilityLabel={t("common.loading")} />;
   if (settings.isError)
     return (
       <Screen title={t("tabs.settings")}>
@@ -29,7 +30,10 @@ export function SettingsScreen() {
 function SettingsEditor({ settings }: { settings: BakerySettings }) {
   const { t } = useTranslation();
   const save = useSaveSettings();
-  const { control, handleSubmit, formState } = useForm<SettingsForm>({ resolver: zodResolver(SettingsForm), defaultValues: toForm(settings) });
+  const { control, handleSubmit, formState } = useForm<SettingsForm>({
+    resolver: zodResolver(SettingsForm),
+    defaultValues: toForm(settings),
+  });
   return (
     <Screen title={t("tabs.settings")}>
       <ScheduleSection control={control} />
@@ -38,10 +42,16 @@ function SettingsEditor({ settings }: { settings: BakerySettings }) {
       {settings.products.map((p, i) => (
         <ProductRow key={p.id} control={control} index={i} name={p.name} />
       ))}
-      {formState.isSubmitted && !formState.isValid ? <Text style={styles.error}>{t("settings.errors.fix")}</Text> : null}
+      {formState.isSubmitted && !formState.isValid ? (
+        <Text style={styles.error}>{t("settings.errors.fix")}</Text>
+      ) : null}
       {save.error ? <Text style={styles.error}>{save.error.message}</Text> : null}
       {save.isSuccess && !formState.isDirty ? <Text style={styles.ok}>{t("settings.saved")}</Text> : null}
-      <Button label={t("settings.save")} busy={save.isPending} onPress={() => void handleSubmit((f) => save.mutate(toSettings(f)))()} />
+      <Button
+        label={t("settings.save")}
+        busy={save.isPending}
+        onPress={() => void handleSubmit((f) => save.mutate(toSettings(f)))()}
+      />
       <ResetDemo />
     </Screen>
   );

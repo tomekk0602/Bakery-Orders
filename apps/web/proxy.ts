@@ -14,7 +14,10 @@ export function proxy(request: NextRequest) {
   const origin = request.headers.get("origin") ?? "";
   const allowed = TRUSTED_ORIGINS.includes(origin);
   if (request.method === "OPTIONS") {
-    return new NextResponse(null, { status: 204, headers: allowed ? { "Access-Control-Allow-Origin": origin, ...CORS } : {} });
+    return new NextResponse(null, {
+      status: 204,
+      headers: allowed ? { "Access-Control-Allow-Origin": origin, ...CORS } : {},
+    });
   }
   const response = NextResponse.next();
   if (allowed) {

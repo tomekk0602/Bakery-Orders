@@ -19,7 +19,15 @@ const item = (over: Partial<StaffRequestsResponse["open"][number]>) => ({
   ...over,
 });
 const data: StaffRequestsResponse = {
-  open: [item({}), item({ id: "66666666-6666-4666-8666-666666666666", origin: "promised_not_recorded", customerName: null, transcript: null })],
+  open: [
+    item({}),
+    item({
+      id: "66666666-6666-4666-8666-666666666666",
+      origin: "promised_not_recorded",
+      customerName: null,
+      transcript: null,
+    }),
+  ],
   done: [],
 };
 
@@ -44,7 +52,11 @@ describe("RequestsScreen (FR-008, FR-034, FR-041)", () => {
     await screen.findByText("Bartošová");
     await fireEvent.press(screen.getAllByText("Vyřízeno")[0]!);
     await waitFor(() =>
-      expect(mockApi).toHaveBeenCalledWith("/api/staff/requests/55555555-5555-4555-8555-555555555555", expect.anything(), expect.objectContaining({ method: "PATCH", body: JSON.stringify({ done: true }) })),
+      expect(mockApi).toHaveBeenCalledWith(
+        "/api/staff/requests/55555555-5555-4555-8555-555555555555",
+        expect.anything(),
+        expect.objectContaining({ method: "PATCH", body: JSON.stringify({ done: true }) }),
+      ),
     );
   });
 });

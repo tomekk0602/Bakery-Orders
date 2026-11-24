@@ -1,4 +1,10 @@
-import { ApiError, CatalogueResponse, WebOrderPlaced, WebOrderPreview, type WebOrderInput } from "@bakery/core/contracts";
+import {
+  ApiError,
+  CatalogueResponse,
+  WebOrderPlaced,
+  WebOrderPreview,
+  type WebOrderInput,
+} from "@bakery/core/contracts";
 import type { z } from "zod";
 
 /** A failure with the server's Czech message, shown as it is. */
@@ -16,5 +22,7 @@ async function call<S extends z.ZodType>(path: string, schema: S, init?: Request
 }
 
 export const loadCatalogue = () => call("/api/catalogue", CatalogueResponse);
-export const previewOrder = (o: WebOrderInput) => call("/api/orders/preview", WebOrderPreview, { method: "POST", body: JSON.stringify(o) });
-export const placeOrder = (o: WebOrderInput) => call("/api/orders", WebOrderPlaced, { method: "POST", body: JSON.stringify(o) });
+export const previewOrder = (o: WebOrderInput) =>
+  call("/api/orders/preview", WebOrderPreview, { method: "POST", body: JSON.stringify(o) });
+export const placeOrder = (o: WebOrderInput) =>
+  call("/api/orders", WebOrderPlaced, { method: "POST", body: JSON.stringify(o) });

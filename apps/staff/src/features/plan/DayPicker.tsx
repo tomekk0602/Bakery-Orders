@@ -33,7 +33,15 @@ export function DayPicker({ days, selected, onSelect }: Props) {
 
 const styles = StyleSheet.create({
   row: { gap: space.sm },
-  chip: { minHeight: TOUCH_TARGET - 12, justifyContent: "center", paddingHorizontal: space.md, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
+  chip: {
+    minHeight: TOUCH_TARGET - 12,
+    justifyContent: "center",
+    paddingHorizontal: space.md,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+  },
   active: { backgroundColor: colors.primary, borderColor: colors.primary },
   closed: { opacity: 0.5 },
   text: { fontSize: font.label, color: colors.text },

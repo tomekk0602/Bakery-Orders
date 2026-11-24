@@ -3,7 +3,8 @@ import { can, ROLE_PERMISSIONS, statementsOf, STATEMENTS } from "./permissions.t
 
 describe("permissions", () => {
   it("lets an employee take orders and read the plan", () => {
-    for (const p of ["order:create", "order:pickup", "plan:view", "request:resolve"] as const) expect(can("employee", p)).toBe(true);
+    for (const p of ["order:create", "order:pickup", "plan:view", "request:resolve"] as const)
+      expect(can("employee", p)).toBe(true);
   });
 
   it("keeps settings, ops, demo reset and eval cases for the owner (FR-044)", () => {

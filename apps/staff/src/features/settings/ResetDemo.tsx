@@ -22,7 +22,12 @@ export function ResetDemo() {
             busy={reset.isPending}
             onPress={() => reset.mutate(undefined, { onSettled: () => setArmed(false) })}
           />
-          <Button label={t("settings.reset.cancel")} variant="secondary" onPress={() => setArmed(false)} disabled={reset.isPending} />
+          <Button
+            label={t("settings.reset.cancel")}
+            variant="secondary"
+            onPress={() => setArmed(false)}
+            disabled={reset.isPending}
+          />
         </>
       ) : (
         <Button label={t("settings.reset.start")} variant="secondary" onPress={() => setArmed(true)} />

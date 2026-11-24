@@ -51,17 +51,17 @@ Chosen: **R1 + A1** (owner, 2026-11-24).
 
 **Roles and permissions**
 
-| Permission | owner | employee |
-|---|---|---|
-| `order:create` (voice or form, cut-off override) | ✓ | ✓ |
-| `order:view`, `order:pickup` | ✓ | ✓ |
-| `order:edit`, `order:cancel` | ✓ | ✓ |
-| `plan:view` | ✓ | ✓ |
-| `request:view`, `request:resolve` | ✓ | ✓ |
-| `settings:edit` (catalogue, prices, limits, buffers, cut-off, closed days) | ✓ | — |
-| `ops:view` ("Provoz") | ✓ | — |
-| `demo:reset` | ✓ | — |
-| `eval:create` (turn a call into a test case) | ✓ | — |
+| Permission                                                                 | owner | employee |
+| -------------------------------------------------------------------------- | ----- | -------- |
+| `order:create` (voice or form, cut-off override)                           | ✓     | ✓        |
+| `order:view`, `order:pickup`                                               | ✓     | ✓        |
+| `order:edit`, `order:cancel`                                               | ✓     | ✓        |
+| `plan:view`                                                                | ✓     | ✓        |
+| `request:view`, `request:resolve`                                          | ✓     | ✓        |
+| `settings:edit` (catalogue, prices, limits, buffers, cut-off, closed days) | ✓     | —        |
+| `ops:view` ("Provoz")                                                      | ✓     | —        |
+| `demo:reset`                                                               | ✓     | —        |
+| `eval:create` (turn a call into a test case)                               | ✓     | —        |
 
 - The map lives in `packages/core/src/permissions.ts`; Better Auth's access control is built from it.
 - Every staff route calls `requirePermission(request, permission)` before anything else; a missing

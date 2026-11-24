@@ -1,7 +1,8 @@
 import type { WebOrderPreview } from "@bakery/core/contracts";
 
 const czk = (n: number) => `${n.toLocaleString("cs-CZ")} Kč`;
-const dayLabel = (date: string, weekday: string) => `${weekday} ${new Date(`${date}T12:00:00Z`).toLocaleDateString("cs-CZ", { day: "numeric", month: "numeric", timeZone: "UTC" })}`;
+const dayLabel = (date: string, weekday: string) =>
+  `${weekday} ${new Date(`${date}T12:00:00Z`).toLocaleDateString("cs-CZ", { day: "numeric", month: "numeric", timeZone: "UTC" })}`;
 
 /** The order as the server priced it: what the customer confirms, and what the counter sees. */
 export function Summary({ order }: { order: WebOrderPreview }) {

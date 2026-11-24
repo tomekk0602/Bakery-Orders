@@ -21,19 +21,19 @@ Expo Go code and one login on seeded data with a reset (ADR-0014).
 
 **Primary Dependencies** (versions read from npm on 2026-11-24; choices in research R13–R20):
 
-| Area | Library | Version |
-|---|---|---|
-| Web app, API, customer site | Next.js (App Router, Route Handlers) + React | 16.4 / 19.3 |
-| Staff app (iOS, Android, web) | Expo SDK + Expo Router + React Native | 58 / 58 / 0.88 |
-| On-device dictation | expo-speech-recognition | 58.0 |
-| Schemas and validation | zod (JSON Schema export for tool definitions) | 4.6 |
-| Database access, migrations | drizzle-orm + drizzle-kit, `pg` (Node) and `@neondatabase/serverless` | 0.45 / 0.31 |
-| Auth | Better Auth + `@better-auth/expo` | 1.7 |
-| Models | `@google/genai` (Live, ephemeral tokens, Flash-Lite) | 3.6 |
-| Time and holidays | date-fns + `@date-fns/tz`, date-holidays | 4.4 / 1.5 / 3.39 |
-| Styling (web) | Tailwind CSS | 4.3 |
-| Observability | `@langfuse/tracing` + `@langfuse/otel` (OpenTelemetry) | 6.1 |
-| Errors | `@sentry/nextjs`, `@sentry/react-native` | 11.17 / 8.36 |
+| Area                          | Library                                                               | Version          |
+| ----------------------------- | --------------------------------------------------------------------- | ---------------- |
+| Web app, API, customer site   | Next.js (App Router, Route Handlers) + React                          | 16.4 / 19.3      |
+| Staff app (iOS, Android, web) | Expo SDK + Expo Router + React Native                                 | 58 / 58 / 0.88   |
+| On-device dictation           | expo-speech-recognition                                               | 58.0             |
+| Schemas and validation        | zod (JSON Schema export for tool definitions)                         | 4.6              |
+| Database access, migrations   | drizzle-orm + drizzle-kit, `pg` (Node) and `@neondatabase/serverless` | 0.45 / 0.31      |
+| Auth                          | Better Auth + `@better-auth/expo`                                     | 1.7              |
+| Models                        | `@google/genai` (Live, ephemeral tokens, Flash-Lite)                  | 3.6              |
+| Time and holidays             | date-fns + `@date-fns/tz`, date-holidays                              | 4.4 / 1.5 / 3.39 |
+| Styling (web)                 | Tailwind CSS                                                          | 4.3              |
+| Observability                 | `@langfuse/tracing` + `@langfuse/otel` (OpenTelemetry)                | 6.1              |
+| Errors                        | `@sentry/nextjs`, `@sentry/react-native`                              | 11.17 / 8.36     |
 
 **Storage**: one PostgreSQL database — Neon (EU, Frankfurt) in production with a branch per preview;
 PostgreSQL in a container for tests.
@@ -62,21 +62,21 @@ both apps.
 
 ## Constitution Check
 
-*GATE: Must pass before Phase 0 research. Re-checked after Phase 1 design.*
+_GATE: Must pass before Phase 0 research. Re-checked after Phase 1 design._
 
-| Principle / rule | How this plan satisfies it | Status |
-|---|---|---|
-| Problem: no customer lost | three channels over one core; form and staff app work without voice (FR-016) | pass |
-| I. Model chooses, code decides | core computes dates, totals, limits, saving; tools take enum IDs; server validates every tool call | pass |
-| II. Nothing invented, nothing saved without a yes | `prepare` then `confirm` with a server check; enum; "do not infer" tool text | pass |
-| III. No silent failure, no broken promise | fallback chain with on-screen notice; promised-callback check at call end; quota exhaustion shown | pass |
-| IV. Measure before choosing | every unmeasured threshold marked as debt (call cap, IP limits, alert thresholds, latency targets) | pass (debts listed) |
-| V. Disclosure and retention | greeting and call-page notice; 30-day transcript deletion job | pass |
-| VI. No paid tokens | free tiers; `gpt-transcribe` backup off by default | pass |
-| VII. Only from the specs | tasks generated from this plan; each cites FRs | pass |
-| Standard over invention | libraries above; own code only for the bakery domain and the agent prompt/tools | pass |
-| Limits in the database | conditional `UPDATE … WHERE reserved + qty <= limit` in the confirm transaction | pass |
-| Evaluation (ADR-0012), LLMOps (ADR-0013) | Evalite suites, CI gate, Langfuse traces, Sentry | pass |
+| Principle / rule                                  | How this plan satisfies it                                                                         | Status              |
+| ------------------------------------------------- | -------------------------------------------------------------------------------------------------- | ------------------- |
+| Problem: no customer lost                         | three channels over one core; form and staff app work without voice (FR-016)                       | pass                |
+| I. Model chooses, code decides                    | core computes dates, totals, limits, saving; tools take enum IDs; server validates every tool call | pass                |
+| II. Nothing invented, nothing saved without a yes | `prepare` then `confirm` with a server check; enum; "do not infer" tool text                       | pass                |
+| III. No silent failure, no broken promise         | fallback chain with on-screen notice; promised-callback check at call end; quota exhaustion shown  | pass                |
+| IV. Measure before choosing                       | every unmeasured threshold marked as debt (call cap, IP limits, alert thresholds, latency targets) | pass (debts listed) |
+| V. Disclosure and retention                       | greeting and call-page notice; 30-day transcript deletion job                                      | pass                |
+| VI. No paid tokens                                | free tiers; `gpt-transcribe` backup off by default                                                 | pass                |
+| VII. Only from the specs                          | tasks generated from this plan; each cites FRs                                                     | pass                |
+| Standard over invention                           | libraries above; own code only for the bakery domain and the agent prompt/tools                    | pass                |
+| Limits in the database                            | conditional `UPDATE … WHERE reserved + qty <= limit` in the confirm transaction                    | pass                |
+| Evaluation (ADR-0012), LLMOps (ADR-0013)          | Evalite suites, CI gate, Langfuse traces, Sentry                                                   | pass                |
 
 Re-check after Phase 1: no violations; nothing in Complexity Tracking.
 

@@ -12,7 +12,11 @@ export function Screen({ title, children, refreshing = false, onRefresh }: Props
       <ScrollView
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
-        refreshControl={onRefresh ? <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} /> : undefined}
+        refreshControl={
+          onRefresh ? (
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
+          ) : undefined
+        }
       >
         {title ? (
           <Text style={styles.title} accessibilityRole="header">

@@ -11,8 +11,10 @@ import { db, fail, required } from "./runtime";
 
 // Access control built from the one permission map in the core (ADR-0015).
 const ac = createAccessControl(STATEMENTS);
-const roles = Object.fromEntries(ROLES.map((r) => [r, ac.newRole(statementsOf(r))])) as Record<Role, ReturnType<typeof ac.newRole>>;
-
+const roles = Object.fromEntries(ROLES.map((r) => [r, ac.newRole(statementsOf(r))])) as Record<
+  Role,
+  ReturnType<typeof ac.newRole>
+>;
 
 function createAuth() {
   return betterAuth({
@@ -20,7 +22,12 @@ function createAuth() {
     baseURL: required("BETTER_AUTH_URL", "http://localhost:3000"),
     database: drizzleAdapter(db(), {
       provider: "pg",
-      schema: { user: schema.user, session: schema.session, account: schema.account, verification: schema.verification },
+      schema: {
+        user: schema.user,
+        session: schema.session,
+        account: schema.account,
+        verification: schema.verification,
+      },
     }),
     emailAndPassword: { enabled: true, disableSignUp: true },
     trustedOrigins: TRUSTED_ORIGINS,
@@ -37,7 +44,10 @@ export type StaffUser = { id: string; name: string; email: string; role: Role };
  * The signed-in staff member if they hold `permission` — else the 401/403 response to return
  * (FR-043). Every staff route calls this first.
  */
-export async function requirePermission(req: Request, permission: Permission): Promise<{ user: StaffUser } | { response: Response }> {
+export async function requirePermission(
+  req: Request,
+  permission: Permission,
+): Promise<{ user: StaffUser } | { response: Response }> {
   const session = await auth().api.getSession({ headers: req.headers });
   if (!session) return { response: fail("unauthenticated", "Přihlaste se prosím.", 401) };
   const role = session.user.role;

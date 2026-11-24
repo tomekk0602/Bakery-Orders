@@ -13,18 +13,33 @@ export function DictationPanel({ onSubmit, busy, error }: Props) {
     <>
       <Text style={styles.hint}>{t("dictation.example")}</Text>
       {d.supported ? (
-        <Button label={d.listening ? t("dictation.stop") : t("dictation.start")} variant={d.listening ? "secondary" : "primary"} onPress={d.listening ? d.stop : d.start} />
+        <Button
+          label={d.listening ? t("dictation.stop") : t("dictation.start")}
+          variant={d.listening ? "secondary" : "primary"}
+          onPress={d.listening ? d.stop : d.start}
+        />
       ) : (
         <Text style={styles.hint}>{t("dictation.keyboardHint")}</Text>
       )}
       {d.error ? <Text style={styles.error}>{t("dictation.micError")}</Text> : null}
-      <TextField label={t("dictation.text")} value={d.text} onChangeText={d.setText} multiline autoCapitalize="sentences" />
+      <TextField
+        label={t("dictation.text")}
+        value={d.text}
+        onChangeText={d.setText}
+        multiline
+        autoCapitalize="sentences"
+      />
       {error ? (
         <Text style={styles.error} accessibilityRole="alert">
           {error}
         </Text>
       ) : null}
-      <Button label={t("dictation.process")} onPress={() => onSubmit(d.text)} busy={busy} disabled={d.text.trim() === "" || d.listening} />
+      <Button
+        label={t("dictation.process")}
+        onPress={() => onSubmit(d.text)}
+        busy={busy}
+        disabled={d.text.trim() === "" || d.listening}
+      />
     </>
   );
 }

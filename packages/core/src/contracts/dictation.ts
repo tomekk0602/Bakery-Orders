@@ -21,7 +21,13 @@ export const DictationResponse = z.object({
     pickupDate: IsoDate.nullable(),
     items: z.array(z.object({ productId: z.string(), quantity: z.number().int().positive() })),
   }),
-  unmatched: z.array(z.object({ word: z.string(), quantity: z.number().int().positive().nullable(), candidates: z.array(z.object({ id: z.string(), name: z.string() })) })),
+  unmatched: z.array(
+    z.object({
+      word: z.string(),
+      quantity: z.number().int().positive().nullable(),
+      candidates: z.array(z.object({ id: z.string(), name: z.string() })),
+    }),
+  ),
   missing: z.array(MissingField),
   card: OrderCard.nullable(),
   refusal: z.object({ code: z.string(), message: z.string() }).nullable(),

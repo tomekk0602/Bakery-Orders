@@ -10,7 +10,8 @@ export async function POST(req: Request, { params }: Ctx) {
   const r = await requirePermission(req, "order:create");
   if ("response" in r) return r.response;
   const { id } = await params;
-  if (!z.uuid().safeParse(id).success) return fail("no_draft", "Objednávka k potvrzení neexistuje nebo už byla uložena.", 404);
+  if (!z.uuid().safeParse(id).success)
+    return fail("no_draft", "Objednávka k potvrzení neexistuje nebo už byla uložena.", 404);
   const result = await confirmStaffDraft(id, r.user.id);
   if (result.ok) return json({ orderId: result.orderId, orderNumber: result.orderNumber });
   return result.reason === "over_limit"

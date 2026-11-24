@@ -37,7 +37,15 @@ export const OrderCard = z.object({
   customerPhone: z.string().nullable(),
   pickupDate: IsoDate,
   pickupWeekdayName: z.string(),
-  lines: z.array(z.object({ productId: z.string(), name: z.string(), quantity: z.number().int(), unitPriceCzk: z.number().int(), subtotalCzk: z.number().int() })),
+  lines: z.array(
+    z.object({
+      productId: z.string(),
+      name: z.string(),
+      quantity: z.number().int(),
+      unitPriceCzk: z.number().int(),
+      subtotalCzk: z.number().int(),
+    }),
+  ),
   totalCzk: z.number().int().nonnegative(),
 });
 export type OrderCard = z.infer<typeof OrderCard>;

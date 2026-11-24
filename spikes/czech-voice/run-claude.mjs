@@ -46,13 +46,35 @@ const SCHEMA = JSON.stringify({
 
 function claude(prompt) {
   return new Promise((resolve, reject) => {
-    const p = spawn("claude", [
-      "-p", "--model", MODEL, "--tools", "", "--strict-mcp-config", "--disable-slash-commands",
-      "--setting-sources", "", "--no-session-persistence", "--output-format", "json",
-      "--system-prompt", SYSTEM, "--json-schema", SCHEMA, prompt,
-    ], { cwd: new URL(".", import.meta.url).pathname, stdio: ["ignore", "pipe", "pipe"] });
-    let out = "", err = "";
-    const timer = setTimeout(() => { p.kill(); reject(new Error("claude timeout")); }, CALL_TIMEOUT_MS);
+    const p = spawn(
+      "claude",
+      [
+        "-p",
+        "--model",
+        MODEL,
+        "--tools",
+        "",
+        "--strict-mcp-config",
+        "--disable-slash-commands",
+        "--setting-sources",
+        "",
+        "--no-session-persistence",
+        "--output-format",
+        "json",
+        "--system-prompt",
+        SYSTEM,
+        "--json-schema",
+        SCHEMA,
+        prompt,
+      ],
+      { cwd: new URL(".", import.meta.url).pathname, stdio: ["ignore", "pipe", "pipe"] },
+    );
+    let out = "",
+      err = "";
+    const timer = setTimeout(() => {
+      p.kill();
+      reject(new Error("claude timeout"));
+    }, CALL_TIMEOUT_MS);
     p.stdout.on("data", (d) => (out += d));
     p.stderr.on("data", (d) => (err += d));
     p.on("close", (code) => {
@@ -69,7 +91,15 @@ function claude(prompt) {
 }
 
 // One step with Gemini's native function calling, mapped to the same {say, tool} shape.
-const GEMINI_TOOLS = [{ functionDeclarations: TOOLS.map((t) => ({ name: t.name, description: t.description, parametersJsonSchema: t.parameters })) }];
+const GEMINI_TOOLS = [
+  {
+    functionDeclarations: TOOLS.map((t) => ({
+      name: t.name,
+      description: t.description,
+      parametersJsonSchema: t.parameters,
+    })),
+  },
+];
 // Free tier is limited per model and minute (2026-11-24: 3.6 Flash 5/min, 3.5 Flash-Lite 15/min,
 // read from the 429 responses), so calls are spaced to stay under GEMINI_RPM.
 const GEMINI_RPM = Number(process.env.GEMINI_RPM ?? 5);
@@ -115,13 +145,19 @@ function checkTurn(t, actions) {
   if (t.order) {
     const prep = calls.filter((c) => c.name === "prepare_order").at(-1);
     const got = Object.fromEntries((prep?.args.items ?? []).map((i) => [i.product_id, i.quantity]));
-    const ok = prep && prep.args.pickup_date === t.order.date &&
+    const ok =
+      prep &&
+      prep.args.pickup_date === t.order.date &&
       Object.keys(got).length === Object.keys(t.order.items).length &&
       Object.entries(t.order.items).every(([k, v]) => got[k] === v);
     if (!ok) fails.push(`order ${JSON.stringify(got)} ${prep?.args.pickup_date}`);
   }
   if (t.sayAny && !t.sayAny.some((w) => said.includes(norm(w)))) fails.push(`said none of ${t.sayAny.join("/")}`);
-  if (t.callOrSay && !calls.some((c) => c.name === t.callOrSay.call) && !t.callOrSay.sayAny.some((w) => said.includes(w)))
+  if (
+    t.callOrSay &&
+    !calls.some((c) => c.name === t.callOrSay.call) &&
+    !t.callOrSay.sayAny.some((w) => said.includes(w))
+  )
     fails.push("no callback offered");
   return fails;
 }
@@ -129,9 +165,14 @@ function checkTurn(t, actions) {
 async function pool(items, fn) {
   const out = new Array(items.length);
   let next = 0;
-  await Promise.all(Array.from({ length: POOL }, async () => {
-    while (next < items.length) { const i = next++; out[i] = await fn(items[i]).catch((e) => ({ error: String(e) })); }
-  }));
+  await Promise.all(
+    Array.from({ length: POOL }, async () => {
+      while (next < items.length) {
+        const i = next++;
+        out[i] = await fn(items[i]).catch((e) => ({ error: String(e) }));
+      }
+    }),
+  );
   return out;
 }
 
@@ -140,7 +181,13 @@ const singles = await pool(loadUtterances(), async (u) => {
   const history = [`ZÁKAZNÍK: ${u.text}`];
   const actions = await agentTurn(history);
   const calls = actions.filter((a) => a.tool).map((a) => ({ name: a.tool.name, args: a.tool.args }));
-  return { id: u.id, ...score(u, calls), ms: actions.reduce((s, a) => s + a.ms, 0), steps: actions.length, transcript: history };
+  return {
+    id: u.id,
+    ...score(u, calls),
+    ms: actions.reduce((s, a) => s + a.ms, 0),
+    steps: actions.length,
+    transcript: history,
+  };
 });
 
 // Part 2: multi-turn dialogues.
@@ -158,7 +205,10 @@ const multi = await pool(dialogs, async (d) => {
 });
 
 mkdirSync(new URL("./out/", import.meta.url), { recursive: true });
-writeFileSync(new URL(`./out/claude-${MODEL}.json`, import.meta.url), JSON.stringify({ model: MODEL, today: TODAY, singles, multi }, null, 2));
+writeFileSync(
+  new URL(`./out/claude-${MODEL}.json`, import.meta.url),
+  JSON.stringify({ model: MODEL, today: TODAY, singles, multi }, null, 2),
+);
 
 const line = (r) => `  ${r.error ? "ERR " : r.pass ? "PASS" : "FAIL"} ${r.id ?? ""} ${r.error ?? r.why}`;
 console.log(`claude ${MODEL} — single utterances: ${singles.filter((r) => r.pass).length}/${singles.length}`);

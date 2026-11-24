@@ -11,7 +11,8 @@ export function OrderDetailScreen({ id }: { id: string }) {
   const order = useOrder(id);
   const setHandedOver = useSetHandedOver();
 
-  if (order.isPending) return <ActivityIndicator style={styles.center} color={colors.primary} accessibilityLabel={t("common.loading")} />;
+  if (order.isPending)
+    return <ActivityIndicator style={styles.center} color={colors.primary} accessibilityLabel={t("common.loading")} />;
   if (order.isError)
     return (
       <Screen>
@@ -26,13 +27,20 @@ export function OrderDetailScreen({ id }: { id: string }) {
     <Screen title={t("orders.number", { number: o.number })}>
       <View style={styles.row}>
         <Badge label={t(`orders.source.${o.source}`)} />
-        <Badge label={t(`orders.${handedOver ? "handedOver" : o.status}`)} tone={handedOver ? "success" : o.status === "cancelled" ? "warning" : "neutral"} />
+        <Badge
+          label={t(`orders.${handedOver ? "handedOver" : o.status}`)}
+          tone={handedOver ? "success" : o.status === "cancelled" ? "warning" : "neutral"}
+        />
       </View>
       <Card>
         <Text style={styles.name}>{o.customerName}</Text>
         <Text style={styles.text}>{t("orders.pickup", { day: formatDay(o.pickupDay) })}</Text>
         {o.customerPhone ? (
-          <Button label={t("orders.call", { phone: o.customerPhone })} variant="secondary" onPress={() => void Linking.openURL(`tel:${o.customerPhone}`)} />
+          <Button
+            label={t("orders.call", { phone: o.customerPhone })}
+            variant="secondary"
+            onPress={() => void Linking.openURL(`tel:${o.customerPhone}`)}
+          />
         ) : (
           <Text style={styles.muted}>{t("orders.noPhone")}</Text>
         )}

@@ -21,6 +21,9 @@ export function bakingPlan(
       const b = closed ? 0 : (buffers[p.id] ?? 0);
       return { productId: p.id, name: p.name, reserved: r, buffer: b, toBake: r + b };
     });
-  const totals = lines.reduce((t, l) => ({ reserved: t.reserved + l.reserved, buffer: t.buffer + l.buffer, toBake: t.toBake + l.toBake }), { reserved: 0, buffer: 0, toBake: 0 });
+  const totals = lines.reduce(
+    (t, l) => ({ reserved: t.reserved + l.reserved, buffer: t.buffer + l.buffer, toBake: t.toBake + l.toBake }),
+    { reserved: 0, buffer: 0, toBake: 0 },
+  );
   return { lines, totals };
 }

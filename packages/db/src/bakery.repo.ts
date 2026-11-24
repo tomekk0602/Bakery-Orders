@@ -31,13 +31,25 @@ export async function loadBakery(db: Db): Promise<Bakery> {
 }
 
 /** Pieces still available per limited product for a day; unlimited products are absent. */
-export async function remainingCapacity(db: Db, catalogue: readonly Product[], day: string): Promise<Record<string, number>> {
+export async function remainingCapacity(
+  db: Db,
+  catalogue: readonly Product[],
+  day: string,
+): Promise<Record<string, number>> {
   const limited = catalogue.filter((p) => p.dailyLimit !== null);
   if (limited.length === 0) return {};
   const rows = await db
     .select()
     .from(dailyCapacity)
-    .where(and(eq(dailyCapacity.day, day), inArray(dailyCapacity.productId, limited.map((p) => p.id))));
+    .where(
+      and(
+        eq(dailyCapacity.day, day),
+        inArray(
+          dailyCapacity.productId,
+          limited.map((p) => p.id),
+        ),
+      ),
+    );
   return Object.fromEntries(
     limited.map((p) => [p.id, (p.dailyLimit ?? 0) - (rows.find((r) => r.productId === p.id)?.reserved ?? 0)]),
   );

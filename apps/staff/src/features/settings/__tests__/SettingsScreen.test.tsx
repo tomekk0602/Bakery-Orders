@@ -11,13 +11,23 @@ const settings: BakerySettings = {
   cutoffTime: "14:00",
   closedWeekdays: [7],
   closedDays: [],
-  products: [{ id: "rohlik", name: "Rohlík", priceCzk: 4, dailyLimit: null, active: true, buffers: [120, 120, 120, 120, 120, 180, 0] }],
+  products: [
+    {
+      id: "rohlik",
+      name: "Rohlík",
+      priceCzk: 4,
+      dailyLimit: null,
+      active: true,
+      buffers: [120, 120, 120, 120, 120, 180, 0],
+    },
+  ],
 };
 
 beforeEach(() => {
   mockApi.mockReset();
   mockApi.mockImplementation((path: string, _s: unknown, init?: RequestInit) => {
-    if (path === "/api/staff/settings") return Promise.resolve(init?.method === "PUT" ? JSON.parse(String(init.body)) : settings);
+    if (path === "/api/staff/settings")
+      return Promise.resolve(init?.method === "PUT" ? JSON.parse(String(init.body)) : settings);
     return Promise.resolve({ ok: true });
   });
 });
@@ -33,7 +43,11 @@ describe("SettingsScreen (FR-011, FR-042)", () => {
     await fireEvent.press(screen.getByText("Uložit nastavení"));
     await waitFor(() => expect(putCall()).toBeTruthy());
     const sent = JSON.parse(String((putCall()![2] as RequestInit).body)) as BakerySettings;
-    expect(sent.products[0]).toMatchObject({ priceCzk: 5, dailyLimit: 300, buffers: [120, 120, 120, 120, 120, 200, 0] });
+    expect(sent.products[0]).toMatchObject({
+      priceCzk: 5,
+      dailyLimit: 300,
+      buffers: [120, 120, 120, 120, 120, 200, 0],
+    });
   });
 
   it("a bad price blocks saving", async () => {
@@ -57,6 +71,12 @@ describe("SettingsScreen (FR-011, FR-042)", () => {
     await fireEvent.press(await screen.findByText("Obnovit demo"));
     expect(mockApi).not.toHaveBeenCalledWith("/api/staff/reset", expect.anything(), expect.anything());
     await fireEvent.press(screen.getByText("Opravdu obnovit"));
-    await waitFor(() => expect(mockApi).toHaveBeenCalledWith("/api/staff/reset", expect.anything(), expect.objectContaining({ method: "POST" })));
+    await waitFor(() =>
+      expect(mockApi).toHaveBeenCalledWith(
+        "/api/staff/reset",
+        expect.anything(),
+        expect.objectContaining({ method: "POST" }),
+      ),
+    );
   });
 });

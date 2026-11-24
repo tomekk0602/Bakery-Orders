@@ -50,23 +50,36 @@ async function runOne(u) {
           break;
         case "response.function_call_arguments.done": {
           let args = {};
-          try { args = JSON.parse(ev.arguments || "{}"); } catch { args = { _raw: ev.arguments }; }
+          try {
+            args = JSON.parse(ev.arguments || "{}");
+          } catch {
+            args = { _raw: ev.arguments };
+          }
           calls.push({ name: ev.name, args });
-          send({ type: "conversation.item.create", item: { type: "function_call_output", call_id: ev.call_id, output: JSON.stringify(runTool(ev.name, args)) } });
+          send({
+            type: "conversation.item.create",
+            item: { type: "function_call_output", call_id: ev.call_id, output: JSON.stringify(runTool(ev.name, args)) },
+          });
           break;
         }
         case "response.done": {
           responses++;
           const hadCall = ev.response?.output?.some((o) => o.type === "function_call");
           if (hadCall && responses < 5) send({ type: "response.create" });
-          else { clearTimeout(timer); resolve("done"); }
+          else {
+            clearTimeout(timer);
+            resolve("done");
+          }
           break;
         }
       }
     });
   });
 
-  await new Promise((r, j) => { ws.once("open", r); ws.once("error", j); });
+  await new Promise((r, j) => {
+    ws.once("open", r);
+    ws.once("error", j);
+  });
   send({
     type: "session.update",
     session: {
@@ -104,9 +117,20 @@ async function runOne(u) {
   const outcome = await finished;
   ws.close();
   mkdirSync(new URL("./out/audio/", import.meta.url), { recursive: true });
-  writeFileSync(new URL(`./out/audio/openai-${VARIANT}-${u.id}.wav`, import.meta.url), pcm16ToWav(Buffer.concat(audio), RATE));
+  writeFileSync(
+    new URL(`./out/audio/openai-${VARIANT}-${u.id}.wav`, import.meta.url),
+    pcm16ToWav(Buffer.concat(audio), RATE),
+  );
   const s = score(u, calls);
-  return { id: u.id, outcome, latencyMs: firstAudio ? Math.round(firstAudio - speechEnd) : null, heard, reply: transcript, calls, ...s };
+  return {
+    id: u.id,
+    outcome,
+    latencyMs: firstAudio ? Math.round(firstAudio - speechEnd) : null,
+    heard,
+    reply: transcript,
+    calls,
+    ...s,
+  };
 }
 
 const rows = [];

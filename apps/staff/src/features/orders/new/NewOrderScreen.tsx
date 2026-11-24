@@ -24,7 +24,8 @@ export function NewOrderScreen() {
   const confirm = useConfirmDraft();
   const [step, setStep] = useState<Step>({ kind: "voice" });
 
-  if (form.isPending) return <ActivityIndicator style={styles.center} color={colors.primary} accessibilityLabel={t("common.loading")} />;
+  if (form.isPending)
+    return <ActivityIndicator style={styles.center} color={colors.primary} accessibilityLabel={t("common.loading")} />;
   if (form.isError)
     return (
       <Screen title={t("tabs.newOrder")}>
@@ -53,11 +54,25 @@ export function NewOrderScreen() {
     <Screen title={t("tabs.newOrder")}>
       {step.kind === "voice" || step.kind === "form" ? (
         <View style={styles.modes}>
-          <Button label={t("dictation.byVoice")} variant={step.kind === "voice" ? "primary" : "secondary"} onPress={() => restart("voice")} />
-          <Button label={t("dictation.byForm")} variant={step.kind === "form" ? "primary" : "secondary"} onPress={() => restart("form")} />
+          <Button
+            label={t("dictation.byVoice")}
+            variant={step.kind === "voice" ? "primary" : "secondary"}
+            onPress={() => restart("voice")}
+          />
+          <Button
+            label={t("dictation.byForm")}
+            variant={step.kind === "form" ? "primary" : "secondary"}
+            onPress={() => restart("form")}
+          />
         </View>
       ) : null}
-      {step.kind === "voice" ? <DictationPanel busy={dictate.isPending} error={dictate.error?.message ?? null} onSubmit={(text) => dictate.mutate(text, { onSuccess: onDictated })} /> : null}
+      {step.kind === "voice" ? (
+        <DictationPanel
+          busy={dictate.isPending}
+          error={dictate.error?.message ?? null}
+          onSubmit={(text) => dictate.mutate(text, { onSuccess: onDictated })}
+        />
+      ) : null}
       {step.kind === "form" ? (
         <OrderForm
           form={form.data}
@@ -66,7 +81,9 @@ export function NewOrderScreen() {
           notice={step.notice}
           busy={prepare.isPending}
           error={prepare.error?.message ?? null}
-          onSubmit={(values) => prepare.mutate(toInput(values), { onSuccess: (card) => setStep({ kind: "card", card, values }) })}
+          onSubmit={(values) =>
+            prepare.mutate(toInput(values), { onSuccess: (card) => setStep({ kind: "card", card, values }) })
+          }
         />
       ) : null}
       {step.kind === "card" ? (
@@ -75,7 +92,11 @@ export function NewOrderScreen() {
           busy={confirm.isPending}
           error={confirm.error?.message ?? null}
           onEdit={() => setStep({ kind: "form", values: step.values })}
-          onConfirm={() => confirm.mutate(step.card.draftId, { onSuccess: (saved) => setStep({ kind: "saved", number: saved.orderNumber }) })}
+          onConfirm={() =>
+            confirm.mutate(step.card.draftId, {
+              onSuccess: (saved) => setStep({ kind: "saved", number: saved.orderNumber }),
+            })
+          }
         />
       ) : null}
       {step.kind === "saved" ? (

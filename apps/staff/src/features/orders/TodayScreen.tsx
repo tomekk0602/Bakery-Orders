@@ -13,7 +13,8 @@ export function TodayScreen() {
   const orders = useOrdersForDay(null);
   const setHandedOver = useSetHandedOver();
 
-  if (orders.isPending) return <ActivityIndicator style={styles.center} color={colors.primary} accessibilityLabel={t("common.loading")} />;
+  if (orders.isPending)
+    return <ActivityIndicator style={styles.center} color={colors.primary} accessibilityLabel={t("common.loading")} />;
   if (orders.isError)
     return (
       <Screen title={t("tabs.today")}>
@@ -22,11 +23,17 @@ export function TodayScreen() {
       </Screen>
     );
 
-  const list = [...orders.data.orders].sort((a, b) => Number(a.status === "picked_up") - Number(b.status === "picked_up") || a.number - b.number);
+  const list = [...orders.data.orders].sort(
+    (a, b) => Number(a.status === "picked_up") - Number(b.status === "picked_up") || a.number - b.number,
+  );
   const waiting = list.filter((o) => o.status === "confirmed").length;
 
   return (
-    <Screen title={t("orders.todayTitle", { day: formatDay(orders.data.day) })} refreshing={orders.isRefetching} onRefresh={() => void orders.refetch()}>
+    <Screen
+      title={t("orders.todayTitle", { day: formatDay(orders.data.day) })}
+      refreshing={orders.isRefetching}
+      onRefresh={() => void orders.refetch()}
+    >
       <Text style={styles.summary}>
         {t("orders.toHandOver", { count: waiting })} · {t("orders.handedOverCount", { count: list.length - waiting })}
       </Text>
@@ -36,7 +43,9 @@ export function TodayScreen() {
           key={order.id}
           order={order}
           onOpen={() => router.push(`/objednavka/${order.id}`)}
-          onToggle={() => setHandedOver.mutate({ id: order.id, status: order.status === "picked_up" ? "confirmed" : "picked_up" })}
+          onToggle={() =>
+            setHandedOver.mutate({ id: order.id, status: order.status === "picked_up" ? "confirmed" : "picked_up" })
+          }
           busy={setHandedOver.isPending && setHandedOver.variables?.id === order.id}
         />
       ))}

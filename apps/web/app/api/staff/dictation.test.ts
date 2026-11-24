@@ -18,7 +18,9 @@ beforeAll(async () => {
   const { loadBakery } = await import("@bakery/db");
   const { buildCalendar } = await import("@bakery/core");
   const { db } = await import("@/server/runtime");
-  day = buildCalendar(new Date(), (await loadBakery(db())).schedule).find((d) => !d.closed && d.relative !== "today")!.date;
+  day = buildCalendar(new Date(), (await loadBakery(db())).schedule).find(
+    (d) => !d.closed && d.relative !== "today",
+  )!.date;
 });
 afterAll(async () => env?.stop());
 beforeEach(() => {
@@ -28,9 +30,17 @@ beforeEach(() => {
 
 const dictate = async (text: string, cookie?: string) => {
   const { POST } = await import("./dictation/route");
-  return POST(request("/api/staff/dictation", { method: "POST", body: JSON.stringify({ text }), ...(cookie ? { cookie } : {}) }));
+  return POST(
+    request("/api/staff/dictation", { method: "POST", body: JSON.stringify({ text }), ...(cookie ? { cookie } : {}) }),
+  );
 };
-const said = (over: Record<string, unknown> = {}) => ({ customerName: "Nováková", pickupDate: day, items: [{ productId: "chleb-kminovy", quantity: 2 }], unmatched: [], ...over });
+const said = (over: Record<string, unknown> = {}) => ({
+  customerName: "Nováková",
+  pickupDate: day,
+  items: [{ productId: "chleb-kminovy", quantity: 2 }],
+  unmatched: [],
+  ...over,
+});
 
 describe("staff dictation (FR-017–FR-022, research R22)", () => {
   it("401 without a session, and the model is not called", async () => {
@@ -40,7 +50,9 @@ describe("staff dictation (FR-017–FR-022, research R22)", () => {
 
   it("a complete sentence becomes an order card from the core; the model gets the enums", async () => {
     extract.mockResolvedValue(said());
-    const body = DictationResponse.parse(await (await dictate("Nováková, dva kmínové na zítra", env.cookies.employee)).json());
+    const body = DictationResponse.parse(
+      await (await dictate("Nováková, dva kmínové na zítra", env.cookies.employee)).json(),
+    );
     expect(body.card?.totalCzk).toBe(138);
     expect(body.missing).toEqual([]);
     const { jsonSchema, instructions } = extract.mock.calls[0]![0] as { jsonSchema: object; instructions: string };
@@ -49,10 +61,17 @@ describe("staff dictation (FR-017–FR-022, research R22)", () => {
   });
 
   it("a word with no product gives candidates with names and no card (FR-020)", async () => {
-    extract.mockResolvedValue(said({ unmatched: [{ word: "razowy", quantity: 1, candidateIds: ["chleb-celozrnny", "chleb-zitny"] }] }));
-    const body = DictationResponse.parse(await (await dictate("Nováková, dva kmínové a jeden razowy", env.cookies.employee)).json());
+    extract.mockResolvedValue(
+      said({ unmatched: [{ word: "razowy", quantity: 1, candidateIds: ["chleb-celozrnny", "chleb-zitny"] }] }),
+    );
+    const body = DictationResponse.parse(
+      await (await dictate("Nováková, dva kmínové a jeden razowy", env.cookies.employee)).json(),
+    );
     expect(body.card).toBeNull();
-    expect(body.unmatched[0]?.candidates).toEqual([{ id: "chleb-celozrnny", name: "Celozrnný chléb" }, { id: "chleb-zitny", name: "Žitný chléb" }]);
+    expect(body.unmatched[0]?.candidates).toEqual([
+      { id: "chleb-celozrnny", name: "Celozrnný chléb" },
+      { id: "chleb-zitny", name: "Žitný chléb" },
+    ]);
   });
 
   it("a missing name or day gives no card and says what is missing (FR-021)", async () => {
@@ -64,7 +83,9 @@ describe("staff dictation (FR-017–FR-022, research R22)", () => {
 
   it("a rule the core refuses comes back as a refusal, not a card", async () => {
     extract.mockResolvedValue(said({ items: [{ productId: "chleb-celozrnny", quantity: 200 }] }));
-    const body = DictationResponse.parse(await (await dictate("Nováková, dvě stě celozrnných", env.cookies.employee)).json());
+    const body = DictationResponse.parse(
+      await (await dictate("Nováková, dvě stě celozrnných", env.cookies.employee)).json(),
+    );
     expect(body.card).toBeNull();
     expect(body.refusal?.code).toBe("over_limit");
   });
@@ -81,7 +102,10 @@ describe("staff dictation (FR-017–FR-022, research R22)", () => {
     providerFailure = new DictationUnavailable("quota");
     const res = await dictate("dva chleby", env.cookies.employee);
     expect(res.status).toBe(503);
-    expect(((await res.json()) as { error: { code: string; message: string } }).error).toEqual({ code: "quota_exhausted", message: "Diktování je dnes vyčerpané. Použijte formulář." });
+    expect(((await res.json()) as { error: { code: string; message: string } }).error).toEqual({
+      code: "quota_exhausted",
+      message: "Diktování je dnes vyčerpané. Použijte formulář.",
+    });
   });
 
   it("refuses an empty sentence without calling the model", async () => {

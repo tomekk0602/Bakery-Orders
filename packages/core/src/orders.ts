@@ -48,7 +48,8 @@ export type PreparedOrder = {
   customerPhone: string | null;
 };
 
-const refuse = (reason: RefusalReason, detail?: string): Refusal => (detail ? { ok: false, reason, detail } : { ok: false, reason });
+const refuse = (reason: RefusalReason, detail?: string): Refusal =>
+  detail ? { ok: false, reason, detail } : { ok: false, reason };
 
 /** Every rule an order must pass before it can be read back and confirmed (ADR-0003). */
 export function prepareOrder(input: PrepareInput, ctx: PrepareContext): PreparedOrder | Refusal {
@@ -82,5 +83,13 @@ export function prepareOrder(input: PrepareInput, ctx: PrepareContext): Prepared
   if (ctx.channel !== "staff" && !customerPhone) return refuse("missing_phone");
 
   const lines = priceLines(items, offered);
-  return { ok: true, lines, totalCzk: orderTotal(lines), pickupDate: input.pickupDate, pickupWeekdayName: day.weekdayName, customerName, customerPhone };
+  return {
+    ok: true,
+    lines,
+    totalCzk: orderTotal(lines),
+    pickupDate: input.pickupDate,
+    pickupWeekdayName: day.weekdayName,
+    customerName,
+    customerPhone,
+  };
 }

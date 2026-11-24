@@ -3,7 +3,14 @@ import { describe, expect, it } from "vitest";
 import { bakingPlan } from "./baking-plan.ts";
 import type { Product } from "./catalogue.ts";
 
-const p = (id: string, active = true): Product => ({ id, name: id.toUpperCase(), spokenForms: [], priceCzk: 10, dailyLimit: null, active });
+const p = (id: string, active = true): Product => ({
+  id,
+  name: id.toUpperCase(),
+  spokenForms: [],
+  priceCzk: 10,
+  dailyLimit: null,
+  active,
+});
 const catalogue = [p("chleb"), p("rohlik"), p("vanocka", false)];
 
 describe("bakingPlan (FR-010)", () => {
@@ -18,7 +25,10 @@ describe("bakingPlan (FR-010)", () => {
 
   it("lists every active product, with zero where nothing is ordered", () => {
     const plan = bakingPlan(catalogue, {}, { rohlik: 5 }, false);
-    expect(plan.lines.map((l) => [l.productId, l.toBake])).toEqual([["chleb", 0], ["rohlik", 5]]);
+    expect(plan.lines.map((l) => [l.productId, l.toBake])).toEqual([
+      ["chleb", 0],
+      ["rohlik", 5],
+    ]);
   });
 
   it("keeps an inactive product that still has orders, so nothing ordered is forgotten", () => {
@@ -44,7 +54,8 @@ describe("bakingPlan (FR-010)", () => {
         }
         const sum = (k: "reserved" | "buffer" | "toBake") => plan.lines.reduce((s, l) => s + l[k], 0);
         expect(plan.totals).toEqual({ reserved: sum("reserved"), buffer: sum("buffer"), toBake: sum("toBake") });
-        for (const [id, n] of Object.entries(reserved)) if (n > 0) expect(plan.lines.some((l) => l.productId === id)).toBe(true);
+        for (const [id, n] of Object.entries(reserved))
+          if (n > 0) expect(plan.lines.some((l) => l.productId === id)).toBe(true);
       }),
     );
   });

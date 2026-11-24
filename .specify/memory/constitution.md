@@ -15,8 +15,8 @@ Sync Impact Report
 
 # Bakery Voice Orders — Constitution
 
-A solution for a small bakery whose owner says: *"People call us to reserve bread and pastry.
-Managing the reservations and working out what to bake takes a lot of our time."* Built as a
+A solution for a small bakery whose owner says: _"People call us to reserve bread and pastry.
+Managing the reservations and working out what to bake takes a lot of our time."_ Built as a
 recruitment assignment for Cod8; reviewed together with the reviewers afterwards, so **every
 decision must be explainable from a written source**.
 
@@ -130,7 +130,7 @@ first and the decision is recorded (below), then the code. `[owner]` 2026-11-24 
     (MADR, template in `docs/adr/template.md`, index in `docs/adr/README.md`);
   - a choice inside one feature → that feature's `research.md` (Decision / Rationale / Alternatives
     rejected / Evidence).
-  A decision recorded only in a commit message, a code comment or chat is a defect.
+    A decision recorded only in a commit message, a code comment or chat is a defect.
 - **Every decision is written in detail**: the problem, the options actually considered, the
   chosen one and why, its consequences, how compliance is checked, and the evidence (a measurement,
   a URL with its date, or the owner's words with the date). `[owner]` 2026-11-24

@@ -31,4 +31,7 @@ export async function startStaffDb() {
 }
 
 export const request = (path: string, init: RequestInit & { cookie?: string } = {}) =>
-  new Request(`http://localhost:3000${path}`, { ...init, headers: { "content-type": "application/json", ...(init.cookie ? { cookie: init.cookie } : {}) } });
+  new Request(`http://localhost:3000${path}`, {
+    ...init,
+    headers: { "content-type": "application/json", ...(init.cookie ? { cookie: init.cookie } : {}) },
+  });

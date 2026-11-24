@@ -42,13 +42,13 @@ plan, callbacks. Every channel calls the same core; none has its own copy of a r
 
 **The three ways to order**
 
-| | 1. Voice agent | 2. Staff app | 3. Web form |
-|---|---|---|---|
-| Who speaks / types | the customer | staff, after the call or at the counter | the customer |
-| Who confirms | the customer, by an explicit "ano" | staff, one tap on the order card | the customer, a button |
-| Cut-off | enforced | **staff may override** | enforced |
-| Customer's phone | required | **optional** | required |
-| AI | the conversation | only turning one sentence into an order | none |
+|                    | 1. Voice agent                     | 2. Staff app                            | 3. Web form            |
+| ------------------ | ---------------------------------- | --------------------------------------- | ---------------------- |
+| Who speaks / types | the customer                       | staff, after the call or at the counter | the customer           |
+| Who confirms       | the customer, by an explicit "ano" | staff, one tap on the order card        | the customer, a button |
+| Cut-off            | enforced                           | **staff may override**                  | enforced               |
+| Customer's phone   | required                           | **optional**                            | required               |
+| AI                 | the conversation                   | only turning one sentence into an order | none                   |
 
 **The staff app (Expo, React Native)** — one app for staff and owner, on the phone (Expo Go by QR
 code for the reviewers) and as a web build (a link). It holds:
@@ -59,8 +59,8 @@ code for the reviewers) and as a web build (a link). It holds:
      confirm with one tap; the recognised text stays editable;
    - **by form**: customer name, phone (optional), products with quantity steppers, pickup day from
      the open days, confirm.
-   A word that matches no product is never guessed: the card says "nemáme »razowy«" and offers the
-   closest catalogue products to pick from.
+     A word that matches no product is never guessed: the card says "nemáme »razowy«" and offers the
+     closest catalogue products to pick from.
 2. **Today's pick-ups** — one tap "picked up".
 3. **Baking plan** — per day: reserved + buffer = to bake.
 4. **Callbacks** — requests from the agent, on top until done.
@@ -124,4 +124,5 @@ web form (channel 3). After step 2 there is a working product to show even if ti
 - Expo web: https://docs.expo.dev/workflow/web/ ; Expo Go: https://docs.expo.dev/get-started/expo-go/
 
 ## Relations
+
 - Amended by ADR-0015 (2026-11-24): roles owner and employee with server-checked permissions; two demo logins.

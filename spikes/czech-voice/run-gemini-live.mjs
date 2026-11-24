@@ -20,7 +20,15 @@ if (!process.env.GEMINI_API_KEY) throw new Error("GEMINI_API_KEY missing in spik
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY, httpOptions: { apiVersion: "v1beta" } });
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 // Same JSON Schemas as the other providers, passed as JSON Schema.
-const LIVE_TOOLS = [{ functionDeclarations: TOOLS.map((t) => ({ name: t.name, description: t.description, parametersJsonSchema: t.parameters })) }];
+const LIVE_TOOLS = [
+  {
+    functionDeclarations: TOOLS.map((t) => ({
+      name: t.name,
+      description: t.description,
+      parametersJsonSchema: t.parameters,
+    })),
+  },
+];
 
 async function runOne(u) {
   const calls = [];
@@ -64,8 +72,12 @@ async function runOne(u) {
           });
         }
       },
-      onerror: (e) => { error = e?.message ?? String(e); },
-      onclose: (e) => { if (e?.reason && !error && e.code !== 1000) error = `closed ${e.code} ${e.reason}`; },
+      onerror: (e) => {
+        error = e?.message ?? String(e);
+      },
+      onclose: (e) => {
+        if (e?.reason && !error && e.code !== 1000) error = `closed ${e.code} ${e.reason}`;
+      },
     },
   });
 
@@ -84,19 +96,35 @@ async function runOne(u) {
     session.sendRealtimeInput({ audio: { data: silence, mimeType } });
     await sleep(CHUNK_MS);
     if (performance.now() - speechEnd < TRAILING_SILENCE_MS) continue;
-    if (firstAudio && performance.now() - lastEvent > QUIET_END_MS) { outcome = "done"; break; }
+    if (firstAudio && performance.now() - lastEvent > QUIET_END_MS) {
+      outcome = "done";
+      break;
+    }
   }
   session.close();
   mkdirSync(new URL("./out/audio/", import.meta.url), { recursive: true });
-  writeFileSync(new URL(`./out/audio/gemini-live${LABEL}-${VARIANT}-${u.id}.wav`, import.meta.url), pcm16ToWav(Buffer.concat(audio), OUT_RATE));
+  writeFileSync(
+    new URL(`./out/audio/gemini-live${LABEL}-${VARIANT}-${u.id}.wav`, import.meta.url),
+    pcm16ToWav(Buffer.concat(audio), OUT_RATE),
+  );
   const s = score(u, calls);
-  return { id: u.id, outcome: error ? `error: ${error}` : outcome, latencyMs: firstAudio ? Math.round(firstAudio - speechEnd) : null, heard, reply, calls, ...s };
+  return {
+    id: u.id,
+    outcome: error ? `error: ${error}` : outcome,
+    latencyMs: firstAudio ? Math.round(firstAudio - speechEnd) : null,
+    heard,
+    reply,
+    calls,
+    ...s,
+  };
 }
 
 const rows = [];
 for (const u of loadUtterances()) {
   const r = await runOne(u);
-  console.log(`${r.pass ? "PASS" : "FAIL"} ${u.id} ${r.latencyMs} ms ${r.outcome} | heard: ${r.heard} | reply: ${r.reply}`);
+  console.log(
+    `${r.pass ? "PASS" : "FAIL"} ${u.id} ${r.latencyMs} ms ${r.outcome} | heard: ${r.heard} | reply: ${r.reply}`,
+  );
   rows.push(r);
 }
 saveResults(`gemini-live${LABEL}`, VARIANT, rows);

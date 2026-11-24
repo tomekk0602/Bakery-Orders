@@ -17,10 +17,34 @@ export function ScheduleSection({ control }: { control: Control<SettingsForm> })
         <Text style={styles.heading}>{t("settings.cutoff")}</Text>
         <View style={styles.row}>
           <View style={styles.half}>
-            <Controller control={control} name="cutoffDaysBefore" render={({ field, fieldState }) => <TextField label={t("settings.cutoffDays")} value={field.value} onChangeText={field.onChange} keyboardType="number-pad" error={err(fieldState.error?.message)} />} />
+            <Controller
+              control={control}
+              name="cutoffDaysBefore"
+              render={({ field, fieldState }) => (
+                <TextField
+                  label={t("settings.cutoffDays")}
+                  value={field.value}
+                  onChangeText={field.onChange}
+                  keyboardType="number-pad"
+                  error={err(fieldState.error?.message)}
+                />
+              )}
+            />
           </View>
           <View style={styles.half}>
-            <Controller control={control} name="cutoffTime" render={({ field, fieldState }) => <TextField label={t("settings.cutoffTime")} value={field.value} onChangeText={field.onChange} placeholder="14:00" error={err(fieldState.error?.message)} />} />
+            <Controller
+              control={control}
+              name="cutoffTime"
+              render={({ field, fieldState }) => (
+                <TextField
+                  label={t("settings.cutoffTime")}
+                  value={field.value}
+                  onChangeText={field.onChange}
+                  placeholder="14:00"
+                  error={err(fieldState.error?.message)}
+                />
+              )}
+            />
           </View>
         </View>
       </Card>
@@ -36,7 +60,14 @@ export function ScheduleSection({ control }: { control: Control<SettingsForm> })
                   const day = i + 1;
                   const on = field.value.includes(day);
                   return (
-                    <Pressable key={key} accessibilityRole="button" accessibilityState={{ selected: on }} accessibilityLabel={t(`settings.weekdays.${key}`)} onPress={() => field.onChange(on ? field.value.filter((d) => d !== day) : [...field.value, day])} style={[styles.chip, on && styles.chipOn]}>
+                    <Pressable
+                      key={key}
+                      accessibilityRole="button"
+                      accessibilityState={{ selected: on }}
+                      accessibilityLabel={t(`settings.weekdays.${key}`)}
+                      onPress={() => field.onChange(on ? field.value.filter((d) => d !== day) : [...field.value, day])}
+                      style={[styles.chip, on && styles.chipOn]}
+                    >
                       <Text style={[styles.chipText, on && styles.chipTextOn]}>{t(`settings.weekdays.${key}`)}</Text>
                     </Pressable>
                   );
@@ -52,17 +83,44 @@ export function ScheduleSection({ control }: { control: Control<SettingsForm> })
         {closedDays.fields.map((f, i) => (
           <View key={f.id} style={styles.closedRow}>
             <View style={styles.half}>
-              <Controller control={control} name={`closedDays.${i}.day`} render={({ field, fieldState }) => <TextField label={t("settings.date")} placeholder="2026-12-31" value={field.value} onChangeText={field.onChange} error={err(fieldState.error?.message)} />} />
+              <Controller
+                control={control}
+                name={`closedDays.${i}.day`}
+                render={({ field, fieldState }) => (
+                  <TextField
+                    label={t("settings.date")}
+                    placeholder="2026-12-31"
+                    value={field.value}
+                    onChangeText={field.onChange}
+                    error={err(fieldState.error?.message)}
+                  />
+                )}
+              />
             </View>
             <View style={styles.half}>
-              <Controller control={control} name={`closedDays.${i}.reason`} render={({ field }) => <TextField label={t("settings.reason")} value={field.value} onChangeText={field.onChange} />} />
+              <Controller
+                control={control}
+                name={`closedDays.${i}.reason`}
+                render={({ field }) => (
+                  <TextField label={t("settings.reason")} value={field.value} onChangeText={field.onChange} />
+                )}
+              />
             </View>
-            <Pressable accessibilityRole="button" accessibilityLabel={t("settings.removeDay")} onPress={() => closedDays.remove(i)} hitSlop={8}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={t("settings.removeDay")}
+              onPress={() => closedDays.remove(i)}
+              hitSlop={8}
+            >
               <Text style={styles.remove}>✕</Text>
             </Pressable>
           </View>
         ))}
-        <Button label={t("settings.addDay")} variant="secondary" onPress={() => closedDays.append({ day: "", reason: "" })} />
+        <Button
+          label={t("settings.addDay")}
+          variant="secondary"
+          onPress={() => closedDays.append({ day: "", reason: "" })}
+        />
       </Card>
     </>
   );
@@ -73,7 +131,16 @@ const styles = StyleSheet.create({
   row: { flexDirection: "row", gap: space.sm },
   half: { flex: 1 },
   chips: { flexDirection: "row", flexWrap: "wrap", gap: space.sm },
-  chip: { minWidth: 48, minHeight: 44, alignItems: "center", justifyContent: "center", borderRadius: radius.lg, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
+  chip: {
+    minWidth: 48,
+    minHeight: 44,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+  },
   chipOn: { backgroundColor: colors.primary, borderColor: colors.primary },
   chipText: { fontSize: font.label, color: colors.text },
   chipTextOn: { color: colors.primaryText, fontWeight: "700" },

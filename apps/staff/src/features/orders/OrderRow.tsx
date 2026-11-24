@@ -12,7 +12,12 @@ export function OrderRow({ order, onOpen, onToggle, busy }: Props) {
   const handedOver = order.status === "picked_up";
   return (
     <Card muted={handedOver}>
-      <Pressable accessibilityRole="button" accessibilityLabel={t("orders.open", { number: order.number })} onPress={onOpen} style={({ pressed }) => [styles.summary, pressed && styles.pressed]}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={t("orders.open", { number: order.number })}
+        onPress={onOpen}
+        style={({ pressed }) => [styles.summary, pressed && styles.pressed]}
+      >
         <View style={styles.top}>
           <Text style={styles.name}>{order.customerName}</Text>
           <Text style={styles.total}>{formatCzk(order.totalCzk)}</Text>
@@ -24,7 +29,12 @@ export function OrderRow({ order, onOpen, onToggle, busy }: Props) {
           {handedOver ? <Badge label={t("orders.handedOver")} tone="success" /> : null}
         </View>
       </Pressable>
-      <Button label={handedOver ? t("orders.undoHandOver") : t("orders.handOver")} variant={handedOver ? "secondary" : "primary"} onPress={onToggle} busy={busy} />
+      <Button
+        label={handedOver ? t("orders.undoHandOver") : t("orders.handOver")}
+        variant={handedOver ? "secondary" : "primary"}
+        onPress={onToggle}
+        busy={busy}
+      />
     </Card>
   );
 }

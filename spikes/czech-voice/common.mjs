@@ -21,11 +21,31 @@ export const CATALOGUE = [
 // Speech vocabulary (ADR-0010 point 3): product names with the inflected forms a caller says,
 // plus words the recognisers missed in R7 ("pět kaiserek" heard as "Pětka, Serek", "pět kalaret").
 export const VOCABULARY = [
-  "kmínový chléb", "kmínové chleby", "žitný chléb", "celozrnný chléb", "celozrnné chleby",
-  "rohlík", "rohlíky", "rohlíků", "houska", "housky", "housek",
-  "kaiserka", "kaiserky", "kaiserek", "tvarohový koláč", "tvarohových", "makový koláč", "makových",
-  "povidlová buchta", "povidlové buchty", "máslový croissant", "croissanty", "croissantů",
-  "pozítří", "Pekárna U Lípy",
+  "kmínový chléb",
+  "kmínové chleby",
+  "žitný chléb",
+  "celozrnný chléb",
+  "celozrnné chleby",
+  "rohlík",
+  "rohlíky",
+  "rohlíků",
+  "houska",
+  "housky",
+  "housek",
+  "kaiserka",
+  "kaiserky",
+  "kaiserek",
+  "tvarohový koláč",
+  "tvarohových",
+  "makový koláč",
+  "makových",
+  "povidlová buchta",
+  "povidlové buchty",
+  "máslový croissant",
+  "croissanty",
+  "croissantů",
+  "pozítří",
+  "Pekárna U Lípy",
 ];
 
 // Run 1 showed the model miscounting relative days ("pozítří", "v sobotu") by one. Dates are not
@@ -143,11 +163,14 @@ export function score(u, calls) {
   if (!prep) return { pass: false, why: "no prepare_order call" };
   const got = Object.fromEntries((prep.args.items ?? []).map((i) => [i.product_id, i.quantity]));
   const itemsOk =
-    Object.keys(got).length === Object.keys(e.items).length &&
-    Object.entries(e.items).every(([k, v]) => got[k] === v);
+    Object.keys(got).length === Object.keys(e.items).length && Object.entries(e.items).every(([k, v]) => got[k] === v);
   const dateOk = prep.args.pickup_date === e.date;
   const nameOk = (prep.args.customer_name ?? "").toLowerCase().includes(e.name.toLowerCase().slice(0, 5));
-  const why = [!itemsOk && `items ${JSON.stringify(got)}`, !dateOk && `date ${prep.args.pickup_date}`, !nameOk && `name ${prep.args.customer_name}`]
+  const why = [
+    !itemsOk && `items ${JSON.stringify(got)}`,
+    !dateOk && `date ${prep.args.pickup_date}`,
+    !nameOk && `name ${prep.args.customer_name}`,
+  ]
     .filter(Boolean)
     .join("; ");
   return { pass: itemsOk && dateOk && nameOk, why: why || "ok" };
@@ -156,18 +179,32 @@ export function score(u, calls) {
 export function saveResults(provider, variant, rows) {
   mkdirSync(new URL("./out/", import.meta.url), { recursive: true });
   writeFileSync(new URL(`./out/${provider}-${variant}.json`, import.meta.url), JSON.stringify(rows, null, 2));
-  const lat = rows.map((r) => r.latencyMs).filter((x) => x != null).sort((a, b) => a - b);
+  const lat = rows
+    .map((r) => r.latencyMs)
+    .filter((x) => x != null)
+    .sort((a, b) => a - b);
   const pct = (p) => (lat.length ? lat[Math.min(lat.length - 1, Math.floor(p * lat.length))] : null);
   const passed = rows.filter((r) => r.pass).length;
-  console.log(`\n${provider} / ${variant}: ${passed}/${rows.length} pass, first audio median ${pct(0.5)} ms, max ${lat.at(-1)} ms`);
+  console.log(
+    `\n${provider} / ${variant}: ${passed}/${rows.length} pass, first audio median ${pct(0.5)} ms, max ${lat.at(-1)} ms`,
+  );
   for (const r of rows) console.log(`  ${r.pass ? "PASS" : "FAIL"} ${r.id} ${r.latencyMs ?? "-"} ms  ${r.why}`);
 }
 
 export function pcm16ToWav(pcm, rate) {
   const h = Buffer.alloc(44);
-  h.write("RIFF", 0); h.writeUInt32LE(36 + pcm.length, 4); h.write("WAVE", 8);
-  h.write("fmt ", 12); h.writeUInt32LE(16, 16); h.writeUInt16LE(1, 20); h.writeUInt16LE(1, 22);
-  h.writeUInt32LE(rate, 24); h.writeUInt32LE(rate * 2, 28); h.writeUInt16LE(2, 32); h.writeUInt16LE(16, 34);
-  h.write("data", 36); h.writeUInt32LE(pcm.length, 40);
+  h.write("RIFF", 0);
+  h.writeUInt32LE(36 + pcm.length, 4);
+  h.write("WAVE", 8);
+  h.write("fmt ", 12);
+  h.writeUInt32LE(16, 16);
+  h.writeUInt16LE(1, 20);
+  h.writeUInt16LE(1, 22);
+  h.writeUInt32LE(rate, 24);
+  h.writeUInt32LE(rate * 2, 28);
+  h.writeUInt16LE(2, 32);
+  h.writeUInt16LE(16, 34);
+  h.write("data", 36);
+  h.writeUInt32LE(pcm.length, 40);
   return Buffer.concat([h, pcm]);
 }

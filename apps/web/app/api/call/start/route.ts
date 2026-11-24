@@ -5,7 +5,12 @@ import { CALL_START_LIMIT, liveConfig } from "@/server/call-session";
 import { log } from "@/server/log";
 import { db, fail, genai, ipHash, json, LIVE_MODEL } from "@/server/runtime";
 
-const Body = z.object({ caller_phone: z.string().trim().regex(/^\+?[0-9 ]{9,16}$/, "phone") });
+const Body = z.object({
+  caller_phone: z
+    .string()
+    .trim()
+    .regex(/^\+?[0-9 ]{9,16}$/, "phone"),
+});
 
 /** Begins a browser call: per-IP limit, a call record, a one-use Live token locked to our config (FR-035, FR-036). */
 export async function POST(req: Request) {
@@ -14,11 +19,20 @@ export async function POST(req: Request) {
 
   const hash = ipHash(req);
   if (!(await hitRateLimit(db(), `call:${hash}`, CALL_START_LIMIT.max, CALL_START_LIMIT.windowMs)))
-    return fail("rate_limited", "Příliš mnoho hovorů za krátkou dobu. Zkuste to prosím za chvíli, nebo použijte objednávkový formulář.", 429);
+    return fail(
+      "rate_limited",
+      "Příliš mnoho hovorů za krátkou dobu. Zkuste to prosím za chvíli, nebo použijte objednávkový formulář.",
+      429,
+    );
 
   const bakery = await loadBakery(db());
   const now = new Date();
-  const callId = await createCall(db(), { callerPhone: parsed.data.caller_phone.replace(/\s+/g, ""), ipHash: hash, promptVersion: PROMPT_VERSION, model: LIVE_MODEL });
+  const callId = await createCall(db(), {
+    callerPhone: parsed.data.caller_phone.replace(/\s+/g, ""),
+    ipHash: hash,
+    promptVersion: PROMPT_VERSION,
+    model: LIVE_MODEL,
+  });
 
   try {
     const token = await genai().authTokens.create({

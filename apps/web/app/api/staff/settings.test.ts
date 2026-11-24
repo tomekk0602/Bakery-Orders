@@ -14,7 +14,9 @@ const get = async (cookie?: string) => {
 };
 const put = async (body: unknown, cookie?: string) => {
   const { PUT } = await import("./settings/route");
-  return PUT(request("/api/staff/settings", { method: "PUT", body: JSON.stringify(body), ...(cookie ? { cookie } : {}) }));
+  return PUT(
+    request("/api/staff/settings", { method: "PUT", body: JSON.stringify(body), ...(cookie ? { cookie } : {}) }),
+  );
 };
 
 describe("bakery settings (FR-011, FR-044)", () => {
@@ -38,30 +40,57 @@ describe("bakery settings (FR-011, FR-044)", () => {
       ...s,
       cutoffTime: "13:30",
       closedDays: [{ day: "2026-12-31", reason: "Silvestr" }],
-      products: s.products.map((p) => (p.id === "rohlik" ? { ...rohlik, priceCzk: 5, dailyLimit: 300, buffers: [100, 100, 100, 100, 100, 150, 0] } : p)),
+      products: s.products.map((p) =>
+        p.id === "rohlik" ? { ...rohlik, priceCzk: 5, dailyLimit: 300, buffers: [100, 100, 100, 100, 100, 150, 0] } : p,
+      ),
     };
     const saved = BakerySettings.parse(await (await put(changed, env.cookies.owner)).json());
     expect(saved.cutoffTime).toBe("13:30");
     expect(saved.closedDays).toEqual([{ day: "2026-12-31", reason: "Silvestr" }]);
-    expect(saved.products.find((p) => p.id === "rohlik")).toMatchObject({ priceCzk: 5, dailyLimit: 300, buffers: [100, 100, 100, 100, 100, 150, 0] });
+    expect(saved.products.find((p) => p.id === "rohlik")).toMatchObject({
+      priceCzk: 5,
+      dailyLimit: 300,
+      buffers: [100, 100, 100, 100, 100, 150, 0],
+    });
 
     const { GET } = await import("./order-form/route");
-    const form = OrderFormResponse.parse(await (await GET(request("/api/staff/order-form", { cookie: env.cookies.employee }))).json());
+    const form = OrderFormResponse.parse(
+      await (await GET(request("/api/staff/order-form", { cookie: env.cookies.employee }))).json(),
+    );
     expect(form.products.find((p) => p.id === "rohlik")?.priceCzk).toBe(5);
   });
 
   it("a deactivated product leaves the offer", async () => {
     const s = BakerySettings.parse(await (await get(env.cookies.owner)).json());
-    await put({ ...s, products: s.products.map((p) => (p.id === "vanocka" ? { ...p, active: false } : p)) }, env.cookies.owner);
+    await put(
+      { ...s, products: s.products.map((p) => (p.id === "vanocka" ? { ...p, active: false } : p)) },
+      env.cookies.owner,
+    );
     const { GET } = await import("./order-form/route");
-    const form = OrderFormResponse.parse(await (await GET(request("/api/staff/order-form", { cookie: env.cookies.employee }))).json());
+    const form = OrderFormResponse.parse(
+      await (await GET(request("/api/staff/order-form", { cookie: env.cookies.employee }))).json(),
+    );
     expect(form.products.some((p) => p.id === "vanocka")).toBe(false);
   });
 
   it.each([
     ["a malformed time", { cutoffTime: "25:00" }],
-    ["a zero price", { products: [{ id: "rohlik", name: "Rohlík", priceCzk: 0, dailyLimit: null, active: true, buffers: [0, 0, 0, 0, 0, 0, 0] }] }],
-    ["six buffers instead of seven", { products: [{ id: "rohlik", name: "Rohlík", priceCzk: 4, dailyLimit: null, active: true, buffers: [0, 0, 0, 0, 0, 0] }] }],
+    [
+      "a zero price",
+      {
+        products: [
+          { id: "rohlik", name: "Rohlík", priceCzk: 0, dailyLimit: null, active: true, buffers: [0, 0, 0, 0, 0, 0, 0] },
+        ],
+      },
+    ],
+    [
+      "six buffers instead of seven",
+      {
+        products: [
+          { id: "rohlik", name: "Rohlík", priceCzk: 4, dailyLimit: null, active: true, buffers: [0, 0, 0, 0, 0, 0] },
+        ],
+      },
+    ],
     ["every weekday closed", { closedWeekdays: [1, 2, 3, 4, 5, 6, 7] }],
   ])("refuses %s", async (_label, change) => {
     const s = BakerySettings.parse(await (await get(env.cookies.owner)).json());
@@ -70,7 +99,24 @@ describe("bakery settings (FR-011, FR-044)", () => {
 
   it("refuses an unknown product and changes nothing", async () => {
     const s = BakerySettings.parse(await (await get(env.cookies.owner)).json());
-    const res = await put({ ...s, cutoffTime: "09:00", products: [...s.products, { id: "bageta", name: "Bageta", priceCzk: 30, dailyLimit: null, active: true, buffers: [0, 0, 0, 0, 0, 0, 0] }] }, env.cookies.owner);
+    const res = await put(
+      {
+        ...s,
+        cutoffTime: "09:00",
+        products: [
+          ...s.products,
+          {
+            id: "bageta",
+            name: "Bageta",
+            priceCzk: 30,
+            dailyLimit: null,
+            active: true,
+            buffers: [0, 0, 0, 0, 0, 0, 0],
+          },
+        ],
+      },
+      env.cookies.owner,
+    );
     expect(res.status).toBe(400);
     expect(BakerySettings.parse(await (await get(env.cookies.owner)).json()).cutoffTime).not.toBe("09:00");
   });

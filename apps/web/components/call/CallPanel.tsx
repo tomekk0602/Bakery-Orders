@@ -55,17 +55,25 @@ export function CallPanel() {
       />
 
       {!inCall ? (
-        <button onClick={start} disabled={phone.trim().length < 9} className="mt-4 w-full rounded-xl bg-amber-700 px-4 py-3 text-lg font-semibold text-white disabled:opacity-40">
+        <button
+          onClick={start}
+          disabled={phone.trim().length < 9}
+          className="mt-4 w-full rounded-xl bg-amber-700 px-4 py-3 text-lg font-semibold text-white disabled:opacity-40"
+        >
           Zavolat do pekárny
         </button>
       ) : (
-        <button onClick={hangUp} className="mt-4 w-full rounded-xl bg-red-700 px-4 py-3 text-lg font-semibold text-white">
+        <button
+          onClick={hangUp}
+          className="mt-4 w-full rounded-xl bg-red-700 px-4 py-3 text-lg font-semibold text-white"
+        >
           {status === "connecting" ? "Spojuji…" : "Zavěsit"}
         </button>
       )}
 
       <p className="mt-3 text-sm text-stone-500">
-        Hovor vyřizuje asistent s umělou inteligencí (Google Gemini). Přepis hovoru uchováváme 30 dní. Nejlépe se sluchátky.
+        Hovor vyřizuje asistent s umělou inteligencí (Google Gemini). Přepis hovoru uchováváme 30 dní. Nejlépe se
+        sluchátky.
       </p>
 
       {error && (
@@ -86,7 +94,10 @@ export function CallPanel() {
       {turns.length > 0 && (
         <ol className="mt-5 space-y-2" aria-live="polite">
           {turns.map((t, i) => (
-            <li key={i} className={t.role === "agent" ? "rounded-lg bg-amber-50 p-2" : "rounded-lg bg-stone-100 p-2 text-right"}>
+            <li
+              key={i}
+              className={t.role === "agent" ? "rounded-lg bg-amber-50 p-2" : "rounded-lg bg-stone-100 p-2 text-right"}
+            >
               <span className="text-xs uppercase text-stone-500">{t.role === "agent" ? "Pekárna" : "Vy"}</span>
               <div>{t.text}</div>
             </li>

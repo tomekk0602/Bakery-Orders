@@ -15,4 +15,5 @@ export async function orderDetail(id: string): Promise<StaffOrderDetail | null> 
   return detail ? StaffOrderDetail.parse(detail) : null;
 }
 
-export const setHandedOver = (id: string, body: SetOrderStatusBody): Promise<SetStatusResult> => setOrderHandedOver(db(), id, body.status);
+export const setHandedOver = (id: string, body: SetOrderStatusBody): Promise<SetStatusResult> =>
+  setOrderHandedOver(db(), id, body.status);

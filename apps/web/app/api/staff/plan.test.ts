@@ -17,7 +17,10 @@ beforeAll(async () => {
   // Kučerová 6 croissantů (handed over), Procházka 8 housek + 4 kaiserky.
   await seedDemoOrders(db(), new Date(`${day}T10:00:00Z`));
   // Procházka cancels: his pieces must leave the plan.
-  await db().update(order).set({ status: "cancelled" }).where(and(eq(order.pickupDay, day), eq(order.customerName, "Procházka")));
+  await db()
+    .update(order)
+    .set({ status: "cancelled" })
+    .where(and(eq(order.pickupDay, day), eq(order.customerName, "Procházka")));
 });
 afterAll(async () => env?.stop());
 
@@ -36,7 +39,11 @@ describe("baking plan (FR-010, FR-044)", () => {
     const line = (id: string) => body.lines.find((l) => l.productId === id)!;
     const weekday = new Date(`${day}T12:00:00Z`).getUTCDay() || 7;
     const factor = weekday === 6 ? 1.5 : 1;
-    expect(line("rohlik")).toMatchObject({ reserved: 10, buffer: Math.round(120 * factor), toBake: 10 + Math.round(120 * factor) });
+    expect(line("rohlik")).toMatchObject({
+      reserved: 10,
+      buffer: Math.round(120 * factor),
+      toBake: 10 + Math.round(120 * factor),
+    });
     expect(line("croissant").reserved).toBe(6); // handed over still had to be baked
     expect(line("houska").reserved).toBe(0); // cancelled
     expect(body.totals.toBake).toBe(body.lines.reduce((s, l) => s + l.toBake, 0));

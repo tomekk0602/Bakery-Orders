@@ -14,11 +14,17 @@ import { SuggestionPicker } from "./SuggestionPicker";
 const FormValues = z
   .object({
     customerName: z.string().trim().min(1, "newOrder.nameRequired"),
-    customerPhone: z.string().trim().regex(/^(\+?[0-9 ]{9,16})?$/, "newOrder.phoneInvalid"),
+    customerPhone: z
+      .string()
+      .trim()
+      .regex(/^(\+?[0-9 ]{9,16})?$/, "newOrder.phoneInvalid"),
     pickupDate: z.string().min(1),
     quantities: z.record(z.string(), z.number().int().min(0)),
   })
-  .refine((v) => Object.values(v.quantities).some((q) => q > 0), { path: ["quantities"], message: "newOrder.itemsRequired" });
+  .refine((v) => Object.values(v.quantities).some((q) => q > 0), {
+    path: ["quantities"],
+    message: "newOrder.itemsRequired",
+  });
 type FormValues = z.infer<typeof FormValues>;
 
 export const emptyOrder = (form: OrderFormResponse): FormValues => ({
@@ -59,18 +65,31 @@ type Props = {
 /** Name, optional phone, day and quantities; staff may order after the cut-off (FR-013, FR-017, FR-021). */
 export function OrderForm({ form, initial, onSubmit, busy, error, suggestions = [], notice = null }: Props) {
   const { t } = useTranslation();
-  const { control, handleSubmit, formState, getValues, setValue } = useForm<FormValues>({ resolver: zodResolver(FormValues), defaultValues: initial });
+  const { control, handleSubmit, formState, getValues, setValue } = useForm<FormValues>({
+    resolver: zodResolver(FormValues),
+    defaultValues: initial,
+  });
   // From the form's current values, not the rendered ones, so quick taps add up.
   const add = (id: string, delta: number) => {
     const current = getValues("quantities");
-    setValue("quantities", { ...current, [id]: Math.max(0, (current[id] ?? 0) + delta) }, { shouldValidate: formState.isSubmitted });
+    setValue(
+      "quantities",
+      { ...current, [id]: Math.max(0, (current[id] ?? 0) + delta) },
+      { shouldValidate: formState.isSubmitted },
+    );
   };
   const [open, setOpen] = useState(suggestions);
   const resolve = (word: string) => setOpen((list) => list.filter((u) => u.word !== word));
   const err = (key?: string) => (key ? t(key) : undefined);
   // The "at least one product" rule is attached to the quantities record as a whole.
   const quantitiesError: unknown = formState.errors.quantities;
-  const itemsError = typeof quantitiesError === "object" && quantitiesError !== null && "message" in quantitiesError && typeof quantitiesError.message === "string" ? quantitiesError.message : undefined;
+  const itemsError =
+    typeof quantitiesError === "object" &&
+    quantitiesError !== null &&
+    "message" in quantitiesError &&
+    typeof quantitiesError.message === "string"
+      ? quantitiesError.message
+      : undefined;
   return (
     <>
       {notice ? (
@@ -86,10 +105,41 @@ export function OrderForm({ form, initial, onSubmit, busy, error, suggestions = 
           resolve(word);
         }}
       />
-      <Controller control={control} name="customerName" render={({ field, fieldState }) => <TextField label={t("newOrder.name")} value={field.value} onChangeText={field.onChange} onBlur={field.onBlur} autoCapitalize="words" error={err(fieldState.error?.message)} />} />
-      <Controller control={control} name="customerPhone" render={({ field, fieldState }) => <TextField label={t("newOrder.phone")} value={field.value} onChangeText={field.onChange} onBlur={field.onBlur} keyboardType="phone-pad" autoComplete="tel" error={err(fieldState.error?.message)} />} />
+      <Controller
+        control={control}
+        name="customerName"
+        render={({ field, fieldState }) => (
+          <TextField
+            label={t("newOrder.name")}
+            value={field.value}
+            onChangeText={field.onChange}
+            onBlur={field.onBlur}
+            autoCapitalize="words"
+            error={err(fieldState.error?.message)}
+          />
+        )}
+      />
+      <Controller
+        control={control}
+        name="customerPhone"
+        render={({ field, fieldState }) => (
+          <TextField
+            label={t("newOrder.phone")}
+            value={field.value}
+            onChangeText={field.onChange}
+            onBlur={field.onBlur}
+            keyboardType="phone-pad"
+            autoComplete="tel"
+            error={err(fieldState.error?.message)}
+          />
+        )}
+      />
       <Text style={styles.label}>{t("newOrder.day")}</Text>
-      <Controller control={control} name="pickupDate" render={({ field }) => <DayPicker days={form.days} selected={field.value} onSelect={field.onChange} />} />
+      <Controller
+        control={control}
+        name="pickupDate"
+        render={({ field }) => <DayPicker days={form.days} selected={field.value} onSelect={field.onChange} />}
+      />
       <Card>
         <Controller
           control={control}
@@ -97,7 +147,12 @@ export function OrderForm({ form, initial, onSubmit, busy, error, suggestions = 
           render={({ field }) => (
             <>
               {form.products.map((p) => (
-                <QuantityStepper key={p.id} label={p.name} value={field.value[p.id] ?? 0} onStep={(d) => add(p.id, d)} />
+                <QuantityStepper
+                  key={p.id}
+                  label={p.name}
+                  value={field.value[p.id] ?? 0}
+                  onStep={(d) => add(p.id, d)}
+                />
               ))}
             </>
           )}

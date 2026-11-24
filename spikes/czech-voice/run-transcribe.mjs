@@ -17,9 +17,16 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 // The words that carry the order: product stems by id, plus the customer's name.
 const STEMS = {
-  "chleb-kminovy": "kmínov", "chleb-zitny": "žitn", "chleb-celozrnny": "celozrnn", rohlik: "rohlík",
-  houska: "housk", kaiserka: "kaiser", "kolac-tvarohovy": "tvaroh", "kolac-makovy": "makov",
-  "buchta-povidlova": "povidl", croissant: "croissant",
+  "chleb-kminovy": "kmínov",
+  "chleb-zitny": "žitn",
+  "chleb-celozrnny": "celozrnn",
+  rohlik: "rohlík",
+  houska: "housk",
+  kaiserka: "kaiser",
+  "kolac-tvarohovy": "tvaroh",
+  "kolac-makovy": "makov",
+  "buchta-povidlova": "povidl",
+  croissant: "croissant",
 };
 const EXTRA = { "u05-unknown": ["baget", "proch"], "u08-human": ["člověk"] };
 function keyTerms(u) {
@@ -27,11 +34,18 @@ function keyTerms(u) {
   return [...Object.keys(u.expect.items).map((id) => STEMS[id]), u.expect.name.toLowerCase().slice(0, 5)];
 }
 
-const norm = (s) => s.toLowerCase().normalize("NFC").replace(/[.,!?;:"„“]/g, " ").split(/\s+/).filter(Boolean);
+const norm = (s) =>
+  s
+    .toLowerCase()
+    .normalize("NFC")
+    .replace(/[.,!?;:"„“]/g, " ")
+    .split(/\s+/)
+    .filter(Boolean);
 // Word error rate against the script. Digits vs words ("10" vs "deset") count as errors, so WER is
 // pessimistic for every recogniser alike; the key-term recall is the number that matters here.
 function wer(ref, hyp) {
-  const r = norm(ref), h = norm(hyp);
+  const r = norm(ref),
+    h = norm(hyp);
   const d = Array.from({ length: r.length + 1 }, (_, i) => [i, ...Array(h.length).fill(0)]);
   for (let j = 1; j <= h.length; j++) d[0][j] = j;
   for (let i = 1; i <= r.length; i++)
@@ -47,19 +61,28 @@ function scoreText(u, text) {
 }
 
 async function transcribe(u, withVocabulary) {
-  let text = "", last = performance.now(), error = null;
+  let text = "",
+    last = performance.now(),
+    error = null;
   const session = await ai.live.connect({
     model: MODEL,
     config: {
       responseModalities: [Modality.TEXT],
-      inputAudioTranscription: withVocabulary ? { languageCodes: ["cs-CZ"], customVocabulary: VOCABULARY } : { languageCodes: ["cs-CZ"] },
+      inputAudioTranscription: withVocabulary
+        ? { languageCodes: ["cs-CZ"], customVocabulary: VOCABULARY }
+        : { languageCodes: ["cs-CZ"] },
     },
     callbacks: {
       onmessage: (m) => {
         const t = m.serverContent?.inputTranscription?.text;
-        if (t) { text += t; last = performance.now(); }
+        if (t) {
+          text += t;
+          last = performance.now();
+        }
       },
-      onerror: (e) => { error = e?.message ?? String(e); },
+      onerror: (e) => {
+        error = e?.message ?? String(e);
+      },
     },
   });
   const pcm = readFileSync(new URL(`./audio/${u.id}.${VARIANT}.${RATE}.pcm`, import.meta.url));
@@ -84,7 +107,12 @@ const rows = [];
 for (const u of loadUtterances()) {
   const plain = await transcribe(u, false);
   const vocab = await transcribe(u, true);
-  rows.push({ id: u.id, ref: u.text, plain: { ...plain, ...scoreText(u, plain.text) }, vocab: { ...vocab, ...scoreText(u, vocab.text) } });
+  rows.push({
+    id: u.id,
+    ref: u.text,
+    plain: { ...plain, ...scoreText(u, plain.text) },
+    vocab: { ...vocab, ...scoreText(u, vocab.text) },
+  });
   console.log(`${u.id}\n  plain: ${plain.error ?? plain.text}\n  vocab: ${vocab.error ?? vocab.text}`);
 }
 
@@ -97,7 +125,8 @@ for (const label of ["gemini-live", "gemini-live-vocab"]) {
 
 writeFileSync(new URL(`./out/transcribe-${VARIANT}.json`, import.meta.url), JSON.stringify({ rows, live }, null, 2));
 const sum = (list) => {
-  const t = list.reduce((a, s) => a + s.terms, 0), f = list.reduce((a, s) => a + s.found, 0);
+  const t = list.reduce((a, s) => a + s.terms, 0),
+    f = list.reduce((a, s) => a + s.found, 0);
   const w = list.reduce((a, s) => a + s.wer, 0) / list.length;
   return `key terms ${f}/${t}, mean WER ${(w * 100).toFixed(1)}%`;
 };
@@ -106,7 +135,12 @@ console.log(`\n${VARIANT}:`);
 console.log(`  ${MODEL}, no vocabulary:   ${sum(rows.map((r) => r.plain))}`);
 console.log(`  ${MODEL}, with vocabulary: ${sum(rows.map((r) => r.vocab))}`);
 for (const [label, data] of Object.entries(live)) {
-  const s = data.map((r) => scoreText(utts.find((u) => u.id === r.id), r.heard ?? ""));
+  const s = data.map((r) =>
+    scoreText(
+      utts.find((u) => u.id === r.id),
+      r.heard ?? "",
+    ),
+  );
   console.log(`  ${label} (heard):        ${sum(s)}`);
 }
 for (const r of rows) {

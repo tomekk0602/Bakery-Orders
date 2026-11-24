@@ -15,6 +15,9 @@ export async function reservedForDay(db: Db, day: string): Promise<Record<string
 
 /** The owner's walk-in buffer per product for an ISO weekday (1 = Monday … 7 = Sunday). */
 export async function buffersForWeekday(db: Db, weekday: number): Promise<Record<string, number>> {
-  const rows = await db.select({ productId: walkInBuffer.productId, quantity: walkInBuffer.quantity }).from(walkInBuffer).where(eq(walkInBuffer.weekday, weekday));
+  const rows = await db
+    .select({ productId: walkInBuffer.productId, quantity: walkInBuffer.quantity })
+    .from(walkInBuffer)
+    .where(eq(walkInBuffer.weekday, weekday));
   return Object.fromEntries(rows.map((r) => [r.productId, r.quantity]));
 }

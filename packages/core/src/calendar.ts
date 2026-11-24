@@ -47,7 +47,11 @@ function pragueNoon(date: string): TZDate {
   return new TZDate(y, m - 1, d, 12, 0, 0, TIME_ZONE);
 }
 
-export function describeDay(date: string, schedule: BakerySchedule, relative: CalendarDay["relative"] = null): CalendarDay {
+export function describeDay(
+  date: string,
+  schedule: BakerySchedule,
+  relative: CalendarDay["relative"] = null,
+): CalendarDay {
   const noon = pragueNoon(date);
   const weekday = getISODay(noon);
   const closedReason = schedule.closedWeekdays.includes(weekday)
@@ -57,7 +61,14 @@ export function describeDay(date: string, schedule: BakerySchedule, relative: Ca
       : isPublicHoliday(date)
         ? "holiday"
         : null;
-  return { date, weekday, weekdayName: format(noon, "EEEE", { locale: cs }), relative, closed: closedReason !== null, closedReason };
+  return {
+    date,
+    weekday,
+    weekdayName: format(noon, "EEEE", { locale: cs }),
+    relative,
+    closed: closedReason !== null,
+    closedReason,
+  };
 }
 
 /** The next CALENDAR_DAYS days from today in Prague — the table the agent looks dates up in (R1). */

@@ -11,9 +11,13 @@ export const orderKeys = {
 
 /** The day's orders; `null` lets the server pick today in Prague. */
 export const useOrdersForDay = (day: string | null) =>
-  useQuery({ queryKey: orderKeys.day(day), queryFn: () => api(`/api/staff/orders${day ? `?day=${day}` : ""}`, StaffOrdersResponse) });
+  useQuery({
+    queryKey: orderKeys.day(day),
+    queryFn: () => api(`/api/staff/orders${day ? `?day=${day}` : ""}`, StaffOrdersResponse),
+  });
 
-export const useOrder = (id: string) => useQuery({ queryKey: orderKeys.detail(id), queryFn: () => api(`/api/staff/orders/${id}`, StaffOrderDetail) });
+export const useOrder = (id: string) =>
+  useQuery({ queryKey: orderKeys.detail(id), queryFn: () => api(`/api/staff/orders/${id}`, StaffOrderDetail) });
 
 const Ok = z.object({ ok: z.literal(true) });
 

@@ -10,12 +10,21 @@ export const DRAFT_TTL_MS = 24 * 60 * 60 * 1000;
 /** Who may confirm a draft: the call it was prepared in, or the staff member who prepared it (FR-006, FR-019). */
 export type DraftOwner = { callId: string } | { userId: string };
 
-const ownerColumns = (owner: DraftOwner) => ("callId" in owner ? { callId: owner.callId, createdBy: null } : { callId: null, createdBy: owner.userId });
+const ownerColumns = (owner: DraftOwner) =>
+  "callId" in owner ? { callId: owner.callId, createdBy: null } : { callId: null, createdBy: owner.userId };
 
 const ownedBy = (owner: DraftOwner) =>
-  "callId" in owner ? eq(orderDraft.callId, owner.callId) : and(isNull(orderDraft.callId), eq(orderDraft.createdBy, owner.userId));
+  "callId" in owner
+    ? eq(orderDraft.callId, owner.callId)
+    : and(isNull(orderDraft.callId), eq(orderDraft.createdBy, owner.userId));
 
-export async function saveDraft(db: Db, prepared: PreparedOrder, channel: OrderChannel, owner: DraftOwner, now = new Date()): Promise<string> {
+export async function saveDraft(
+  db: Db,
+  prepared: PreparedOrder,
+  channel: OrderChannel,
+  owner: DraftOwner,
+  now = new Date(),
+): Promise<string> {
   const rows = await db
     .insert(orderDraft)
     .values({ channel, ...ownerColumns(owner), payload: prepared, expiresAt: new Date(now.getTime() + DRAFT_TTL_MS) })
@@ -24,7 +33,8 @@ export async function saveDraft(db: Db, prepared: PreparedOrder, channel: OrderC
 }
 
 export type ConfirmMeta = { promptVersion: string | null; model: string | null };
-export type ConfirmResult = { ok: true; orderNumber: number; orderId: string } | { ok: false; reason: "no_draft" | "over_limit" };
+export type ConfirmResult =
+  { ok: true; orderNumber: number; orderId: string } | { ok: false; reason: "no_draft" | "over_limit" };
 
 type Tx = Parameters<Parameters<Db["transaction"]>[0]>[0];
 type OrderSourceValue = typeof order.$inferInsert.source;
@@ -36,10 +46,21 @@ class OverLimit extends Error {}
  * Inserts an order with its lines and takes the daily capacity with a conditional update, so two
  * concurrent orders can never take the same last pieces (research R14, spec E4).
  */
-async function insertOrder(tx: Tx, p: PreparedOrder, source: OrderSourceValue, meta: ConfirmMeta & { callId: string | null; createdBy: string | null }) {
+async function insertOrder(
+  tx: Tx,
+  p: PreparedOrder,
+  source: OrderSourceValue,
+  meta: ConfirmMeta & { callId: string | null; createdBy: string | null },
+) {
   for (const line of p.lines) {
-    const [limit] = await tx.select({ dailyLimit: product.dailyLimit }).from(product).where(eq(product.id, line.productId));
-    await tx.insert(dailyCapacity).values({ productId: line.productId, day: p.pickupDate, reserved: 0 }).onConflictDoNothing();
+    const [limit] = await tx
+      .select({ dailyLimit: product.dailyLimit })
+      .from(product)
+      .where(eq(product.id, line.productId));
+    await tx
+      .insert(dailyCapacity)
+      .values({ productId: line.productId, day: p.pickupDate, reserved: 0 })
+      .onConflictDoNothing();
     const updated = await tx
       .update(dailyCapacity)
       .set({ reserved: sql`${dailyCapacity.reserved} + ${line.quantity}` })
@@ -47,7 +68,9 @@ async function insertOrder(tx: Tx, p: PreparedOrder, source: OrderSourceValue, m
         and(
           eq(dailyCapacity.productId, line.productId),
           eq(dailyCapacity.day, p.pickupDate),
-          limit?.dailyLimit == null ? sql`true` : sql`${dailyCapacity.reserved} + ${line.quantity} <= ${limit.dailyLimit}`,
+          limit?.dailyLimit == null
+            ? sql`true`
+            : sql`${dailyCapacity.reserved} + ${line.quantity} <= ${limit.dailyLimit}`,
         ),
       )
       .returning({ reserved: dailyCapacity.reserved });
@@ -56,11 +79,28 @@ async function insertOrder(tx: Tx, p: PreparedOrder, source: OrderSourceValue, m
   const saved = firstRow(
     await tx
       .insert(order)
-      .values({ source, customerName: p.customerName, customerPhone: p.customerPhone, pickupDay: p.pickupDate, totalCzk: p.totalCzk, promptVersion: meta.promptVersion, model: meta.model, callId: meta.callId, createdBy: meta.createdBy })
+      .values({
+        source,
+        customerName: p.customerName,
+        customerPhone: p.customerPhone,
+        pickupDay: p.pickupDate,
+        totalCzk: p.totalCzk,
+        promptVersion: meta.promptVersion,
+        model: meta.model,
+        callId: meta.callId,
+        createdBy: meta.createdBy,
+      })
       .returning({ id: order.id, number: order.number }),
     "order",
   );
-  await tx.insert(orderLine).values(p.lines.map((l) => ({ orderId: saved.id, productId: l.productId, quantity: l.quantity, unitPriceCzk: l.unitPriceCzk })));
+  await tx.insert(orderLine).values(
+    p.lines.map((l) => ({
+      orderId: saved.id,
+      productId: l.productId,
+      quantity: l.quantity,
+      unitPriceCzk: l.unitPriceCzk,
+    })),
+  );
   return saved;
 }
 
@@ -70,14 +110,27 @@ const overLimit = (e: unknown) => {
 };
 
 /** Saves a draft as an order, once, and only for its owner (FR-006, FR-019). */
-export async function confirmDraft(db: Db, draftId: string, owner: DraftOwner, meta: ConfirmMeta, now = new Date()): Promise<ConfirmResult> {
+export async function confirmDraft(
+  db: Db,
+  draftId: string,
+  owner: DraftOwner,
+  meta: ConfirmMeta,
+  now = new Date(),
+): Promise<ConfirmResult> {
   const who = ownerColumns(owner);
   return db
     .transaction(async (tx) => {
       const [draft] = await tx
         .select()
         .from(orderDraft)
-        .where(and(eq(orderDraft.id, draftId), gt(orderDraft.expiresAt, now), isNull(orderDraft.confirmedOrderId), ownedBy(owner)))
+        .where(
+          and(
+            eq(orderDraft.id, draftId),
+            gt(orderDraft.expiresAt, now),
+            isNull(orderDraft.confirmedOrderId),
+            ownedBy(owner),
+          ),
+        )
         .for("update");
       if (!draft) return { ok: false, reason: "no_draft" } as const;
       const saved = await insertOrder(tx, draft.payload as PreparedOrder, draft.channel, { ...meta, ...who });
@@ -91,7 +144,12 @@ export async function confirmDraft(db: Db, draftId: string, owner: DraftOwner, m
 export async function placeWebOrder(db: Db, prepared: PreparedOrder): Promise<ConfirmResult> {
   return db
     .transaction(async (tx) => {
-      const saved = await insertOrder(tx, prepared, "web", { promptVersion: null, model: null, callId: null, createdBy: null });
+      const saved = await insertOrder(tx, prepared, "web", {
+        promptVersion: null,
+        model: null,
+        callId: null,
+        createdBy: null,
+      });
       return { ok: true, orderNumber: saved.number, orderId: saved.id } as const;
     })
     .catch(overLimit);

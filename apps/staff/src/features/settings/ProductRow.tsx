@@ -16,14 +16,51 @@ export function ProductRow({ control, index, name }: Props) {
     <Card>
       <View style={styles.head}>
         <Text style={styles.name}>{name}</Text>
-        <Controller control={control} name={`products.${index}.active`} render={({ field }) => <Switch accessibilityLabel={t("settings.active", { product: name })} value={field.value} onValueChange={field.onChange} />} />
+        <Controller
+          control={control}
+          name={`products.${index}.active`}
+          render={({ field }) => (
+            <Switch
+              accessibilityLabel={t("settings.active", { product: name })}
+              value={field.value}
+              onValueChange={field.onChange}
+            />
+          )}
+        />
       </View>
       <View style={styles.row}>
         <View style={styles.half}>
-          <Controller control={control} name={`products.${index}.priceCzk`} render={({ field, fieldState }) => <TextField label={t("settings.price")} accessibilityLabel={t("settings.priceOf", { product: name })} value={field.value} onChangeText={field.onChange} keyboardType="number-pad" error={err(fieldState.error?.message)} />} />
+          <Controller
+            control={control}
+            name={`products.${index}.priceCzk`}
+            render={({ field, fieldState }) => (
+              <TextField
+                label={t("settings.price")}
+                accessibilityLabel={t("settings.priceOf", { product: name })}
+                value={field.value}
+                onChangeText={field.onChange}
+                keyboardType="number-pad"
+                error={err(fieldState.error?.message)}
+              />
+            )}
+          />
         </View>
         <View style={styles.half}>
-          <Controller control={control} name={`products.${index}.dailyLimit`} render={({ field, fieldState }) => <TextField label={t("settings.limit")} accessibilityLabel={t("settings.limitOf", { product: name })} placeholder={t("settings.noLimit")} value={field.value} onChangeText={field.onChange} keyboardType="number-pad" error={err(fieldState.error?.message)} />} />
+          <Controller
+            control={control}
+            name={`products.${index}.dailyLimit`}
+            render={({ field, fieldState }) => (
+              <TextField
+                label={t("settings.limit")}
+                accessibilityLabel={t("settings.limitOf", { product: name })}
+                placeholder={t("settings.noLimit")}
+                value={field.value}
+                onChangeText={field.onChange}
+                keyboardType="number-pad"
+                error={err(fieldState.error?.message)}
+              />
+            )}
+          />
         </View>
       </View>
       <Text style={styles.label}>{t("settings.buffers")}</Text>
@@ -35,7 +72,13 @@ export function ProductRow({ control, index, name }: Props) {
               control={control}
               name={`products.${index}.buffers.${day}`}
               render={({ field, fieldState }) => (
-                <TextInput accessibilityLabel={t("settings.bufferOf", { product: name, day: t(`settings.weekdays.${key}`) })} value={field.value} onChangeText={field.onChange} keyboardType="number-pad" style={[styles.small, fieldState.error && styles.invalid]} />
+                <TextInput
+                  accessibilityLabel={t("settings.bufferOf", { product: name, day: t(`settings.weekdays.${key}`) })}
+                  value={field.value}
+                  onChangeText={field.onChange}
+                  keyboardType="number-pad"
+                  style={[styles.small, fieldState.error && styles.invalid]}
+                />
               )}
             />
           </View>
@@ -54,6 +97,16 @@ const styles = StyleSheet.create({
   week: { flexDirection: "row", gap: space.xs },
   day: { flex: 1, alignItems: "center", gap: 2 },
   dayLabel: { fontSize: font.label - 2, color: colors.muted },
-  small: { width: "100%", minHeight: 44, borderWidth: 1, borderColor: colors.border, borderRadius: radius.md, textAlign: "center", fontSize: font.body, color: colors.text, backgroundColor: colors.surface },
+  small: {
+    width: "100%",
+    minHeight: 44,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    textAlign: "center",
+    fontSize: font.body,
+    color: colors.text,
+    backgroundColor: colors.surface,
+  },
   invalid: { borderColor: colors.danger },
 });

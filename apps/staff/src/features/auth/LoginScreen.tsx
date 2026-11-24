@@ -7,13 +7,19 @@ import { z } from "zod";
 import { authClient } from "@/shared/auth/client";
 import { Button, colors, font, Screen, TextField } from "@/shared/ui";
 
-const LoginForm = z.object({ email: z.email("login.invalidEmail"), password: z.string().min(1, "login.passwordRequired") });
+const LoginForm = z.object({
+  email: z.email("login.invalidEmail"),
+  password: z.string().min(1, "login.passwordRequired"),
+});
 type LoginForm = z.infer<typeof LoginForm>;
 
 export function LoginScreen() {
   const { t } = useTranslation();
   const [failed, setFailed] = useState(false);
-  const { control, handleSubmit, formState } = useForm<LoginForm>({ resolver: zodResolver(LoginForm), defaultValues: { email: "", password: "" } });
+  const { control, handleSubmit, formState } = useForm<LoginForm>({
+    resolver: zodResolver(LoginForm),
+    defaultValues: { email: "", password: "" },
+  });
 
   const submit = handleSubmit(async ({ email, password }) => {
     setFailed(false);
@@ -29,14 +35,32 @@ export function LoginScreen() {
         control={control}
         name="email"
         render={({ field, fieldState }) => (
-          <TextField label={t("login.email")} value={field.value} onChangeText={field.onChange} onBlur={field.onBlur} autoCapitalize="none" autoComplete="email" keyboardType="email-address" error={fieldState.error?.message ? t(fieldState.error.message) : undefined} />
+          <TextField
+            label={t("login.email")}
+            value={field.value}
+            onChangeText={field.onChange}
+            onBlur={field.onBlur}
+            autoCapitalize="none"
+            autoComplete="email"
+            keyboardType="email-address"
+            error={fieldState.error?.message ? t(fieldState.error.message) : undefined}
+          />
         )}
       />
       <Controller
         control={control}
         name="password"
         render={({ field, fieldState }) => (
-          <TextField label={t("login.password")} value={field.value} onChangeText={field.onChange} onBlur={field.onBlur} secureTextEntry autoComplete="current-password" onSubmitEditing={() => void submit()} error={fieldState.error?.message ? t(fieldState.error.message) : undefined} />
+          <TextField
+            label={t("login.password")}
+            value={field.value}
+            onChangeText={field.onChange}
+            onBlur={field.onBlur}
+            secureTextEntry
+            autoComplete="current-password"
+            onSubmitEditing={() => void submit()}
+            error={fieldState.error?.message ? t(fieldState.error.message) : undefined}
+          />
         )}
       />
       {failed ? (

@@ -50,16 +50,16 @@ Chosen (owner, 2026-11-24): **A**, and the details below.
 
 **Call details**
 
-| # | Question | Decision | Rejected |
-|---|---|---|---|
-| 1 | Cancelling or changing by phone | the agent records a **request for staff** with what it understood; it never cancels or edits itself | the agent cancels by name and phone — a browser call cannot verify who is calling |
-| 2 | The caller's phone in a browser call | a **phone field before "Zavolat"**, standing in for caller ID | dictating digits — measured risk of misheard numbers ("päť" → "50", research R12) |
-| 3 | Protecting the free quota | the Live token is issued **bound to our model, prompt and tools** and short-lived; **per-IP limits** on token issuance (counters in PostgreSQL); a **call length cap of 3 minutes**; when the quota or a limit is reached, the screen says so and offers the form | an open token or the API key in the browser |
-| 4 | Echo | browser **echo cancellation** on, and a hint "nejlépe se sluchátky" | no handling — the agent would hear itself |
-| 5 | Holidays | Czech public holidays from **`date-holidays`**, plus closed days the owner sets | a hand-written list |
-| 6 | AI notice on the call page | one sentence under the button: an AI assistant (Google Gemini) handles the call; the transcript is kept for 30 days (ADR-0008) | notice only in the spoken greeting |
-| 7 | Order number | the agent ends with the **order number**; the form shows it too | no confirmation — without SMS the customer would have nothing to refer to |
-| 8 | Staff notifications | a **badge in the staff app** for new callback and change requests; no push notifications | push — extra setup and permissions, not needed for the brief |
+| #   | Question                             | Decision                                                                                                                                                                                                                                                          | Rejected                                                                          |
+| --- | ------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| 1   | Cancelling or changing by phone      | the agent records a **request for staff** with what it understood; it never cancels or edits itself                                                                                                                                                               | the agent cancels by name and phone — a browser call cannot verify who is calling |
+| 2   | The caller's phone in a browser call | a **phone field before "Zavolat"**, standing in for caller ID                                                                                                                                                                                                     | dictating digits — measured risk of misheard numbers ("päť" → "50", research R12) |
+| 3   | Protecting the free quota            | the Live token is issued **bound to our model, prompt and tools** and short-lived; **per-IP limits** on token issuance (counters in PostgreSQL); a **call length cap of 3 minutes**; when the quota or a limit is reached, the screen says so and offers the form | an open token or the API key in the browser                                       |
+| 4   | Echo                                 | browser **echo cancellation** on, and a hint "nejlépe se sluchátky"                                                                                                                                                                                               | no handling — the agent would hear itself                                         |
+| 5   | Holidays                             | Czech public holidays from **`date-holidays`**, plus closed days the owner sets                                                                                                                                                                                   | a hand-written list                                                               |
+| 6   | AI notice on the call page           | one sentence under the button: an AI assistant (Google Gemini) handles the call; the transcript is kept for 30 days (ADR-0008)                                                                                                                                    | notice only in the spoken greeting                                                |
+| 7   | Order number                         | the agent ends with the **order number**; the form shows it too                                                                                                                                                                                                   | no confirmation — without SMS the customer would have nothing to refer to         |
+| 8   | Staff notifications                  | a **badge in the staff app** for new callback and change requests; no push notifications                                                                                                                                                                          | push — extra setup and permissions, not needed for the brief                      |
 
 The 3-minute cap and the per-IP limits are **proposed values without a measurement**; they are
 replaced by values from the traces of the first week (ADR-0013, constitution IV).
@@ -105,4 +105,5 @@ replaced by values from the traces of the first week (ADR-0013, constitution IV)
 - Related: ADR-0006, ADR-0008, ADR-0009, ADR-0011, ADR-0013.
 
 ## Relations
+
 - Amended by ADR-0015 (2026-11-24): roles owner and employee with server-checked permissions; two demo logins.

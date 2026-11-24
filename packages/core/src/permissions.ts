@@ -20,7 +20,9 @@ type Statements = typeof STATEMENTS;
 export type Permission = { [R in keyof Statements]: `${R}:${Statements[R][number]}` }[keyof Statements];
 
 /** Every permission that exists, for validating what the server sends. */
-export const ALL_PERMISSIONS = Object.entries(STATEMENTS).flatMap(([r, actions]) => actions.map((a) => `${r}:${a}`)) as Permission[];
+export const ALL_PERMISSIONS = Object.entries(STATEMENTS).flatMap(([r, actions]) =>
+  actions.map((a) => `${r}:${a}`),
+) as Permission[];
 
 const EMPLOYEE: readonly Permission[] = [
   "order:create",
@@ -38,7 +40,8 @@ export const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
   owner: [...EMPLOYEE, "settings:edit", "ops:view", "demo:reset", "eval:create"],
 };
 
-export const isRole = (value: unknown): value is Role => typeof value === "string" && (ROLES as readonly string[]).includes(value);
+export const isRole = (value: unknown): value is Role =>
+  typeof value === "string" && (ROLES as readonly string[]).includes(value);
 
 /** Whether a role holds a permission. An unknown or missing role holds none. */
 export function can(role: unknown, permission: Permission): boolean {

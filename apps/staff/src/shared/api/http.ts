@@ -28,12 +28,20 @@ export async function api<S extends z.ZodType>(path: string, schema: S, init: Re
   const res = await fetch(`${API_URL}${path}`, {
     ...init,
     credentials: Platform.OS === "web" ? "include" : "omit",
-    headers: { "content-type": "application/json", ...(await sessionHeaders()), ...(init.headers as Record<string, string>) },
+    headers: {
+      "content-type": "application/json",
+      ...(await sessionHeaders()),
+      ...(init.headers as Record<string, string>),
+    },
   });
   const body: unknown = await res.json().catch(() => null);
   if (!res.ok) {
     const err = ApiError.safeParse(body);
-    throw new ApiRequestError(res.status, err.success ? err.data.error.code : "http_error", err.success ? err.data.error.message : "Server neodpovídá.");
+    throw new ApiRequestError(
+      res.status,
+      err.success ? err.data.error.code : "http_error",
+      err.success ? err.data.error.message : "Server neodpovídá.",
+    );
   }
   return schema.parse(body);
 }

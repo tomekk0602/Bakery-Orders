@@ -29,11 +29,25 @@ type Prepared = { ok: true; order: PreparedOrder } | { ok: false; reason: Refusa
 async function prepare(input: WebOrderData, now: Date): Promise<Prepared> {
   const bakery = await loadBakery(db());
   const remaining = await remainingCapacity(db(), bakery.catalogue, input.pickupDate);
-  const r = prepareOrder(input, { now, channel: "web", catalogue: bakery.catalogue, schedule: bakery.schedule, staffOverride: false, remaining });
+  const r = prepareOrder(input, {
+    now,
+    channel: "web",
+    catalogue: bakery.catalogue,
+    schedule: bakery.schedule,
+    staffOverride: false,
+    remaining,
+  });
   return r.ok ? { ok: true, order: r } : { ok: false, reason: r.reason };
 }
 
-const summary = (o: PreparedOrder) => ({ customerName: o.customerName, customerPhone: o.customerPhone ?? "", pickupDate: o.pickupDate, pickupWeekdayName: o.pickupWeekdayName, lines: o.lines, totalCzk: o.totalCzk });
+const summary = (o: PreparedOrder) => ({
+  customerName: o.customerName,
+  customerPhone: o.customerPhone ?? "",
+  pickupDate: o.pickupDate,
+  pickupWeekdayName: o.pickupWeekdayName,
+  lines: o.lines,
+  totalCzk: o.totalCzk,
+});
 
 export async function previewWebOrder(input: WebOrderData, now = new Date()) {
   const r = await prepare(input, now);
@@ -44,5 +58,7 @@ export async function placeOrder(input: WebOrderData, now = new Date()) {
   const r = await prepare(input, now);
   if (!r.ok) return r;
   const saved = await placeWebOrder(db(), r.order);
-  return saved.ok ? { ok: true as const, placed: WebOrderPlaced.parse({ ...summary(r.order), orderNumber: saved.orderNumber }) } : { ok: false as const, reason: saved.reason };
+  return saved.ok
+    ? { ok: true as const, placed: WebOrderPlaced.parse({ ...summary(r.order), orderNumber: saved.orderNumber }) }
+    : { ok: false as const, reason: saved.reason };
 }

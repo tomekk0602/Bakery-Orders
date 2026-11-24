@@ -10,7 +10,7 @@ decision-makers: owner
 
 The assignment (Cod8, 2026-11-24) is open: "what you build, in what scope and how much time you
 spend is up to you", and the walkthrough afterwards is about "what your solution does, why it looks
-the way it does and how you think about the problem". The reviewers will ask *why* about every
+the way it does and how you think about the problem". The reviewers will ask _why_ about every
 choice. A decision that lives only in chat or in the author's head cannot be shown or checked.
 
 ## Decision Drivers
@@ -36,11 +36,11 @@ Chosen option: **A**, pinned to Spec Kit **0.16.2** (the version the owner alrea
 
 Decisions are recorded in exactly one of three places:
 
-| The statement is… | It goes to |
-|---|---|
-| a rule that holds everywhere — how we build | `.specify/memory/constitution.md` |
-| a choice that crosses features, or sets product, architecture or process | `docs/adr/NNNN-*.md` (MADR, `template.md`) |
-| a choice inside one feature | `specs/NNN-*/research.md` (Decision / Rationale / Alternatives rejected / Evidence) |
+| The statement is…                                                        | It goes to                                                                          |
+| ------------------------------------------------------------------------ | ----------------------------------------------------------------------------------- |
+| a rule that holds everywhere — how we build                              | `.specify/memory/constitution.md`                                                   |
+| a choice that crosses features, or sets product, architecture or process | `docs/adr/NNNN-*.md` (MADR, `template.md`)                                          |
+| a choice inside one feature                                              | `specs/NNN-*/research.md` (Decision / Rationale / Alternatives rejected / Evidence) |
 
 Every record names the problem, the options actually considered, the choice and why, the
 consequences, how compliance is checked, and the evidence: a measurement with its numbers, a URL

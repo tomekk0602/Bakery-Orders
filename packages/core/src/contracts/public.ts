@@ -26,10 +26,23 @@ export const WebOrderInput = z.object({
 export type WebOrderInput = z.input<typeof WebOrderInput>;
 export type WebOrderData = z.output<typeof WebOrderInput>;
 
-const Line = z.object({ productId: z.string(), name: z.string(), quantity: z.number().int(), unitPriceCzk: z.number().int(), subtotalCzk: z.number().int() });
+const Line = z.object({
+  productId: z.string(),
+  name: z.string(),
+  quantity: z.number().int(),
+  unitPriceCzk: z.number().int(),
+  subtotalCzk: z.number().int(),
+});
 
 /** The summary the customer confirms, priced by the server; nothing saved yet. */
-export const WebOrderPreview = z.object({ customerName: z.string(), customerPhone: z.string(), pickupDate: IsoDate, pickupWeekdayName: z.string(), lines: z.array(Line), totalCzk: z.number().int() });
+export const WebOrderPreview = z.object({
+  customerName: z.string(),
+  customerPhone: z.string(),
+  pickupDate: IsoDate,
+  pickupWeekdayName: z.string(),
+  lines: z.array(Line),
+  totalCzk: z.number().int(),
+});
 export type WebOrderPreview = z.infer<typeof WebOrderPreview>;
 
 /** The saved order: its number is what the customer refers to at the counter (FR-040). */

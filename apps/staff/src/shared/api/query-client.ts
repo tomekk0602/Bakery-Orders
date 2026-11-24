@@ -10,6 +10,8 @@ export function createQueryClient(): QueryClient {
         if (error instanceof ApiRequestError && error.status === 401) void authClient.signOut();
       },
     }),
-    defaultOptions: { queries: { retry: (count, error) => !(error instanceof ApiRequestError && error.status < 500) && count < 2 } },
+    defaultOptions: {
+      queries: { retry: (count, error) => !(error instanceof ApiRequestError && error.status < 500) && count < 2 },
+    },
   });
 }

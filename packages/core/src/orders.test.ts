@@ -20,7 +20,15 @@ const ctx = (over: Partial<PrepareContext> = {}): PrepareContext => ({
   remaining: {},
   ...over,
 });
-const base = { items: [{ productId: "chleb-kminovy", quantity: 2 }, { productId: "rohlik", quantity: 6 }], pickupDate: "2026-11-28", customerName: "Nováková", customerPhone: "+420777123456" };
+const base = {
+  items: [
+    { productId: "chleb-kminovy", quantity: 2 },
+    { productId: "rohlik", quantity: 6 },
+  ],
+  pickupDate: "2026-11-28",
+  customerName: "Nováková",
+  customerPhone: "+420777123456",
+};
 
 describe("prepareOrder", () => {
   it("prepares a priced order with the weekday", () => {
@@ -33,7 +41,16 @@ describe("prepareOrder", () => {
   });
 
   it("merges repeated products into one line", () => {
-    const r = prepareOrder({ ...base, items: [{ productId: "rohlik", quantity: 3 }, { productId: "rohlik", quantity: 2 }] }, ctx());
+    const r = prepareOrder(
+      {
+        ...base,
+        items: [
+          { productId: "rohlik", quantity: 3 },
+          { productId: "rohlik", quantity: 2 },
+        ],
+      },
+      ctx(),
+    );
     expect(r.ok && r.lines).toEqual([expect.objectContaining({ productId: "rohlik", quantity: 5, subtotalCzk: 20 })]);
   });
 
@@ -59,7 +76,10 @@ describe("prepareOrder", () => {
   });
 
   it("lets staff order after the cut-off and without a phone", () => {
-    const r = prepareOrder({ ...base, pickupDate: "2026-11-24", customerPhone: null }, ctx({ channel: "staff", staffOverride: true }));
+    const r = prepareOrder(
+      { ...base, pickupDate: "2026-11-24", customerPhone: null },
+      ctx({ channel: "staff", staffOverride: true }),
+    );
     expect(r.ok).toBe(true);
   });
 

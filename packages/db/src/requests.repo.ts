@@ -18,7 +18,10 @@ const columns = {
   transcript: call.transcript,
 };
 
-type Row = Pick<typeof staffRequest.$inferSelect, "id" | "kind" | "origin" | "customerName" | "customerPhone" | "note" | "createdAt" | "doneAt"> & { transcript: unknown };
+type Row = Pick<
+  typeof staffRequest.$inferSelect,
+  "id" | "kind" | "origin" | "customerName" | "customerPhone" | "note" | "createdAt" | "doneAt"
+> & { transcript: unknown };
 
 const toItem = (r: Row): StaffRequestItem => ({
   ...r,

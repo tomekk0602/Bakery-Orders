@@ -8,12 +8,39 @@ jest.mock("@/shared/api/http", () => ({ api: (...args: unknown[]) => mockApi(...
 const mockPush = jest.fn();
 jest.mock("expo-router", () => ({ useRouter: () => ({ push: mockPush }) }));
 
-const line = (productId: string, name: string, quantity: number, unitPriceCzk: number) => ({ productId, name, quantity, unitPriceCzk });
+const line = (productId: string, name: string, quantity: number, unitPriceCzk: number) => ({
+  productId,
+  name,
+  quantity,
+  unitPriceCzk,
+});
 const day: StaffOrdersResponse = {
   day: "2026-11-24",
   orders: [
-    { id: "11111111-1111-4111-8111-111111111111", number: 1002, source: "web", status: "picked_up", customerName: "Kučerová", customerPhone: null, pickupDay: "2026-11-24", totalCzk: 192, lines: [line("croissant", "Máslový croissant", 6, 32)], createdAt: "2026-11-23T10:00:00.000Z" },
-    { id: "22222222-2222-4222-8222-222222222222", number: 1001, source: "phone", status: "confirmed", customerName: "Novák", customerPhone: "+420737777788", pickupDay: "2026-11-24", totalCzk: 162, lines: [line("chleb-kminovy", "Kmínový chléb", 2, 69), line("rohlik", "Rohlík", 6, 4)], createdAt: "2026-11-23T09:00:00.000Z" },
+    {
+      id: "11111111-1111-4111-8111-111111111111",
+      number: 1002,
+      source: "web",
+      status: "picked_up",
+      customerName: "Kučerová",
+      customerPhone: null,
+      pickupDay: "2026-11-24",
+      totalCzk: 192,
+      lines: [line("croissant", "Máslový croissant", 6, 32)],
+      createdAt: "2026-11-23T10:00:00.000Z",
+    },
+    {
+      id: "22222222-2222-4222-8222-222222222222",
+      number: 1001,
+      source: "phone",
+      status: "confirmed",
+      customerName: "Novák",
+      customerPhone: "+420737777788",
+      pickupDay: "2026-11-24",
+      totalCzk: 162,
+      lines: [line("chleb-kminovy", "Kmínový chléb", 2, 69), line("rohlik", "Rohlík", 6, 4)],
+      createdAt: "2026-11-23T09:00:00.000Z",
+    },
   ],
 };
 
@@ -21,7 +48,9 @@ const renderScreen = () => renderWithQuery(<TodayScreen />);
 
 beforeEach(() => {
   mockApi.mockReset();
-  mockApi.mockImplementation((path: string) => Promise.resolve(path.startsWith("/api/staff/orders/") ? { ok: true } : day));
+  mockApi.mockImplementation((path: string) =>
+    Promise.resolve(path.startsWith("/api/staff/orders/") ? { ok: true } : day),
+  );
 });
 
 describe("TodayScreen (FR-012)", () => {
@@ -38,7 +67,11 @@ describe("TodayScreen (FR-012)", () => {
     await renderScreen();
     await fireEvent.press(await screen.findByText("Vydat"));
     await waitFor(() =>
-      expect(mockApi).toHaveBeenCalledWith("/api/staff/orders/22222222-2222-4222-8222-222222222222", expect.anything(), expect.objectContaining({ method: "PATCH", body: JSON.stringify({ status: "picked_up" }) })),
+      expect(mockApi).toHaveBeenCalledWith(
+        "/api/staff/orders/22222222-2222-4222-8222-222222222222",
+        expect.anything(),
+        expect.objectContaining({ method: "PATCH", body: JSON.stringify({ status: "picked_up" }) }),
+      ),
     );
   });
 

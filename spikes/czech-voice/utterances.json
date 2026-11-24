@@ -1,22 +1,48 @@
 [
-  { "id": "u01-basic", "text": "Dobrý den, chtěla bych si objednat dva kmínové chleby a šest rohlíků na sobotu ráno. Jmenuji se Nováková.",
-    "expect": { "items": { "chleb-kminovy": 2, "rohlik": 6 }, "date": "2026-11-28", "name": "Nováková" } },
-  { "id": "u02-tomorrow", "text": "Prosím vás, na zítra deset housek a jeden žitný chléb. Dvořák.",
-    "expect": { "items": { "houska": 10, "chleb-zitny": 1 }, "date": "2026-11-25", "name": "Dvořák" } },
-  { "id": "u03-dozen-split", "text": "Potřeboval bych tucet koláčů, půlku tvarohových a půlku makových, na pátek. Svoboda.",
-    "expect": { "items": { "kolac-tvarohovy": 6, "kolac-makovy": 6 }, "date": "2026-11-27", "name": "Svoboda" } },
-  { "id": "u04-correction", "text": "Dobrý den, tři celozrnné chleby na čtvrtek, ne, vlastně jenom dva. Jmenuji se Černá.",
-    "expect": { "items": { "chleb-celozrnny": 2 }, "date": "2026-11-26", "name": "Černá" } },
-  { "id": "u05-unknown", "text": "Máte bagety? Chtěl bych dvě na zítra. Procházka.",
-    "expect": { "noOrder": true } },
-  { "id": "u06-slovak", "text": "Dobrý deň, chcel by som päť croissantov na sobotu. Horváth.",
-    "expect": { "items": { "croissant": 5 }, "date": "2026-11-28", "name": "Horváth" } },
-  { "id": "u07-day-after", "text": "Pět kaiserek a dvě povidlové buchty na pozítří, jméno Marek.",
-    "expect": { "items": { "kaiserka": 5, "buchta-povidlova": 2 }, "date": "2026-11-26", "name": "Marek" } },
-  { "id": "u08-human", "text": "Dobrý den, já bych radši mluvila s někým z pekárny, s člověkem.",
-    "expect": { "callback": true } },
-  { "id": "u09-next-monday", "text": "Na příští pondělí patnáct rohlíků a čtyři housky, Veselá.",
-    "expect": { "items": { "rohlik": 15, "houska": 4 }, "date": "2026-11-30", "name": "Veselá" } },
-  { "id": "u10-ellipsis", "text": "Dobrý den, jeden kmínový a jeden žitný chleba na zítra, jméno Pokorný.",
-    "expect": { "items": { "chleb-kminovy": 1, "chleb-zitny": 1 }, "date": "2026-11-25", "name": "Pokorný" } }
+  {
+    "id": "u01-basic",
+    "text": "Dobrý den, chtěla bych si objednat dva kmínové chleby a šest rohlíků na sobotu ráno. Jmenuji se Nováková.",
+    "expect": { "items": { "chleb-kminovy": 2, "rohlik": 6 }, "date": "2026-11-28", "name": "Nováková" }
+  },
+  {
+    "id": "u02-tomorrow",
+    "text": "Prosím vás, na zítra deset housek a jeden žitný chléb. Dvořák.",
+    "expect": { "items": { "houska": 10, "chleb-zitny": 1 }, "date": "2026-11-25", "name": "Dvořák" }
+  },
+  {
+    "id": "u03-dozen-split",
+    "text": "Potřeboval bych tucet koláčů, půlku tvarohových a půlku makových, na pátek. Svoboda.",
+    "expect": { "items": { "kolac-tvarohovy": 6, "kolac-makovy": 6 }, "date": "2026-11-27", "name": "Svoboda" }
+  },
+  {
+    "id": "u04-correction",
+    "text": "Dobrý den, tři celozrnné chleby na čtvrtek, ne, vlastně jenom dva. Jmenuji se Černá.",
+    "expect": { "items": { "chleb-celozrnny": 2 }, "date": "2026-11-26", "name": "Černá" }
+  },
+  { "id": "u05-unknown", "text": "Máte bagety? Chtěl bych dvě na zítra. Procházka.", "expect": { "noOrder": true } },
+  {
+    "id": "u06-slovak",
+    "text": "Dobrý deň, chcel by som päť croissantov na sobotu. Horváth.",
+    "expect": { "items": { "croissant": 5 }, "date": "2026-11-28", "name": "Horváth" }
+  },
+  {
+    "id": "u07-day-after",
+    "text": "Pět kaiserek a dvě povidlové buchty na pozítří, jméno Marek.",
+    "expect": { "items": { "kaiserka": 5, "buchta-povidlova": 2 }, "date": "2026-11-26", "name": "Marek" }
+  },
+  {
+    "id": "u08-human",
+    "text": "Dobrý den, já bych radši mluvila s někým z pekárny, s člověkem.",
+    "expect": { "callback": true }
+  },
+  {
+    "id": "u09-next-monday",
+    "text": "Na příští pondělí patnáct rohlíků a čtyři housky, Veselá.",
+    "expect": { "items": { "rohlik": 15, "houska": 4 }, "date": "2026-11-30", "name": "Veselá" }
+  },
+  {
+    "id": "u10-ellipsis",
+    "text": "Dobrý den, jeden kmínový a jeden žitný chleba na zítra, jméno Pokorný.",
+    "expect": { "items": { "chleb-kminovy": 1, "chleb-zitny": 1 }, "date": "2026-11-25", "name": "Pokorný" }
+  }
 ]

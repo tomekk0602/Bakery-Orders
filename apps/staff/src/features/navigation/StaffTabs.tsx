@@ -16,7 +16,8 @@ export function StaffTabs() {
   const openRequests = requests.data?.open.length ?? 0;
   const router = useRouter();
 
-  if (me.isPending) return <ActivityIndicator style={styles.center} color={colors.primary} accessibilityLabel={t("common.loading")} />;
+  if (me.isPending)
+    return <ActivityIndicator style={styles.center} color={colors.primary} accessibilityLabel={t("common.loading")} />;
   if (me.isError)
     return (
       <Screen>
@@ -56,7 +57,13 @@ export function StaffTabs() {
       />
       {TABS.map((tab) => (
         <Tabs.Protected key={tab.name} guard={granted.has(tab.permission)}>
-          <Tabs.Screen name={tab.name} options={{ title: t(tab.titleKey), tabBarBadge: tab.name === "pozadavky" && openRequests > 0 ? openRequests : undefined }} />
+          <Tabs.Screen
+            name={tab.name}
+            options={{
+              title: t(tab.titleKey),
+              tabBarBadge: tab.name === "pozadavky" && openRequests > 0 ? openRequests : undefined,
+            }}
+          />
         </Tabs.Protected>
       ))}
     </Tabs>
