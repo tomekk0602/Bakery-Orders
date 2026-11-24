@@ -543,5 +543,11 @@ intervals.
 - **Production data** (2026-11-24): Neon project `bakery-orders`, Postgres 17.12, `eu-central-1`;
   migrated and seeded from this machine (12 products, demo orders and requests, an owner and an
   employee); the demo passwords are in a git-ignored file and go to the reviewers separately.
+- **Build on Vercel** (found on the first deployments): with Root Directory `apps/web`, Vercel reads
+  `engines` from `apps/web/package.json` (a root `>=24` became Node 26, where `better-sqlite3`, an
+  Evalite dependency, does not compile) and runs `npm install` inside the workspace, which installs
+  only that workspace's dependencies — the staff app's were missing for the export. Both are pinned in
+  the repository: Node `24.x` in `apps/web` and an install command that runs `npm ci` at the root, as CI
+  does.
 - **The eval gate's filter** leaves out `packages/core/src/agent/prices.ts`: a price change does not
   change what the agent does (research R26); the push of R27 ran the gate for nothing.
