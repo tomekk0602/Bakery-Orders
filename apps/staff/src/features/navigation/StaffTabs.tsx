@@ -1,4 +1,4 @@
-import { Tabs } from "expo-router";
+import { Tabs, useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 import { useMe } from "@/features/auth/use-me";
@@ -10,6 +10,7 @@ import { TABS } from "./tabs";
 export function StaffTabs() {
   const { t } = useTranslation();
   const me = useMe();
+  const router = useRouter();
 
   if (me.isPending) return <ActivityIndicator style={styles.center} color={colors.primary} accessibilityLabel={t("common.loading")} />;
   if (me.isError)
@@ -35,6 +36,20 @@ export function StaffTabs() {
         ),
       }}
     >
+      {/* Routes that are not tabs: the redirect and the order detail opened from a list. */}
+      <Tabs.Screen name="index" options={{ href: null }} />
+      <Tabs.Screen
+        name="objednavka/[id]"
+        options={{
+          href: null,
+          title: t("orders.detailTitle"),
+          headerLeft: () => (
+            <Pressable accessibilityRole="button" onPress={() => router.back()} hitSlop={12} style={styles.back}>
+              <Text style={styles.signOut}>{t("orders.back")}</Text>
+            </Pressable>
+          ),
+        }}
+      />
       {TABS.map((tab) => (
         <Tabs.Protected key={tab.name} guard={granted.has(tab.permission)}>
           <Tabs.Screen name={tab.name} options={{ title: t(tab.titleKey) }} />
@@ -49,5 +64,6 @@ const styles = StyleSheet.create({
   error: { color: colors.danger, fontSize: font.body },
   header: { flexDirection: "row", gap: space.md, marginRight: space.md, alignItems: "center" },
   role: { color: colors.muted, fontSize: font.label },
+  back: { marginLeft: space.md },
   signOut: { color: colors.primary, fontSize: font.label, fontWeight: "600" },
 });

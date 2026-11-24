@@ -5,3 +5,5 @@ export * from "./orders.repo.ts";
 export * from "./calls.repo.ts";
 export * from "./seed.ts";
 export * from "./auth-schema.ts";
+export * from "./staff-orders.repo.ts";
+export * from "./demo-orders.ts";

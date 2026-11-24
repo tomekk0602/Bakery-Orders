@@ -1,6 +1,11 @@
 {
-  "app": { "title": "Pekárna U Lípy" },
-  "roles": { "owner": "Majitel", "employee": "Prodavač" },
+  "app": {
+    "title": "Pekárna U Lípy"
+  },
+  "roles": {
+    "owner": "Majitel",
+    "employee": "Prodavač"
+  },
   "login": {
     "title": "Přihlášení obsluhy",
     "email": "E-mail",
@@ -18,5 +23,40 @@
     "settings": "Nastavení",
     "ops": "Provoz"
   },
-  "common": { "signOut": "Odhlásit", "loading": "Načítám…", "retry": "Zkusit znovu", "comingSoon": "Tato část se připravuje." }
+  "common": {
+    "signOut": "Odhlásit",
+    "loading": "Načítám…",
+    "retry": "Zkusit znovu",
+    "comingSoon": "Tato část se připravuje."
+  },
+  "orders": {
+    "todayTitle": "Dnes {{day}}",
+    "dayTitle": "{{day}}",
+    "empty": "Na tento den nejsou žádné objednávky.",
+    "toHandOver": "K vydání: {{count}}",
+    "handedOverCount": "Vydáno: {{count}}",
+    "handOver": "Vydat",
+    "undoHandOver": "Vrátit vydání",
+    "handedOver": "Vydáno",
+    "confirmed": "Čeká na vyzvednutí",
+    "cancelled": "Zrušeno",
+    "number": "Objednávka č. {{number}}",
+    "total": "Celkem {{total}}",
+    "pickup": "Vyzvednutí {{day}}",
+    "source": {
+      "phone": "Telefon (AI)",
+      "web": "Web",
+      "staff": "Obsluha"
+    },
+    "noPhone": "Telefon neuveden",
+    "call": "Zavolat {{phone}}",
+    "items": "Položky",
+    "transcript": "Přepis hovoru",
+    "customerSaid": "Zákazník",
+    "agentSaid": "Asistent",
+    "open": "Otevřít objednávku č. {{number}}",
+    "notFound": "Objednávka neexistuje.",
+    "back": "‹ Zpět",
+    "detailTitle": "Objednávka"
+  }
 }

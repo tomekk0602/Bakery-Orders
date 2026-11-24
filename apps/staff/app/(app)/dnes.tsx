@@ -1,5 +1,3 @@
-import { ComingSoonScreen } from "@/features/navigation/ComingSoonScreen";
+import { TodayScreen } from "@/features/orders/TodayScreen";
 
-export default function Route() {
-  return <ComingSoonScreen titleKey="tabs.today" />;
-}
+export default TodayScreen;

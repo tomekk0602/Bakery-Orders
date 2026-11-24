@@ -61,7 +61,7 @@ they cover and must fail first.
 - [x] T024 Integration tests in `packages/db/src/orders.repo.test.ts` on PostgreSQL via `@testcontainers/postgresql`: confirm saves lines and capacity in one transaction; **two concurrent confirms for the last piece → exactly one saved** (SC-004, R14); staff edit adjusts capacity by the difference; cancel releases capacity
 - [x] T025 `packages/db/src/orders.repo.ts`: drafts, confirm with the conditional capacity update, edit, cancel, pick-up, order numbers from a sequence (makes T024 pass; FR-006, FR-007, FR-040)
 - [ ] T026 [P] `packages/db/src/requests.repo.ts`, `calls.repo.ts`, `settings.repo.ts`, `rate-limit.repo.ts` (upsert counter per window), each with an integration test
-- [ ] T027 [P] `packages/db/src/seed.ts`: "Pekárna U Lípy", ~12 products with spoken forms and limits, buffers per weekday, orders for the coming week, the demo staff user with the password from `DEMO_STAFF_PASSWORD` (ADR-0014)
+- [x] T027 [P] `packages/db/src/seed.ts`: "Pekárna U Lípy", ~12 products with spoken forms and limits, buffers per weekday, orders for the coming week, the demo staff user with the password from `DEMO_STAFF_PASSWORD` (ADR-0014)
 - [ ] T028 `packages/db/src/reset.ts` + test: truncates bakery data and re-runs the seed (FR-042)
 
 ### Web app foundation
