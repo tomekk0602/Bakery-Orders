@@ -1,4 +1,5 @@
 import { z } from "zod";
+import type { CalendarDay } from "../calendar.ts";
 import { activeProducts, type Product } from "../catalogue.ts";
 
 export type AgentMode = "customer" | "staff";
@@ -6,12 +7,14 @@ export type AgentMode = "customer" | "staff";
 export const STAFF_REQUEST_KINDS = ["callback", "change", "cancel"] as const;
 
 /**
- * Tool schemas for one session. Product ids are an enum of the active catalogue, so a product
- * outside the offer cannot be expressed (ADR-0010 point 1); the server validates again (ADR-0003).
+ * Tool schemas for one session. Product ids are an enum of the active catalogue and the pickup day an
+ * enum of the calendar's open days, so a product outside the offer or a day outside the calendar
+ * cannot be expressed (ADR-0010 point 1, research R25); the server validates again (ADR-0003).
  */
-export function buildToolSchemas(catalogue: readonly Product[]) {
+export function buildToolSchemas(catalogue: readonly Product[], calendar: readonly CalendarDay[]) {
   const ids = activeProducts(catalogue).map((p) => p.id);
-  if (ids.length === 0) throw new Error("buildToolSchemas: no active products");
+  const days = calendar.filter((d) => !d.closed).map((d) => d.date);
+  if (ids.length === 0 || days.length === 0) throw new Error("buildToolSchemas: no active products or no open days");
   const productId = z.enum(ids as [string, ...string[]]);
   return {
     prepare_order: z.object({
@@ -19,7 +22,7 @@ export function buildToolSchemas(catalogue: readonly Product[]) {
         .array(z.object({ product_id: productId, quantity: z.number().int().min(1).max(200) }))
         .min(1)
         .max(20),
-      pickup_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "YYYY-MM-DD"),
+      pickup_date: z.enum(days as [string, ...string[]]),
       customer_name: z.string().trim().min(1).max(80),
     }),
     confirm_order: z.object({ draft_id: z.string().min(1) }),

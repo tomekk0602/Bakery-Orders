@@ -20,7 +20,13 @@ export function buildDictationSchema(catalogue: readonly Product[], calendar: re
     pickupDate: z.enum(days as [string, ...string[]]).nullable(),
     items: z.array(z.object({ productId, quantity: z.number().int().min(1).max(200) })).max(20),
     unmatched: z
-      .array(z.object({ word: z.string().min(1).max(60), quantity: z.number().int().min(1).max(200).nullable(), candidateIds: z.array(productId).max(MAX_CANDIDATES) }))
+      .array(
+        z.object({
+          word: z.string().min(1).max(60),
+          quantity: z.number().int().min(1).max(200).nullable(),
+          candidateIds: z.array(productId).max(MAX_CANDIDATES),
+        }),
+      )
       .max(10),
   });
 }

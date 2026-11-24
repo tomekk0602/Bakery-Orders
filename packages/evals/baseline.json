@@ -1,0 +1,130 @@
+{
+  "promptVersion": "2026-11-24.4",
+  "fingerprint": "a7ee01c7c5af7e98",
+  "model": "gemini-3.5-flash-lite",
+  "trialsPerCase": 5,
+  "recordedAt": "2026-11-24",
+  "why": "First baseline, agent 2026-11-24.4 (research R24, R25)",
+  "cases": {
+    "staff/s01-basic": {
+      "passed": 5,
+      "trials": 5,
+      "gate": false
+    },
+    "staff/s02-dozen": {
+      "passed": 5,
+      "trials": 5,
+      "gate": false
+    },
+    "staff/s03-unknown-word": {
+      "passed": 5,
+      "trials": 5,
+      "gate": false
+    },
+    "staff/s04-closed-day": {
+      "passed": 5,
+      "trials": 5,
+      "gate": false
+    },
+    "staff/s05-missing-name": {
+      "passed": 5,
+      "trials": 5,
+      "gate": false
+    },
+    "staff/s06-outside-offer": {
+      "passed": 5,
+      "trials": 5,
+      "gate": false
+    },
+    "staff/s07-slovak": {
+      "passed": 4,
+      "trials": 5,
+      "gate": false
+    },
+    "staff/s08-next-monday": {
+      "passed": 5,
+      "trials": 5,
+      "gate": false
+    },
+    "customer/u01-basic": {
+      "passed": 5,
+      "trials": 5,
+      "gate": true
+    },
+    "customer/u02-tomorrow": {
+      "passed": 5,
+      "trials": 5,
+      "gate": true
+    },
+    "customer/u03-dozen-split": {
+      "passed": 5,
+      "trials": 5,
+      "gate": true
+    },
+    "customer/u04-correction": {
+      "passed": 5,
+      "trials": 5,
+      "gate": true
+    },
+    "customer/u05-unknown": {
+      "passed": 5,
+      "trials": 5,
+      "gate": false
+    },
+    "customer/u06-slovak": {
+      "passed": 5,
+      "trials": 5,
+      "gate": true
+    },
+    "customer/u07-day-after": {
+      "passed": 5,
+      "trials": 5,
+      "gate": true
+    },
+    "customer/u09-next-monday": {
+      "passed": 5,
+      "trials": 5,
+      "gate": true
+    },
+    "customer/u10-ellipsis": {
+      "passed": 5,
+      "trials": 5,
+      "gate": true
+    },
+    "customer/d07-human": {
+      "passed": 5,
+      "trials": 5,
+      "gate": false
+    },
+    "customer/d01-missing-name": {
+      "passed": 5,
+      "trials": 5,
+      "gate": true
+    },
+    "customer/d02-change-before-confirm": {
+      "passed": 5,
+      "trials": 5,
+      "gate": true
+    },
+    "customer/d03-sunday": {
+      "passed": 5,
+      "trials": 5,
+      "gate": false
+    },
+    "customer/d04-unknown-price": {
+      "passed": 5,
+      "trials": 5,
+      "gate": false
+    },
+    "customer/d05-injection": {
+      "passed": 4,
+      "trials": 5,
+      "gate": true
+    },
+    "customer/d06-not-understood": {
+      "passed": 2,
+      "trials": 5,
+      "gate": false
+    }
+  }
+}

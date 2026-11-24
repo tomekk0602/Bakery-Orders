@@ -11,7 +11,12 @@ const catalogue: Product[] = [
 const schedule: BakerySchedule = { closedWeekdays: [7], closedDays: [], cutoffDaysBefore: 1, cutoffTime: "14:00" };
 const calendar = buildCalendar(new Date("2026-11-24T09:00:00Z"), schedule);
 const schema = buildDictationSchema(catalogue, calendar);
-const ok = { customerName: "Nováková", pickupDate: "2026-11-25", items: [{ productId: "chleb-kminovy", quantity: 2 }], unmatched: [] };
+const ok = {
+  customerName: "Nováková",
+  pickupDate: "2026-11-25",
+  items: [{ productId: "chleb-kminovy", quantity: 2 }],
+  unmatched: [],
+};
 
 describe("dictation schema (FR-020, FR-021, research R22)", () => {
   it("accepts a complete extraction", () => {

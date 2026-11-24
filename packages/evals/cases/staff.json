@@ -1,0 +1,110 @@
+{
+  "today": "2026-11-24",
+  "cases": [
+    {
+      "id": "s01-basic",
+      "covers": "FR-017",
+      "say": "Nováková, dva kmínové chleby na zítra.",
+      "expect": {
+        "name": "Nováková",
+        "date": "2026-11-25",
+        "items": {
+          "chleb-kminovy": 2
+        },
+        "unmatched": []
+      }
+    },
+    {
+      "id": "s02-dozen",
+      "covers": "FR-017, dozen (R22)",
+      "say": "pět kaiserek a tucet tvarohových koláčů na pátek, pan Dvořák",
+      "expect": {
+        "name": "Dvořák",
+        "date": "2026-11-27",
+        "items": {
+          "kaiserka": 5,
+          "kolac-tvarohovy": 12
+        },
+        "unmatched": []
+      }
+    },
+    {
+      "id": "s03-unknown-word",
+      "covers": "FR-020 (R22)",
+      "say": "Nováková, dva kmínové chleby a jeden razowy na zítra.",
+      "expect": {
+        "name": "Nováková",
+        "date": "2026-11-25",
+        "items": {
+          "chleb-kminovy": 2
+        },
+        "unmatched": ["raz"]
+      }
+    },
+    {
+      "id": "s04-closed-day",
+      "covers": "FR-021, E7",
+      "say": "Malá, tři rohlíky na neděli.",
+      "expect": {
+        "name": "Malá",
+        "date": null,
+        "items": {
+          "rohlik": 3
+        },
+        "unmatched": []
+      }
+    },
+    {
+      "id": "s05-missing-name",
+      "covers": "FR-021",
+      "say": "deset housek na sobotu",
+      "expect": {
+        "name": null,
+        "date": "2026-11-28",
+        "items": {
+          "houska": 10
+        },
+        "unmatched": []
+      }
+    },
+    {
+      "id": "s06-outside-offer",
+      "covers": "FR-020",
+      "say": "Svoboda, jedna vánočka a dvě bagety na čtvrtek.",
+      "expect": {
+        "name": "Svoboda",
+        "date": "2026-11-26",
+        "items": {
+          "vanocka": 1
+        },
+        "unmatched": ["baget"]
+      }
+    },
+    {
+      "id": "s07-slovak",
+      "covers": "FR-001",
+      "say": "Horváth, päť croissantov na sobotu.",
+      "expect": {
+        "name": "Horváth",
+        "date": "2026-11-28",
+        "items": {
+          "croissant": 5
+        },
+        "unmatched": []
+      }
+    },
+    {
+      "id": "s08-next-monday",
+      "covers": "R1",
+      "say": "Veselá, patnáct rohlíků na příští pondělí.",
+      "expect": {
+        "name": "Veselá",
+        "date": "2026-11-30",
+        "items": {
+          "rohlik": 15
+        },
+        "unmatched": []
+      }
+    }
+  ]
+}

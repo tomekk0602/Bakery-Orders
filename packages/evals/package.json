@@ -1,0 +1,24 @@
+{
+  "name": "@bakery/evals",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "eval": "node scripts/run.ts",
+    "eval:ui": "evalite watch",
+    "test": "vitest run",
+    "typecheck": "tsc -p ."
+  },
+  "dependencies": {
+    "@bakery/core": "*",
+    "@bakery/db": "*",
+    "@google/genai": "^3.6.1",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "evalite": "0.19.0",
+    "typescript": "^5.9.3",
+    "vitest": "^5.1.1",
+    "@testcontainers/postgresql": "^12.2.2",
+    "drizzle-orm": "^0.45.0"
+  }
+}

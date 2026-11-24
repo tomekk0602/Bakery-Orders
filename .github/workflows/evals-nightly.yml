@@ -1,0 +1,36 @@
+# Nightly: every eval case, five trials, with the report kept as an artifact (ADR-0013, T072).
+# Compared with the baseline too, so a drift of the model behind the same id shows up.
+name: Evals nightly
+
+on:
+  schedule:
+    - cron: "30 2 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: eval-gate
+  cancel-in-progress: false
+
+jobs:
+  evals:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Full eval suite against packages/evals/baseline.json
+        run: npm run eval -w @bakery/evals -- --gate
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: evals-nightly-report
+          path: packages/evals/out/

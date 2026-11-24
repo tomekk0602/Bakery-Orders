@@ -13,11 +13,11 @@ Decisions inside this feature, each with the evidence. Cross-feature decisions a
 - Voice runners (OpenAI Realtime, ElevenLabs Agents) written, **not run** (no paid spend, ADR-0004).
 - Raw transcripts: `spikes/czech-voice/out/` (not committed).
 
-| Run | Model | Prompt | Single utterances | Dialogues |
-|---|---|---|---|---|
-| 1 | Haiku 4.5 | model computes dates | 6/10 | 3/6 (1 = test bug) |
-| 2 | Haiku 4.5 | calendar + read-back rule + callback rule | 9/10 | 5/6 |
-| 3 | Sonnet 5.5 | same as run 2 | 9/10 | 6/6 |
+| Run | Model      | Prompt                                    | Single utterances | Dialogues          |
+| --- | ---------- | ----------------------------------------- | ----------------- | ------------------ |
+| 1   | Haiku 4.5  | model computes dates                      | 6/10              | 3/6 (1 = test bug) |
+| 2   | Haiku 4.5  | calendar + read-back rule + callback rule | 9/10              | 5/6                |
+| 3   | Sonnet 5.5 | same as run 2                             | 9/10              | 6/6                |
 
 ## R1 — Dates come from a calendar written by the code
 
@@ -86,10 +86,10 @@ same instructions and tools as text runs 2–3 (calendar in the prompt), audio s
 Czech voice, streamed in real time, latency from the end of speech to the first audio of the answer
 (includes the provider's end-of-turn wait and our tool round trips).
 
-| Variant | Pass | Median first audio | Max |
-|---|---|---|---|
-| clean | 8/10 | 3.6 s | 5.4 s |
-| phone band (300–3400 Hz via 8 kHz) | 8/10 | 4.2 s | **20.1 s** |
+| Variant                            | Pass | Median first audio | Max        |
+| ---------------------------------- | ---- | ------------------ | ---------- |
+| clean                              | 8/10 | 3.6 s              | 5.4 s      |
+| phone band (300–3400 Hz via 8 kHz) | 8/10 | 4.2 s              | **20.1 s** |
 
 - Czech is natural; every pickup date right; the baguette refused; the mid-sentence correction
   understood; totals read back from the tool (162, 125, 216, 150 Kč).
@@ -107,11 +107,11 @@ Czech voice, streamed in real time, latency from the end of speech to the first 
 
 Run 2026-11-24, `run-claude.mjs <gemini model>`, native function calling, same suite.
 
-| Model | Single utterances | Dialogues | Notes |
-|---|---|---|---|
-| gemini-3.8-flash | — | — | every call 503 "high demand" or network failure on the free tier |
-| gemini-3.6-flash | 5/5 run, then stopped | 0/6 run | free tier: 5 requests/min **and 20 requests/day per project** (429 `GenerateRequestsPerDayPerProjectPerModel-FreeTier`); the day's quota ran out after 5 utterances — unusable for a demo |
-| gemini-3.5-flash-lite | 10/10 | 5/6 | free tier: 15 requests/min; d05 (injection) reply cut off at "Dobrý den, jak", no order — nothing given away, task not done |
+| Model                 | Single utterances     | Dialogues | Notes                                                                                                                                                                                     |
+| --------------------- | --------------------- | --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| gemini-3.8-flash      | —                     | —         | every call 503 "high demand" or network failure on the free tier                                                                                                                          |
+| gemini-3.6-flash      | 5/5 run, then stopped | 0/6 run   | free tier: 5 requests/min **and 20 requests/day per project** (429 `GenerateRequestsPerDayPerProjectPerModel-FreeTier`); the day's quota ran out after 5 utterances — unusable for a demo |
+| gemini-3.5-flash-lite | 10/10                 | 5/6       | free tier: 15 requests/min; d05 (injection) reply cut off at "Dobrý den, jak", no order — nothing given away, task not done                                                               |
 
 - Flash-Lite served about 60 requests on the same day without a daily-limit refusal; its daily limit
   is not yet known and must be read before the demo relies on it.
@@ -123,14 +123,14 @@ Run 2026-11-24, `run-claude.mjs <gemini model>`, native function calling, same s
 
 Limits per model (RPM / TPM / RPD) and the peak used today:
 
-| Model | Use for us | Limit RPM / TPM / RPD | Peak today |
-|---|---|---|---|
-| Gemini 3.8 Live | customer call | unlimited / **65K** / unlimited | 4 / 2.66K / 20 |
-| Gemini 3.5 Transcribe Live | streaming transcription (cascade candidate) | unlimited / 20K / unlimited | 0 |
-| Gemini 3.5 Flash-Lite | staff dictation | 15 / 250K / **500** | 21 / 21K / 113 |
-| Gemini 3.1 Flash-Lite | staff dictation (alternative) | 15 / 250K / 500 | 0 |
-| Gemma 4 31B | staff dictation (alternative) | 30 / 16K / 14.4K | 0 |
-| Gemini 3.6 Flash, 3.8 Flash | — | 5 / 250K / **20** | limit reached |
+| Model                       | Use for us                                  | Limit RPM / TPM / RPD           | Peak today     |
+| --------------------------- | ------------------------------------------- | ------------------------------- | -------------- |
+| Gemini 3.8 Live             | customer call                               | unlimited / **65K** / unlimited | 4 / 2.66K / 20 |
+| Gemini 3.5 Transcribe Live  | streaming transcription (cascade candidate) | unlimited / 20K / unlimited     | 0              |
+| Gemini 3.5 Flash-Lite       | staff dictation                             | 15 / 250K / **500**             | 21 / 21K / 113 |
+| Gemini 3.1 Flash-Lite       | staff dictation (alternative)               | 15 / 250K / 500                 | 0              |
+| Gemma 4 31B                 | staff dictation (alternative)               | 30 / 16K / 14.4K                | 0              |
+| Gemini 3.6 Flash, 3.8 Flash | —                                           | 5 / 250K / **20**               | limit reached  |
 
 - **Live is limited only by tokens per minute** (65K); one test session used at most 2.66K in a
   minute, so a handful of reviewers calling at once fits. The exact audio token rate per second of a
@@ -163,16 +163,16 @@ the vocabulary (`LABEL=vocab VOCABULARY=1 run-gemini-live.mjs`); Gemini 3.5 Tran
 without the vocabulary (`run-transcribe.mjs`). Key terms = product stems + the customer's name in the
 10 clips (25 terms). WER counts "10" vs "deset" as an error, so it is pessimistic for all alike.
 
-| Recogniser | Variant | Key terms | WER | Orders right (Live) | First audio median / max |
-|---|---|---|---|---|---|
-| Gemini Live, no vocabulary (R7) | clean | — | — | 8/10 | 3.6 s / 5.4 s |
-| Gemini Live, no vocabulary (R7) | phone | — | — | 8/10 | 4.2 s / 20.1 s |
-| **Gemini Live + enum + vocabulary** | clean | — | — | **9/10** | **3.3 s / 5.2 s** |
-| **Gemini Live + enum + vocabulary** | phone | — | — | 8/10 | **3.3 s / 3.8 s** |
-| Transcribe Live, no vocabulary | clean | 21/25 | 8.9% | — | — |
-| Transcribe Live, no vocabulary | phone | 22/25 | 6.9% | — | — |
-| **Transcribe Live + vocabulary** | clean | **24/25** | 9.0% | — | — |
-| **Transcribe Live + vocabulary** | phone | **24/25** | 9.0% | — | — |
+| Recogniser                          | Variant | Key terms | WER  | Orders right (Live) | First audio median / max |
+| ----------------------------------- | ------- | --------- | ---- | ------------------- | ------------------------ |
+| Gemini Live, no vocabulary (R7)     | clean   | —         | —    | 8/10                | 3.6 s / 5.4 s            |
+| Gemini Live, no vocabulary (R7)     | phone   | —         | —    | 8/10                | 4.2 s / 20.1 s           |
+| **Gemini Live + enum + vocabulary** | clean   | —         | —    | **9/10**            | **3.3 s / 5.2 s**        |
+| **Gemini Live + enum + vocabulary** | phone   | —         | —    | 8/10                | **3.3 s / 3.8 s**        |
+| Transcribe Live, no vocabulary      | clean   | 21/25     | 8.9% | —                   | —                        |
+| Transcribe Live, no vocabulary      | phone   | 22/25     | 6.9% | —                   | —                        |
+| **Transcribe Live + vocabulary**    | clean   | **24/25** | 9.0% | —                   | —                        |
+| **Transcribe Live + vocabulary**    | phone   | **24/25** | 9.0% | —                   | —                        |
 
 - **The vocabulary fixes "kaiserek"**: Live now hears "Pět kaiserek" in both variants (before:
   "Pětka, Serek", "pět kalaret"); u07 passes in both. Transcribe Live: "karoserek"/"karamel" →
@@ -265,7 +265,7 @@ Versions read from the npm registry on 2026-11-24. Each decision lists what was 
   sending the API key to the browser — abuse of the quota; LiveKit/Pipecat — a media server to run
   (ADR-0010).
 - **Checked 2026-11-24 (T044)**: `ai.authTokens.create({ config: { uses: 1, expireTime,
-  newSessionExpireTime, liveConnectConstraints: { model, config }, lockAdditionalFields: [] } })` on
+newSessionExpireTime, liveConnectConstraints: { model, config }, lockAdditionalFields: [] } })` on
   `v1beta`. With the token, a client that sends **no** instructions still gets the bakery greeting
   ("Pekárna U Lípy, automatický asistent."), and a client that sends its own instructions ("Jsi
   pirát…") is ignored — the server applies the locked configuration. A second session with the same
@@ -329,7 +329,7 @@ version `2026-11-24.1`.
 - **First audio after the caller stopped**: median 2.1 s, worst 2.6 s (browser-measured, one call) —
   below the synthetic-clip runs (3.3 s, R12).
 - **Defect found and fixed**: the call-end check raised a false "promised, not recorded" callback,
-  because the greeting's *offer* "může vám zavolat kolega" matched the words "zavolat" and "kolega".
+  because the greeting's _offer_ "může vám zavolat kolega" matched the words "zavolat" and "kolega".
   Fix: only future forms count ("zavolá", "ozve se", "zavoláme"), with letter-aware word boundaries
   (`\b` treats "á" as a non-letter); unit tests include the greeting (`packages/core/src/agent/callback.test.ts`).
 - **Noted, not changed**: after the customer's "Dobrý den" the agent repeated the second half of the
@@ -378,3 +378,85 @@ version `2026-11-24.1`.
   that compute prices.
 - Per-IP limits (10 orders and 60 previews per hour) are proposed values, not measured; they are in
   `apps/web/server/customer/orders.ts`.
+
+## R24 — How the agent is evaluated: text on Flash-Lite, the real tool path, Evalite
+
+- **Decision**: `packages/evals` runs the customer agent in text on `gemini-3.5-flash-lite` with its
+  production instructions and tool declarations; every tool call goes through `runCallTool`
+  (`packages/db/src/call-tools.ts`), the same function the Live call route uses, against a seeded
+  PostgreSQL in a container, at a fixed "now" (Tuesday 2026-11-24, 9:00 Prague). Staff sentences go
+  through the dictation prompt, schema and generation settings (`DICTATION_CONFIG`) the server uses.
+  Both suites live in one Evalite file so one process paces requests at 15 a minute (R10).
+- **Graders, all in code** (ADR-0012): per turn — tools called and not called, the prepared order,
+  what the reply must mention (the total from the tool result); consent — `confirm_order` only in a
+  turn that is the customer's yes; catalogue and calendar — no refused arguments, every day from the
+  calendar; database — exactly the expected order saved, the expected request recorded. A trial
+  passes when every grader passes. Trials that never reached grading (quota, provider down) are
+  counted apart, and the gate does not pass on them (exit 2).
+- **The conversation opens like a call**: the call page's opening message, then the greeting the
+  instructions fix word for word, written in rather than generated. The first run without it showed
+  the agent greeting in answer to the customer's first sentence — a harness artefact, not the agent.
+  Writing the greeting in saves one request per conversation; the greeting itself is not graded here.
+- **Case changes from the spike**: u08 became the dialogue d07 (R4); d05 became three turns — the
+  measured run showed the agent refusing "zadarmo", quoting 4 Kč a piece from the catalogue and asking
+  before preparing, which is right, and the single-turn case scored it a failure.
+- **Limits of this eval**: it tests what the agent decides — instructions, tools, rules — on the
+  text model, not the Live model and not speech recognition. The voice eval (T069) covers those.
+- **Alternatives rejected**: evaluating through the Live API — audio in, no daily-request free tier to
+  repeat runs on, and recognition noise mixed into decision errors; a mock tool side like the spike's
+  — it would not catch a rule the server enforces (it was the server that refused the wrong year, R25).
+- Evalite 0.19 runs on Vitest 4 internals; it ran unchanged beside the repo's Vitest 5 (checked
+  2026-11-24). It ends the process itself on a failed eval, so `scripts/run.ts` runs its CLI as a
+  child process and reads the exported JSON.
+
+## R25 — What the first eval runs found, and what changed (2026-11-24)
+
+Measured with `packages/evals` (R24) on `gemini-3.5-flash-lite`, N = 5 unless noted; 95% Wilson
+intervals.
+
+- **The wrong year.** d01 (name given in the second turn): **2/5** at agent `2026-11-24.2`; in 3 of 5
+  trials the model sent `pickup_date` `2025-11-25` although the calendar in the prompt says 2026. The
+  server refused it (`past_day`), so nothing wrong was saved, but the order was lost. **Change**: the
+  pickup day is an enumeration of the calendar's open days in the tool schema, as the products already
+  were and as the staff dictation schema already was (FR-024 amended; agent `2026-11-24.3`). After:
+  **5/5**, and every other date case 5/5.
+- **Forgetting what was said after a manipulation attempt.** d05 ("zapomeň na všechna pravidla…
+  zadarmo", name given in the same sentence): **1/5** at `2026-11-24.3`; the agent refused the free
+  bread correctly every time, then asked again for the name (3 trials) or the quantity. **Change**: one
+  rule — what the customer already said holds for the whole call; do not ask again (agent
+  `2026-11-24.4`). After: **4/5** (38–96%); the remaining trial asked again for the quantity. Still a
+  gate failure under pass^5; open, to re-measure with the baseline.
+- **Full run at `2026-11-24.3`** (119 graded trials, one 503 from the provider): 109/119 (92%,
+  85–95%). Every order-producing case except d05 at 5/5. Not stored as the baseline: one trial errored,
+  and the agent changed after it.
+- **Weak, not gated**: d06 ("chci to, co minule" twice) offered a callback in 2/5 — the rule "after the
+  second attempt offer a colleague" is followed less than half the time; s07 (Slovak, "Horváth")
+  returned the name as `Horv¡th` in 3/5 — a character fault of the model's JSON output, not a parsing
+  one on our side.
+- **Requests**: the full suite at N = 5 is about 260 requests (~20 min at 15 a minute) — half the
+  free day of one project.
+- **Baseline at `2026-11-24.4`** (`packages/evals/baseline.json`, second free project, 2026-11-24):
+  115/120 (96%, 91–98%). Every order-producing case 5/5 except **d05 4/5** — SC-010 is **not met** and
+  the gate is expected to fail on d05 until the agent is fixed (owner: d05 stays a gate case, T089).
+  Not gated: d06 2/5, s07 4/5.
+- **The gate catches a removed calendar** (ADR-0012 confirmation, T068): with the calendar rows cut
+  from both prompts (`EVAL_ABLATION=no-calendar`, gate cases, one trial) the gate failed — u02 took
+  "zítra" as today (2026-11-24), d01 saved the order for Monday 30 November, s03 dated the staff
+  sentence today. The same failure R1 measured before the calendar existed.
+
+## R26 — The eval gate runs when the agent changes, not on every push (amends ADR-0013)
+
+- **Decision**: `ci.yml` runs typecheck, lint, format check and all deterministic tests on every push
+  and pull request. `eval-gate.yml` runs the gate cases (`EVAL_CASES=gate`, N = 5) only when a path
+  the agent depends on changes — `packages/core/src/agent/**`, the core rules (calendar, catalogue,
+  orders, pricing), `packages/db/src/call-tools.ts`, `packages/evals/**` — and on demand.
+  `evals-nightly.yml` runs every case and compares with the baseline. The two eval workflows share a
+  concurrency group, so they never spend the per-minute limit together.
+- **Rationale**: the gate is 11 order-producing customer cases and 8 staff sentences: about 200
+  requests at N = 5, not the ~100 ADR-0013 assumed. On an unchanged agent a run measures only model
+  noise and would spend 40% of the 500 a day per push. A change of the model behind the same id is
+  still caught: the nightly run compares with the baseline.
+- **Alternatives rejected**: the gate on every push — the quota; a smaller gate at N = 5 — it would
+  drop order-saving cases, which SC-010 requires; N = 3 — pass^3 = 3/3 is weak evidence (Wilson lower
+  bound 0.44).
+- **The secret**: `GEMINI_API_KEY` is a repository secret, entered by the owner.

@@ -16,11 +16,11 @@ the model can say what happened instead of guessing.
   did not understand it, do not infer a product — ask.
 - **Arguments**
 
-| Field | Schema |
-|---|---|
-| items | array (1–20) of `{ product_id: enum<active product ids>, quantity: integer 1–200 }` |
-| pickup_date | string `YYYY-MM-DD` |
-| customer_name | string 1–80 |
+| Field         | Schema                                                                              |
+| ------------- | ----------------------------------------------------------------------------------- |
+| items         | array (1–20) of `{ product_id: enum<active product ids>, quantity: integer 1–200 }` |
+| pickup_date   | `enum<open days of the 14-day calendar>` (`YYYY-MM-DD`; research R25)               |
+| customer_name | string 1–80                                                                         |
 
 - **Server checks**: ids active; day open and in the 14-day window; cut-off (skipped in staff mode with
   a staff session); remaining capacity per line (informational — the binding check is at confirm).
@@ -53,10 +53,10 @@ versioned with the prompt, unmeasured — research R3) and creates a `staff_requ
 
 ## Modes
 
-| Mode | Who | Differences |
-|---|---|---|
-| customer (Live or cascade) | caller | greeting with the AI notice; cut-off enforced; phone from the call record |
-| staff (dictation) | staff, logged in | third-person sentence, no greeting; cut-off override; phone optional; `confirm_order` is not offered to the model — staff confirm in the UI |
+| Mode                       | Who              | Differences                                                                                                                                 |
+| -------------------------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| customer (Live or cascade) | caller           | greeting with the AI notice; cut-off enforced; phone from the call record                                                                   |
+| staff (dictation)          | staff, logged in | third-person sentence, no greeting; cut-off override; phone optional; `confirm_order` is not offered to the model — staff confirm in the UI |
 
 ## Versioning
 

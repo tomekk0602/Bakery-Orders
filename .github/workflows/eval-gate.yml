@@ -1,0 +1,50 @@
+# The eval gate (ADR-0012, ADR-0013 as amended by research R26): the order-producing cases, five
+# trials each, on the free Gemini tier — run when the agent or what it calls changes, not on every
+# push, because an unchanged agent only measures noise and the gate uses ~200 of 500 requests a day.
+# Exit 1 is a regression, exit 2 is missing evidence (quota, provider down): both fail the build.
+name: Eval gate
+
+on:
+  push:
+    branches: [main]
+    paths: &agent
+      - packages/core/src/agent/**
+      - packages/core/src/calendar.ts
+      - packages/core/src/catalogue.ts
+      - packages/core/src/orders.ts
+      - packages/core/src/pricing.ts
+      - packages/db/src/call-tools.ts
+      - packages/evals/**
+      - .github/workflows/eval-gate.yml
+  pull_request:
+    paths: *agent
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: eval-gate
+  cancel-in-progress: false
+
+jobs:
+  gate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    env:
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      EVAL_CASES: gate
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Eval gate against packages/evals/baseline.json
+        run: npm run eval -w @bakery/evals -- --gate
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: eval-gate-report
+          path: packages/evals/out/

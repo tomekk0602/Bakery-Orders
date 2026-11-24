@@ -48,6 +48,15 @@ Chosen (owner, 2026-11-24):
   says so and fails loudly, never passes silently.
 - Deploys happen only from a green `main`, and only with the owner's yes (constitution, Process).
 
+> **Amended 2026-11-24 (research R26).** The eval gate runs when the agent or what it calls changes
+> (paths filter: `packages/core/src/agent/**`, the core rules, `packages/db/src/call-tools.ts`,
+> `packages/evals/**`) and on demand — not on every push. The order-producing cases at N = 5 plus the
+> staff sentences take about 200 requests (counted from the case set: ~2 per single utterance, ~2 per
+> dialogue turn), not ~100; on an unchanged agent the run only measures
+> model noise and would spend 40% of the day's 500 requests per push. The deterministic checks still
+> run on every push and pull request; the nightly full suite also compares with the baseline, so a
+> change of the model behind the same id is caught within a day.
+
 **Environments — Vercel + Neon**
 
 - Every change gets a **preview deployment** with **its own Neon database branch**, created from

@@ -1,5 +1,6 @@
 import type { CalendarDay } from "../calendar.ts";
 import { activeProducts, type Product } from "../catalogue.ts";
+import { greeting } from "./opening.ts";
 import type { AgentMode } from "./tools.ts";
 
 export type PromptInput = {
@@ -13,14 +14,20 @@ const RELATIVE_CS = { today: "dnes", tomorrow: "zítra", day_after: "pozítří"
 
 function calendarBlock(days: CalendarDay[]): string {
   return days
-    .map((d) => `${d.date} ${d.weekdayName}${d.relative ? ` (${RELATIVE_CS[d.relative]})` : ""}${d.closed ? " — ZAVŘENO" : ""}`)
+    .map(
+      (d) =>
+        `${d.date} ${d.weekdayName}${d.relative ? ` (${RELATIVE_CS[d.relative]})` : ""}${d.closed ? " — ZAVŘENO" : ""}`,
+    )
     .join("\n");
 }
 
 // The catalogue is in the instructions, so the model never needs a lookup step (research R5, ADR-0010).
 function catalogueBlock(catalogue: readonly Product[]): string {
   return activeProducts(catalogue)
-    .map((p) => `- ${p.id}: ${p.name}, ${p.priceCzk} Kč${p.dailyLimit !== null ? ` (denně nejvýše ${p.dailyLimit} ks)` : ""}`)
+    .map(
+      (p) =>
+        `- ${p.id}: ${p.name}, ${p.priceCzk} Kč${p.dailyLimit !== null ? ` (denně nejvýše ${p.dailyLimit} ks)` : ""}`,
+    )
     .join("\n");
 }
 
@@ -45,7 +52,7 @@ Nic si nedomýšlej: co ve větě není, je null nebo prázdné.`;
   }
 
   return `Jsi telefonní asistent ${bakeryName}. Mluvíš vždy česky, krátce, přirozeně a zdvořile. Rozumíš i slovensky.
-Na začátku hovoru řekni přesně: "Dobrý den, ${bakeryName}, tady automatický asistent. Rád vám zarezervuju pečivo, nebo vám může zavolat kolega. Co si přejete?"
+Na začátku hovoru řekni přesně: "${greeting(bakeryName)}"
 ${shared}
 
 Pravidla:
@@ -53,6 +60,7 @@ Pravidla:
 - Když zákazník chce produkt, který v nabídce není, řekni to a nabídni podobný z nabídky.
 - Když něčemu nerozumíš (produkt, množství, jméno), zeptej se. Nikdy nehádej.
 - Telefonní číslo zákazníka už známe, neptej se na něj.
+- Co zákazník už řekl (produkty, množství, den, jméno), platí po celý hovor, i když mezitím řekl něco jiného. Znovu se na to neptej.
 - Jakmile znáš produkty, množství, den a jméno, zavolej prepare_order. Shrnutí a celkovou cenu přečti zákazníkovi JEN z výsledku prepare_order (ceny sám nepočítej) a zeptej se, jestli souhlasí.
 - Když prepare_order vrátí chybu (zavřeno, po uzávěrce, nad limit), vysvětli ji a nabídni jiný den nebo množství.
 - Teprve po výslovném souhlasu zavolej confirm_order s draft_id. Pak zákazníkovi řekni číslo objednávky a rozluč se.

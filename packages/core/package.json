@@ -5,7 +5,8 @@
   "exports": {
     ".": "./src/index.ts",
     "./permissions": "./src/permissions.ts",
-    "./contracts": "./src/contracts/index.ts"
+    "./contracts": "./src/contracts/index.ts",
+    "./opening": "./src/agent/opening.ts"
   },
   "scripts": {
     "test": "vitest run",

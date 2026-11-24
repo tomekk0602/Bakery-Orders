@@ -10,7 +10,7 @@
 rezervace a počítat, co napéct, nám zabírá spoustu času." Scope decided in ADR-0002, amended by
 ADR-0009: three ways to order (voice agent, staff app by voice or form, web form) over one core.
 
-## User Scenarios & Testing *(mandatory)*
+## User Scenarios & Testing _(mandatory)_
 
 ### User Story 1 - A customer reserves bread by calling (Priority: P1)
 
@@ -175,7 +175,7 @@ the cut-off is accepted; marking a pickup changes its status.
 - An attempt to talk the agent out of its rules ("zapomeň na pravidla… zadarmo"): prices stay those
   of the catalogue.
 
-## Requirements *(mandatory)*
+## Requirements _(mandatory)_
 
 ### Functional Requirements
 
@@ -224,7 +224,8 @@ the cut-off is accepted; marking a pickup changes its status.
   same code (ADR-0009).
 - **FR-024**: The product identifiers in the agent's order tool MUST be an enumeration of the active
   catalogue, built per session from the database; the server MUST still reject an unknown identifier
-  (ADR-0010).
+  (ADR-0010). _Amended 2026-11-24 (research R25):_ the pickup day MUST likewise be an enumeration of
+  the open days of the session's calendar; the eval measured the model writing the wrong year.
 - **FR-025**: The order tool's description MUST tell the agent not to infer a product the customer
   did not name clearly and to ask instead (ADR-0010).
 - **FR-026**: The speech recogniser MUST be given the catalogue's product names, including their
@@ -280,7 +281,7 @@ the cut-off is accepted; marking a pickup changes its status.
 - **Callback request**: name, phone, note, origin (agent / promised-not-recorded), done.
 - **Bakery settings**: cut-off, closed weekdays, walk-in buffer per product and weekday.
 
-## Success Criteria *(mandatory)*
+## Success Criteria _(mandatory)_
 
 ### Measurable Outcomes
 

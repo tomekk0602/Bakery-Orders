@@ -3,8 +3,7 @@ import { createHash } from "node:crypto";
 import { createDb, type Db } from "@bakery/db";
 import { GoogleGenAI } from "@google/genai";
 
-/** The customer call model (ADR-0011, research R12). */
-export const LIVE_MODEL = "gemini-3.8-live";
+export { LIVE_MODEL } from "@bakery/core";
 
 const isProduction = process.env.NODE_ENV === "production";
 
@@ -32,7 +31,11 @@ export function genai(): GoogleGenAI {
 /** A salted hash of the client IP: enough for per-IP limits, never the IP itself (ADR-0014). */
 export function ipHash(req: Request): string {
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || req.headers.get("x-real-ip") || "local";
-  return createHash("sha256").update(required("IP_HASH_SALT", "development-only-salt")).update(ip).digest("hex").slice(0, 32);
+  return createHash("sha256")
+    .update(required("IP_HASH_SALT", "development-only-salt"))
+    .update(ip)
+    .digest("hex")
+    .slice(0, 32);
 }
 
 export const json = (body: unknown, status = 200) => Response.json(body, { status });

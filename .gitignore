@@ -10,3 +10,6 @@ dist/
 *.tsbuildinfo
 .vitest/
 *.local
+
+# eval run output (results, report); the baseline is committed
+packages/evals/out/

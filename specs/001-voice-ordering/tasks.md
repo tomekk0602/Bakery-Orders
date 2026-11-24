@@ -149,12 +149,13 @@ they cover and must fail first.
 
 ## Phase 9: Evaluation (ADR-0012)
 
-- [ ] T063 [P] Move the spike cases into `packages/evals/cases/`: customer utterances and dialogues (u08 as a dialogue, research R4), staff sentences, expected orders
-- [ ] T064 [P] Graders in `packages/evals/src/graders.ts`: order equality against the test database, no save without confirmation, enum membership, dates from the calendar
-- [ ] T065 [P] Statistics in `packages/evals/src/stats.ts` + tests: Wilson interval, pass@k, pass^k
-- [ ] T066 `orders.eval.ts` and `staff.eval.ts`: each case N = 5 on Flash-Lite with the real tools against a test database; report with intervals
+- [x] T063 [P] Move the spike cases into `packages/evals/cases/`: customer utterances and dialogues (u08 as a dialogue, research R4), staff sentences, expected orders
+- [x] T064 [P] Graders in `packages/evals/src/graders.ts`: order equality against the test database, no save without confirmation, enum membership, dates from the calendar
+- [x] T065 [P] Statistics in `packages/evals/src/stats.ts` + tests: Wilson interval, pass@k, pass^k
+- [x] T066 Customer and staff suites in one `agent.eval.ts` (one process, one request pacer): each case N = 5 on Flash-Lite with the real tools (`runCallTool`) against a test database; report with intervals (research R24)
 - [ ] T067 `simulated.eval.ts`: a simulated Czech customer from a goal (Sonnet through the CLI locally, a free Gemini model in CI); scenarios include an unavailable product, a failing tool, silence, a correction, a request for a human (FR-029)
-- [ ] T068 Gate: `baseline.json`, a comparison script, `npm run eval -- --gate` exits non-zero on regression; a test that removes the calendar block and expects the gate to fail (SC-010)
+- [x] T068 Gate: `baseline.json`, a comparison script, `npm run eval -- --gate` exits non-zero on regression; a test that removes the calendar block and expects the gate to fail (SC-010)
+- [ ] T089 Fix d05: after a refused manipulation attempt the agent asks again for what the customer already said (4/5 at `2026-11-24.4`, research R25); re-measure, then a new baseline (SC-010)
 - [ ] T069 [P] Voice eval `packages/evals/voice/`: the spike's Live runner with the vocabulary, clean and phone-band clips, latency report (nightly)
 - [ ] T070 [P] Judge for tone and Czech: calibration set of ~20 transcripts labelled by the owner, agreement reported in research.md; used in the gate only above the agreed threshold
 
@@ -162,8 +163,8 @@ they cover and must fail first.
 
 ## Phase 10: Operations (ADR-0013) and demo (ADR-0014)
 
-- [ ] T071 [P] `.github/workflows/ci.yml`: install, typecheck, lint, format check, unit and integration tests with a PostgreSQL service, the eval gate on Flash-Lite with `GEMINI_API_KEY` from secrets; fails loudly on quota exhaustion
-- [ ] T072 [P] `.github/workflows/evals-nightly.yml`: full eval suite and the voice eval; report as an artifact and a run summary
+- [x] T071 [P] `.github/workflows/ci.yml`: install, typecheck, lint, format check, unit and integration tests (PostgreSQL through Testcontainers); the eval gate in `eval-gate.yml` when the agent changes (research R26), `GEMINI_API_KEY` from secrets; exit 2 on quota exhaustion
+- [ ] T072 [P] `.github/workflows/evals-nightly.yml`: full eval suite and the voice eval; report as an artifact and a run summary — _workflow with the text suite done; the voice eval waits for T069_
 - [ ] T073 [P] `GET /api/cron/retention` + Vercel Cron: delete transcripts after 30 days, expired drafts and old rate-limit rows; test with a fixed clock (FR-009, ADR-0008)
 - [ ] T074 [P] Shadow cost: `packages/core/src/agent/prices.ts` with source URL and date; cost per call and per dictation on the trace and the call record (ADR-0013)
 - [ ] T075 [US4] "Provoz" screen `apps/staff/app/(tabs)/provoz.tsx` + `GET /api/staff/provoz`: first-audio p50/p95, outcome shares, share of phone orders edited by staff (FR-033)

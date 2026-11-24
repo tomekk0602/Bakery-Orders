@@ -8,19 +8,43 @@ import { buildVocabulary } from "./vocabulary.ts";
 
 /** A fixed bakery and day, so the fingerprint depends only on the agent definition. */
 const FIXTURE_CATALOGUE: Product[] = [
-  { id: "chleb-kminovy", name: "Kmínový chléb", spokenForms: ["kmínové chleby"], priceCzk: 69, dailyLimit: 30, active: true },
-  { id: "kaiserka", name: "Kaiserka", spokenForms: ["kaiserky", "kaiserek"], priceCzk: 7, dailyLimit: null, active: true },
+  {
+    id: "chleb-kminovy",
+    name: "Kmínový chléb",
+    spokenForms: ["kmínové chleby"],
+    priceCzk: 69,
+    dailyLimit: 30,
+    active: true,
+  },
+  {
+    id: "kaiserka",
+    name: "Kaiserka",
+    spokenForms: ["kaiserky", "kaiserek"],
+    priceCzk: 7,
+    dailyLimit: null,
+    active: true,
+  },
   { id: "vanocka", name: "Vánočka", spokenForms: ["vánočky"], priceCzk: 120, dailyLimit: null, active: false },
 ];
-const FIXTURE_SCHEDULE: BakerySchedule = { closedWeekdays: [7], closedDays: [], cutoffDaysBefore: 1, cutoffTime: "14:00" };
+const FIXTURE_SCHEDULE: BakerySchedule = {
+  closedWeekdays: [7],
+  closedDays: [],
+  cutoffDaysBefore: 1,
+  cutoffTime: "14:00",
+};
 const FIXTURE_NOW = new Date("2026-11-24T09:00:00Z");
 
 /** Hash of what the model receives for the fixture — instructions, tools and vocabulary. */
 export function agentFingerprint(): string {
   const calendar = buildCalendar(FIXTURE_NOW, FIXTURE_SCHEDULE);
-  const schemas = buildToolSchemas(FIXTURE_CATALOGUE);
+  const schemas = buildToolSchemas(FIXTURE_CATALOGUE, calendar);
   const payload = JSON.stringify({
-    customer: buildInstructions({ mode: "customer", bakeryName: "Pekárna U Lípy", calendar, catalogue: FIXTURE_CATALOGUE }),
+    customer: buildInstructions({
+      mode: "customer",
+      bakeryName: "Pekárna U Lípy",
+      calendar,
+      catalogue: FIXTURE_CATALOGUE,
+    }),
     staff: buildInstructions({ mode: "staff", bakeryName: "Pekárna U Lípy", calendar, catalogue: FIXTURE_CATALOGUE }),
     tools: [toolDeclarations(schemas, "customer"), toolDeclarations(schemas, "staff")],
     vocabulary: buildVocabulary(FIXTURE_CATALOGUE, "Pekárna U Lípy"),

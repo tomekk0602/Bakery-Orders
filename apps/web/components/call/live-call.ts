@@ -1,3 +1,4 @@
+import { CALL_OPENING } from "@bakery/core/opening";
 import { GoogleGenAI, type LiveServerMessage, type Session } from "@google/genai";
 import { openMicrophone, openSpeaker, SPEECH_RMS, type Microphone, type Speaker } from "./audio";
 
@@ -31,7 +32,11 @@ export class LiveCall {
 
   async start(callerPhone: string): Promise<void> {
     this.events.onStatus("connecting");
-    const res = await fetch("/api/call/start", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ caller_phone: callerPhone }) });
+    const res = await fetch("/api/call/start", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ caller_phone: callerPhone }),
+    });
     const body = (await res.json()) as StartResponse & { error?: { message: string } };
     if (!res.ok) throw new Error(body.error?.message ?? "Hovor se nepodařilo zahájit.");
     this.callId = body.call_id;
@@ -56,7 +61,7 @@ export class LiveCall {
       this.session?.sendRealtimeInput({ audio: { data, mimeType: "audio/pcm;rate=16000" } });
     });
     // The agent speaks first: greeting with the AI notice (FR-001).
-    this.session.sendClientContent({ turns: [{ role: "user", parts: [{ text: "(Zákazník se připojil.)" }] }], turnComplete: true });
+    this.session.sendClientContent({ turns: [{ role: "user", parts: [{ text: CALL_OPENING }] }], turnComplete: true });
     this.capTimer = setTimeout(() => void this.end("capped"), body.cap_seconds * 1000);
     this.events.onStatus("live");
   }

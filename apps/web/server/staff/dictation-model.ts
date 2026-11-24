@@ -1,8 +1,6 @@
 import "server-only";
+import { DICTATION_CONFIG, DICTATION_MODEL } from "@bakery/core";
 import { genai } from "../runtime";
-
-/** The staff dictation model (ADR-0011): free tier, 15 requests a minute and 500 a day (research R10). */
-export const DICTATION_MODEL = "gemini-3.5-flash-lite";
 
 /** The model could not be reached or gave nothing usable; the app then offers the form (FR-022). */
 export class DictationUnavailable extends Error {
@@ -21,17 +19,24 @@ export class DictationUnavailable extends Error {
 }
 
 /** One call with the response constrained to the dictation JSON Schema (research R22). */
-export async function extractOrder(input: { text: string; instructions: string; jsonSchema: Record<string, unknown> }): Promise<unknown> {
+export async function extractOrder(input: {
+  text: string;
+  instructions: string;
+  jsonSchema: Record<string, unknown>;
+}): Promise<unknown> {
   let raw: string | undefined;
   try {
     const r = await genai().models.generateContent({
       model: DICTATION_MODEL,
       contents: input.text,
-      config: { systemInstruction: input.instructions, responseMimeType: "application/json", responseJsonSchema: input.jsonSchema, temperature: 0 },
+      config: { ...DICTATION_CONFIG, systemInstruction: input.instructions, responseJsonSchema: input.jsonSchema },
     });
     raw = r.text;
   } catch (e) {
-    throw new DictationUnavailable(e instanceof Error && /quota|RESOURCE_EXHAUSTED|429/.test(e.message) ? "quota" : "provider", e);
+    throw new DictationUnavailable(
+      e instanceof Error && /quota|RESOURCE_EXHAUSTED|429/.test(e.message) ? "quota" : "provider",
+      e,
+    );
   }
   try {
     return JSON.parse(raw ?? "");
