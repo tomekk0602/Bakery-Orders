@@ -1,6 +1,7 @@
 import { CALL_OPENING } from "@bakery/core/opening";
 import { GoogleGenAI, type LiveServerMessage, type Session } from "@google/genai";
 import { openMicrophone, openSpeaker, SPEECH_RMS, type Microphone, type Speaker } from "./audio";
+import { FirstAudioClock } from "./first-audio";
 
 export type Turn = { role: "customer" | "agent"; text: string };
 export type CallEvents = {
@@ -8,9 +9,6 @@ export type CallEvents = {
   onStatus: (status: "connecting" | "live" | "ended", detail?: string) => void;
 };
 type StartResponse = { call_id: string; token: string; model: string; cap_seconds: number };
-
-/** Silence before the first reply audio counts from the last microphone chunk that held speech. */
-const MAX_FIRST_AUDIO_MS = 60_000;
 
 /**
  * One browser call: the browser talks to Gemini Live with a one-use token locked to the bakery's
@@ -21,11 +19,9 @@ export class LiveCall {
   private mic: Microphone | null = null;
   private speaker: Speaker | null = null;
   private turns: Turn[] = [];
-  private firstAudioMs: number[] = [];
+  private readonly firstAudio = new FirstAudioClock();
   /** Every usage report as sent; the server prices them (research R27: per response or cumulative is checked there). */
   private usage: NonNullable<LiveServerMessage["usageMetadata"]>[] = [];
-  private lastSpeechAt = 0;
-  private awaitingReply = false;
   private capTimer: ReturnType<typeof setTimeout> | null = null;
   private ended = false;
   private callId = "";
@@ -56,10 +52,7 @@ export class LiveCall {
       },
     });
     this.mic = await openMicrophone((data, rms) => {
-      if (rms > SPEECH_RMS) {
-        this.lastSpeechAt = performance.now();
-        this.awaitingReply = true;
-      }
+      if (rms > SPEECH_RMS) this.firstAudio.speech(performance.now());
       this.session?.sendRealtimeInput({ audio: { data, mimeType: "audio/pcm;rate=16000" } });
     });
     // The agent speaks first: greeting with the AI notice (FR-001).
@@ -78,17 +71,17 @@ export class LiveCall {
   private async onMessage(m: LiveServerMessage) {
     if (m.usageMetadata) this.usage.push(m.usageMetadata);
     const sc = m.serverContent;
-    if (sc?.interrupted) this.speaker?.interrupt();
+    if (sc?.interrupted) {
+      this.speaker?.interrupt();
+      this.firstAudio.agentTurnEnded();
+    }
     for (const part of sc?.modelTurn?.parts ?? []) {
       const data = part.inlineData?.data;
       if (!data) continue;
-      if (this.awaitingReply && this.lastSpeechAt) {
-        const ms = Math.round(performance.now() - this.lastSpeechAt);
-        if (ms < MAX_FIRST_AUDIO_MS) this.firstAudioMs.push(ms);
-        this.awaitingReply = false;
-      }
+      this.firstAudio.agentAudio(performance.now());
       this.speaker?.play(data);
     }
+    if (sc?.turnComplete) this.firstAudio.agentTurnEnded();
     if (sc?.inputTranscription?.text) this.append("customer", sc.inputTranscription.text);
     if (sc?.outputTranscription?.text) this.append("agent", sc.outputTranscription.text);
 
@@ -121,7 +114,12 @@ export class LiveCall {
     const r = await fetch(`/api/call/${this.callId}/end`, {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ reason, transcript: this.turns, first_audio_ms: this.firstAudioMs, usage: this.usage }),
+      body: JSON.stringify({
+        reason,
+        transcript: this.turns,
+        first_audio_ms: this.firstAudio.samples,
+        usage: this.usage,
+      }),
     })
       .then((x) => x.json() as Promise<{ order_numbers?: number[] }>)
       .catch(() => ({ order_numbers: [] }));

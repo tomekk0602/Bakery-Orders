@@ -549,5 +549,14 @@ intervals.
   only that workspace's dependencies — the staff app's were missing for the export. Both are pinned in
   the repository: Node `24.x` in `apps/web` and an install command that runs `npm ci` at the root, as CI
   does.
+- **First production call (owner, 2026-11-24)**: order 1016 saved in Neon, the trace in Langfuse
+  with `environment: production` and the name masked; owner and employee sign in on `/staff`, the
+  employee gets 403 on "Provoz". Its first-audio samples were `68, 2, 26, 11, 1752, 1525, 3834, 3248`
+  ms: without headphones the microphone heard the agent from the speaker, that counted as the
+  customer's speech, and the next chunk of the same reply was taken as the first audio. **Fixed**
+  (`components/call/first-audio.ts`, tested): only speech heard while the agent is silent counts, and
+  one sample is taken per agent turn, which ends on `turnComplete` or an interruption. Remaining
+  limit: playback can outlast `turnComplete` by a moment, so an echo of the very end can start the
+  clock early — the next real speech chunk moves it to the right place. `SPEECH_RMS` stays unmeasured.
 - **The eval gate's filter** leaves out `packages/core/src/agent/prices.ts`: a price change does not
   change what the agent does (research R26); the push of R27 ran the gate for nothing.
