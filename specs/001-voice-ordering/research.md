@@ -560,3 +560,48 @@ intervals.
   clock early — the next real speech chunk moves it to the right place. `SPEECH_RMS` stays unmeasured.
 - **The eval gate's filter** leaves out `packages/core/src/agent/prices.ts`: a price change does not
   change what the agent does (research R26); the push of R27 ran the gate for nothing.
+
+## R29 — The customer page looks like a bakery, not a form (owner, 2026-11-24)
+
+- **Decision**: the page opens with the bakery (name, order deadline), then how to order (call, form,
+  in the shop), then the products with photo, name and price, then the call and the form, then the
+  notice (FR-046). Products and prices come from the catalogue the agent and the form use, read on the
+  server, so the page can never show something the agent would refuse.
+- **Photos**: supplied by the owner into `apps/web/public/images/` — `hero.jpg` and
+  `products/<product id>.jpg` (e.g. `products/rohlik.jpg`); the owner answers for their licence. A
+  missing file shows a placeholder with the product's initial, so the page works before the photos
+  exist.
+- **Rationale**: the first screen a reviewer sees; a caller who has seen the products knows what to ask
+  for and how it is called, which helps the agent's recognition.
+- **Alternatives rejected**: stock photos fetched by the developer — licence and download to be
+  approved one by one, and the owner prefers to choose them; an online shop with a cart — out of scope,
+  the form already takes the order.
+
+## R30 — The cut-off holds at the yes (owner, 2026-11-24)
+
+- **Found by an outside review**: `confirmDraft` checked the draft's owner, expiry and capacity but not
+  the pickup day again. A draft lives 24 hours, so a call read back at 13:58 and confirmed at 14:01 —
+  or a day the owner closed in between — was saved. The tool contract (`contracts/agent-tools.md`)
+  already promised `after_cutoff` and `closed_day` from `confirm_order`; the code did not do it.
+- **Decision (owner)**: after the cut-off the order is refused, even if the read-back came before it.
+  The day rules are one core function, `checkPickupDay`, used when the order is prepared and again
+  inside the confirmation; staff keep their cut-off override (FR-013) but not for a past or closed day.
+- **Tested**: read back 13:58, yes 14:01 → `after_cutoff`, nothing saved; a staff draft after the
+  cut-off is saved; a day closed after the read-back is refused for staff too.
+- **Not changed**: the agent's instructions name refusals from `prepare_order`; a refusal from
+  `confirm_order` reaches the model as the tool result with its reason. Its spoken explanation is not
+  covered by an eval case yet.
+
+## R31 — Staff cancel an order, and the bread goes back (2026-11-24)
+
+- **Found by an outside review**: a cancellation asked for by phone was recorded as a request, but
+  staff had no way to cancel the order, so it stayed in the baking plan and kept its share of the
+  day's limit — the one thing the bakery relies on, the plan, was wrong.
+- **Decision**: `PATCH /api/staff/orders/{id}` with `status: "cancelled"`, under the `order:cancel`
+  permission both roles hold. One transaction changes the status and gives each line's quantity back
+  to `daily_capacity` (never below zero). A handed-over order is refused — the bread has left the shop.
+  The app asks twice, inside the screen (a system dialog does nothing in the web build).
+- **Tested**: an employee cancels Dvořák's 2 kmínové chleby → the day's reserved count drops by 2, the
+  order leaves the list, a second cancel is refused and changes nothing; a handed-over order is
+  refused; the app sends nothing until the second tap.
+- **Still open**: editing an order's lines or day (T058).

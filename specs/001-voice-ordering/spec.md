@@ -192,6 +192,8 @@ the cut-off is accepted; marking a pickup changes its status.
   a prepared order in the same conversation.
 - **FR-007**: The system MUST refuse an order for a closed or past day, after the cut-off (except by
   staff) or beyond a product's daily limit; limits MUST hold under concurrent orders.
+  _Clarified 2026-11-24 (owner): the rule holds at the moment of the yes, not only at the read-back —
+  a call that crosses the cut-off before the customer agrees is refused (research R30)._
 - **FR-008**: The agent MUST record a callback request when asked for a person or after two turns it
   does not understand; the system MUST create one at call end when the agent promised a callback
   without recording it (research R3).
@@ -206,6 +208,11 @@ the cut-off is accepted; marking a pickup changes its status.
 - **FR-013**: Staff MUST be able to add and edit orders, including after the cut-off; the override
   MUST be granted by the server from the staff login, never by the client (ADR-0009).
 - **FR-014**: The public web form MUST obey FR-007.
+- **FR-046**: The customer page MUST present the bakery like a real shop before any form: its name
+  and the order deadline; the three ways to order (call, web form, in the shop); the active products
+  with photo, name and price from the same catalogue the agent uses; then the call and the form; and
+  the AI and transcript notice. A missing photo MUST show a neutral placeholder, never a broken image.
+  _Added 2026-11-24 (owner): the page looked like a technical form (research R29)._
 - **FR-015**: The staff app MUST require login; the form and the browser call MUST NOT. There are two
   roles, `owner` (UI: Majitel) and `employee` (UI: Prodavač), one demo account each (ADR-0015;
   permissions in FR-043–FR-045).

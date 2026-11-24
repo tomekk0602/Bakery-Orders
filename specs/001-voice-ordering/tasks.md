@@ -134,7 +134,7 @@ they cover and must fail first.
 
 ## Phase 7: User Story 4 — Staff check and handle orders (P2)
 
-- [ ] T058 [P] [US4] `GET /api/staff/orders`, `PATCH /api/staff/orders/[id]` + tests (edit, pick-up, cancel with capacity) (FR-012, FR-013)
+- [ ] T058 [P] [US4] `GET /api/staff/orders`, `PATCH /api/staff/orders/[id]` + tests (edit, pick-up, cancel with capacity) (FR-012, FR-013) — _list, pick-up and cancel with capacity done (research R31); editing lines or the day is open_
 - [ ] T059 [US4] "Odběry" screen `apps/staff/app/(tabs)/odbery.tsx`: today's pick-ups, one-tap picked up; order detail with source and transcript; edit (FR-012)
 - [ ] T060 [P] [US4] "Udělat z toho test" action: `POST /api/staff/eval-cases` with anonymisation + test (FR-031, ADR-0012)
 
@@ -144,6 +144,7 @@ they cover and must fail first.
 
 - [x] T061 [P] [US5] `GET /api/catalogue`, `POST /api/orders/preview`, `POST /api/orders` + tests: same rules as the agent, order number, 10 orders per IP per hour (FR-014, FR-040)
 - [x] T062 [US5] Form on the customer page with a review step and an inline confirmation with the order number; no public page per order number (R23) (FR-014, FR-040)
+- [ ] T090 [US5] Customer page as a shop: header, "how to order", product grid with photos and prices from the catalogue, call and form, notice; photos in `apps/web/public/images/` supplied by the owner (FR-046, research R29)
 
 ---
 
