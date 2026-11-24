@@ -362,3 +362,19 @@ version `2026-11-24.1`.
     Tvarohový koláč, Friday 27.11, 251 Kč. 1.7 s.
   - One run each; the staff-sentence cases join the eval suite (T063).
 - The staff instructions changed, so the agent version is `2026-11-24.2` (the fingerprint test).
+
+## R23 — Web form: a review step, no public page per order number
+
+- **Decision**: the customer form calls `POST /api/orders/preview` (prices the order, saves nothing),
+  shows the server's summary and total, and only "Odeslat objednávku" calls `POST /api/orders`. The
+  order number is shown inline on the same page. There is no `/objednavka/[number]` page, which T062
+  first named.
+- **Rationale**: the review step is the form's equivalent of the agent's read-back (FR-040): the
+  customer confirms what the server will save, not what the browser added up. Order numbers are
+  sequential (1001, 1002, …), so a public page per number would show anyone the names and phone
+  numbers of other customers by counting.
+- **Alternatives rejected**: a confirmation page with an unguessable token — a second identifier and
+  a page for nothing the inline confirmation does not already say; a client-side total — two places
+  that compute prices.
+- Per-IP limits (10 orders and 60 previews per hour) are proposed values, not measured; they are in
+  `apps/web/server/customer/orders.ts`.

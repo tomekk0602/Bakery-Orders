@@ -1,5 +1,5 @@
 import type { OrderChannel, PreparedOrder } from "@bakery/core";
-import { and, eq, gt, isNull, sql, TransactionRollbackError } from "drizzle-orm";
+import { and, eq, gt, isNull, sql } from "drizzle-orm";
 import type { Db } from "./client.ts";
 import { firstRow } from "./rows.ts";
 import { dailyCapacity, order, orderDraft, orderLine, product } from "./schema.ts";
@@ -26,70 +26,75 @@ export async function saveDraft(db: Db, prepared: PreparedOrder, channel: OrderC
 export type ConfirmMeta = { promptVersion: string | null; model: string | null };
 export type ConfirmResult = { ok: true; orderNumber: number; orderId: string } | { ok: false; reason: "no_draft" | "over_limit" };
 
+type Tx = Parameters<Parameters<Db["transaction"]>[0]>[0];
+type OrderSourceValue = typeof order.$inferInsert.source;
+
+/** Thrown inside the transaction when a daily limit would be exceeded; rolls everything back. */
+class OverLimit extends Error {}
+
 /**
- * Saves a draft as an order. Capacity is taken with a conditional update inside the transaction, so
- * two concurrent orders can never take the same last pieces (research R14, spec E4).
+ * Inserts an order with its lines and takes the daily capacity with a conditional update, so two
+ * concurrent orders can never take the same last pieces (research R14, spec E4).
  */
-export async function confirmDraft(db: Db, draftId: string, owner: DraftOwner, meta: ConfirmMeta, now = new Date()): Promise<ConfirmResult> {
-  const who = ownerColumns(owner);
-  return db.transaction(async (tx) => {
-    const [draft] = await tx
-      .select()
-      .from(orderDraft)
+async function insertOrder(tx: Tx, p: PreparedOrder, source: OrderSourceValue, meta: ConfirmMeta & { callId: string | null; createdBy: string | null }) {
+  for (const line of p.lines) {
+    const [limit] = await tx.select({ dailyLimit: product.dailyLimit }).from(product).where(eq(product.id, line.productId));
+    await tx.insert(dailyCapacity).values({ productId: line.productId, day: p.pickupDate, reserved: 0 }).onConflictDoNothing();
+    const updated = await tx
+      .update(dailyCapacity)
+      .set({ reserved: sql`${dailyCapacity.reserved} + ${line.quantity}` })
       .where(
         and(
-          eq(orderDraft.id, draftId),
-          gt(orderDraft.expiresAt, now),
-          isNull(orderDraft.confirmedOrderId),
-          ownedBy(owner),
+          eq(dailyCapacity.productId, line.productId),
+          eq(dailyCapacity.day, p.pickupDate),
+          limit?.dailyLimit == null ? sql`true` : sql`${dailyCapacity.reserved} + ${line.quantity} <= ${limit.dailyLimit}`,
         ),
       )
-      .for("update");
-    if (!draft) return { ok: false, reason: "no_draft" } as const;
-    const p = draft.payload as PreparedOrder;
-
-    for (const line of p.lines) {
-      const [limit] = await tx.select({ dailyLimit: product.dailyLimit }).from(product).where(eq(product.id, line.productId));
-      await tx.insert(dailyCapacity).values({ productId: line.productId, day: p.pickupDate, reserved: 0 }).onConflictDoNothing();
-      const updated = await tx
-        .update(dailyCapacity)
-        .set({ reserved: sql`${dailyCapacity.reserved} + ${line.quantity}` })
-        .where(
-          and(
-            eq(dailyCapacity.productId, line.productId),
-            eq(dailyCapacity.day, p.pickupDate),
-            limit?.dailyLimit == null ? sql`true` : sql`${dailyCapacity.reserved} + ${line.quantity} <= ${limit.dailyLimit}`,
-          ),
-        )
-        .returning({ reserved: dailyCapacity.reserved });
-      if (updated.length === 0) {
-        tx.rollback();
-      }
-    }
-
-    const savedRows = await tx
+      .returning({ reserved: dailyCapacity.reserved });
+    if (updated.length === 0) throw new OverLimit();
+  }
+  const saved = firstRow(
+    await tx
       .insert(order)
-      .values({
-        source: draft.channel,
-        customerName: p.customerName,
-        customerPhone: p.customerPhone,
-        pickupDay: p.pickupDate,
-        totalCzk: p.totalCzk,
-        promptVersion: meta.promptVersion,
-        model: meta.model,
-        callId: who.callId,
-        createdBy: who.createdBy,
-      })
-      .returning({ id: order.id, number: order.number });
-    const saved = firstRow(savedRows, "order");
-    await tx.insert(orderLine).values(p.lines.map((l) => ({ orderId: saved.id, productId: l.productId, quantity: l.quantity, unitPriceCzk: l.unitPriceCzk })));
-    await tx.update(orderDraft).set({ confirmedOrderId: saved.id }).where(eq(orderDraft.id, draft.id));
-    return { ok: true, orderNumber: saved.number, orderId: saved.id } as const;
-  }).catch((e: unknown) => {
-    // tx.rollback() above throws TransactionRollbackError; that is the over-limit path.
-    if (e instanceof TransactionRollbackError) return { ok: false, reason: "over_limit" } as const;
-    throw e;
-  });
+      .values({ source, customerName: p.customerName, customerPhone: p.customerPhone, pickupDay: p.pickupDate, totalCzk: p.totalCzk, promptVersion: meta.promptVersion, model: meta.model, callId: meta.callId, createdBy: meta.createdBy })
+      .returning({ id: order.id, number: order.number }),
+    "order",
+  );
+  await tx.insert(orderLine).values(p.lines.map((l) => ({ orderId: saved.id, productId: l.productId, quantity: l.quantity, unitPriceCzk: l.unitPriceCzk })));
+  return saved;
+}
+
+const overLimit = (e: unknown) => {
+  if (e instanceof OverLimit) return { ok: false, reason: "over_limit" } as const;
+  throw e;
+};
+
+/** Saves a draft as an order, once, and only for its owner (FR-006, FR-019). */
+export async function confirmDraft(db: Db, draftId: string, owner: DraftOwner, meta: ConfirmMeta, now = new Date()): Promise<ConfirmResult> {
+  const who = ownerColumns(owner);
+  return db
+    .transaction(async (tx) => {
+      const [draft] = await tx
+        .select()
+        .from(orderDraft)
+        .where(and(eq(orderDraft.id, draftId), gt(orderDraft.expiresAt, now), isNull(orderDraft.confirmedOrderId), ownedBy(owner)))
+        .for("update");
+      if (!draft) return { ok: false, reason: "no_draft" } as const;
+      const saved = await insertOrder(tx, draft.payload as PreparedOrder, draft.channel, { ...meta, ...who });
+      await tx.update(orderDraft).set({ confirmedOrderId: saved.id }).where(eq(orderDraft.id, draft.id));
+      return { ok: true, orderNumber: saved.number, orderId: saved.id } as const;
+    })
+    .catch(overLimit);
+}
+
+/** Saves an order the customer confirmed in the web form in the same request (FR-014). */
+export async function placeWebOrder(db: Db, prepared: PreparedOrder): Promise<ConfirmResult> {
+  return db
+    .transaction(async (tx) => {
+      const saved = await insertOrder(tx, prepared, "web", { promptVersion: null, model: null, callId: null, createdBy: null });
+      return { ok: true, orderNumber: saved.number, orderId: saved.id } as const;
+    })
+    .catch(overLimit);
 }
 
 export async function orderNumbersForCall(db: Db, callId: string): Promise<number[]> {

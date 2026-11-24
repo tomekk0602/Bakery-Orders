@@ -2,7 +2,8 @@ import { drizzle, type NodePgDatabase } from "drizzle-orm/node-postgres";
 import pg from "pg";
 import * as schema from "./schema.ts";
 
-export type Db = NodePgDatabase<typeof schema>;
+/** The pool stays reachable as `$client`, so a process (or a test) can close it. */
+export type Db = NodePgDatabase<typeof schema> & { $client: pg.Pool };
 
 /** One pool per process. `DATABASE_URL` comes from the environment, never from the repository. */
 export function createDb(url = process.env.DATABASE_URL): { db: Db; pool: pg.Pool } {

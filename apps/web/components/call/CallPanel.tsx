@@ -70,7 +70,10 @@ export function CallPanel() {
 
       {error && (
         <p role="alert" className="mt-4 rounded-lg bg-red-50 p-3 text-red-800">
-          {error}
+          {error}{" "}
+          <a href="#formular" className="font-semibold underline">
+            Objednat přes formulář
+          </a>
         </p>
       )}
 

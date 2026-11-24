@@ -8,8 +8,9 @@ code from a closed set; Czech `message` for screens, English `code` for logs.
 
 | Method & path | Purpose | Body → Response | FR |
 |---|---|---|---|
-| `GET /api/catalogue` | products and open days for the form | → `{ products[], openDays[] }` | FR-014 |
-| `POST /api/orders` | web form order | `{ customer_name, customer_phone, pickup_date, items[] }` → `{ order_number, total_czk }`; errors `closed_day`, `after_cutoff`, `over_limit`, `invalid` | FR-014, FR-040 |
+| `GET /api/catalogue` | products and the days still open for ordering (open and before the cut-off) | → `CatalogueResponse { bakeryName, cutoffDaysBefore, cutoffTime, products[], days[] }` | FR-014 |
+| `POST /api/orders/preview` | price the order and read it back; saves nothing | `WebOrderInput { customerName, customerPhone, pickupDate, items[] }` → `WebOrderPreview { …, lines[], totalCzk }`; errors 422 `closed_day`, `after_cutoff`, `unknown_product`, 409 `over_limit`, 400 `invalid`, 429 | FR-014, FR-040 |
+| `POST /api/orders` | web form order, saved with source `web` | `WebOrderInput` → `WebOrderPlaced { …preview, orderNumber }`; same errors; 10 orders per IP hash per hour (proposed, not measured) | FR-014, FR-040 |
 | `POST /api/call/start` | begin a browser call | `{ caller_phone }` → `{ call_id, token, model, expires_at, cap_seconds }`; errors `rate_limited`, `quota_exhausted`, `voice_unavailable` | FR-035, FR-036 |
 | `POST /api/call/{id}/tools/{name}` | run a tool call from the Live session | tool arguments → tool result ([agent-tools.md](agent-tools.md)) | FR-003–FR-008 |
 | `POST /api/call/{id}/events` | browser telemetry | `{ type: "first_audio" \| "turn" \| "fallback" \| "error", ms?, detail? }[]` → `204` | FR-032 |

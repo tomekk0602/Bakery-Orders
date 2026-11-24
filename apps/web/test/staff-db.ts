@@ -22,7 +22,12 @@ export async function startStaffDb() {
     const res = await auth().api.signInEmail({ body: { email, password: "test-password-1" }, asResponse: true });
     cookies[role] = (res.headers.get("set-cookie") ?? "").split(";")[0] ?? "";
   }
-  return { cookies, stop: () => container.stop() };
+  // The pool is closed first: idle connections cut by the stopping container report FATAL 57P01.
+  const stop = async () => {
+    await db().$client.end();
+    await container.stop();
+  };
+  return { cookies, stop };
 }
 
 export const request = (path: string, init: RequestInit & { cookie?: string } = {}) =>

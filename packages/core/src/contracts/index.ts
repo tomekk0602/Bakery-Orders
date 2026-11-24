@@ -6,3 +6,4 @@ export * from "./new-order.ts";
 export * from "./dictation.ts";
 export * from "./requests.ts";
 export * from "./settings.ts";
+export * from "./public.ts";

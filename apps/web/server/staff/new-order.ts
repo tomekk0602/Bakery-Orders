@@ -2,21 +2,11 @@ import "server-only";
 import { buildCalendar, prepareOrder, type RefusalReason } from "@bakery/core";
 import { ConfirmDraftResponse, OrderCard, OrderFormResponse, type StaffOrderData } from "@bakery/core/contracts";
 import { confirmDraft, loadBakery, remainingCapacity, saveDraft } from "@bakery/db";
+import { REFUSAL_MESSAGES } from "../refusals";
 import { db } from "../runtime";
 
-/** Czech messages for the core's refusals, shown on the order card (contracts/http-api.md). */
-export const REFUSAL_MESSAGES: Record<RefusalReason, string> = {
-  empty_order: "Přidejte alespoň jeden výrobek.",
-  invalid_quantity: "Neplatné množství.",
-  unknown_product: "Tento výrobek není v nabídce.",
-  past_day: "Tento den už minul.",
-  outside_window: "Objednávky přijímáme nejvýše 14 dní dopředu.",
-  closed_day: "V tento den je zavřeno.",
-  after_cutoff: "Na tento den už objednávky nepřijímáme.",
-  over_limit: "Takové množství už na tento den nemáme.",
-  missing_name: "Zadejte jméno zákazníka.",
-  missing_phone: "Zadejte telefon zákazníka.",
-};
+export { REFUSAL_MESSAGES };
+
 
 /** Active products and the open days of the ordering window, today included for staff. */
 export async function orderForm(now = new Date()): Promise<OrderFormResponse> {

@@ -142,8 +142,8 @@ they cover and must fail first.
 
 ## Phase 8: User Story 5 — A customer reserves on the web (P3)
 
-- [ ] T061 [P] [US5] `GET /api/catalogue`, `POST /api/orders` + tests: same rules as the agent, order number (FR-014, FR-040)
-- [ ] T062 [US5] Form on the customer page and the confirmation page `apps/web/app/(customer)/objednavka/[number]/page.tsx` (FR-014, FR-040)
+- [x] T061 [P] [US5] `GET /api/catalogue`, `POST /api/orders/preview`, `POST /api/orders` + tests: same rules as the agent, order number, 10 orders per IP per hour (FR-014, FR-040)
+- [x] T062 [US5] Form on the customer page with a review step and an inline confirmation with the order number; no public page per order number (R23) (FR-014, FR-040)
 
 ---
 
