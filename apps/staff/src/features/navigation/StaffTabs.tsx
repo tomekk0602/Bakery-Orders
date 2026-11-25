@@ -63,8 +63,27 @@ export function StaffTabs() {
           ),
         }}
       >
-        {/* Routes that are not tabs: the redirect, the order detail and the notifications opened from the bell. */}
+        {/* the redirect at "/" (hidden) */}
         <Tabs.Screen name="index" options={{ href: null }} />
+        {TABS.map((tab) => (
+          <Tabs.Protected key={tab.name} guard={granted.has(tab.permission)}>
+            <Tabs.Screen
+              name={tab.name}
+              options={{
+                title: t(tab.titleKey),
+                // an emoji drawn as text, like the bell — no icon font (research R38)
+                tabBarIcon: ({ focused }) => (
+                  <Text style={[styles.icon, !focused && styles.iconIdle]} accessibilityElementsHidden>
+                    {tab.icon}
+                  </Text>
+                ),
+                tabBarBadge: tab.name === "pozadavky" && openRequests > 0 ? openRequests : undefined,
+              }}
+            />
+          </Tabs.Protected>
+        ))}
+        {/* Routes without a tab button, after the tabs: a tab navigator starts on its first screen that is not
+            hidden, and that must be "dnes" (spec 001 FR-045, research R38). */}
         <Tabs.Screen
           name="objednavka/[id]"
           options={{
@@ -104,17 +123,6 @@ export function StaffTabs() {
             }}
           />
         </Tabs.Protected>
-        {TABS.map((tab) => (
-          <Tabs.Protected key={tab.name} guard={granted.has(tab.permission)}>
-            <Tabs.Screen
-              name={tab.name}
-              options={{
-                title: t(tab.titleKey),
-                tabBarBadge: tab.name === "pozadavky" && openRequests > 0 ? openRequests : undefined,
-              }}
-            />
-          </Tabs.Protected>
-        ))}
       </Tabs>
       <NotificationBanner />
     </View>
@@ -128,4 +136,6 @@ const styles = StyleSheet.create({
   role: { color: colors.muted, fontSize: font.label },
   back: { marginLeft: space.md },
   signOut: { color: colors.primary, fontSize: font.label, fontWeight: "600" },
+  icon: { fontSize: 22 },
+  iconIdle: { opacity: 0.55 },
 });

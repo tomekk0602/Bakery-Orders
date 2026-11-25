@@ -422,6 +422,8 @@ name, and reopens it; a request closed 31 days ago is gone after the nightly cle
   turning calls into test cases are for the owner only (ADR-0015).
 - **FR-045**: The app MUST hide tabs and actions the signed-in role cannot use, from the same
   permission map the server uses (ADR-0015).
+  _(Clarified 2026-11-25, research R38: after signing in the app opens "Dnes", the first tab every
+  role has; each tab shows an icon with its label.)_
 - **FR-029**: The agent's behaviour MUST be covered by a simulated-customer suite: a model plays a
   Czech customer from a goal; the saved order is compared in code with the expected order; the suite
   includes an unavailable product and a failing tool (ADR-0010).

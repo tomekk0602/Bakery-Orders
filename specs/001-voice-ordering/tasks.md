@@ -298,3 +298,8 @@ Specified in `specs/002-staff-notifications` (spec, plan) with ADR-0016; built f
 - [x] T116 Web form: preview saves a draft and returns `draftId` + token; `POST /api/orders` confirms `{ draftId, token }`; prices are the draft's; expired → "review again"; route and form tests (FR-064)
 - [x] T117 Call: one end event with reason and order numbers whoever ended it; the panel shows them; tests incl. the cap (FR-066, SC-018)
 - [ ] T118 Live run: web order with a double "Potvrdit", a call ended by the cap
+
+## Fixes from the test on the deployment (owner, 2026-11-25; research R38)
+
+- [x] T119 The app opens "Dnes" after signing in: routes without a tab declared after the tabs, "dnes" first; test from `/` (FR-045)
+- [x] T120 Tab icons: an emoji per tab as text; test that every tab of a role shows its icon (FR-045)

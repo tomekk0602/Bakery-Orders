@@ -42,6 +42,15 @@ async function signInAs(role: Role) {
 }
 
 describe("StaffTabs (FR-045)", () => {
+  it("each tab shows its icon; an employee has none of the owner's (research R38)", async () => {
+    const screen = await signInAs("employee");
+    // the icons are hidden from screen readers, which read the tab's label instead
+    const hidden = { includeHiddenElements: true };
+    for (const icon of ["📋", "➕", "🥖", "📞"]) expect(screen.getAllByText(icon, hidden).length).toBeGreaterThan(0);
+    expect(screen.queryByText("⚙️", hidden)).toBeNull();
+    expect(screen.queryByText("📊", hidden)).toBeNull();
+  });
+
   it("an employee sees the counter tabs but not Nastavení or Provoz", async () => {
     const screen = await signInAs("employee");
     for (const title of ["Dnes", "Nová objednávka", "Plán", "Požadavky"])

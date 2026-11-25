@@ -754,3 +754,20 @@ They are recorded here and in the spec rather than left silently open:
 
 Also recorded: editing an order's items or day in the staff app (T058, T059) is not built — such
 requests are cancelled and taken again (README, "Not in this version yet").
+
+## R38 — The app opened on an order with no id; tabs had no icons (owner, 2026-11-25)
+
+Found in the owner's test on the deployment.
+
+- **Start screen**: after signing in, the app opened `/staff/objednavka/undefined` ("Objednávka
+  neexistuje"). Cause: spec 002 research N17 replaced `href: null` on the order detail and the
+  notification list with a hidden tab button, so they stopped being hidden screens — and a tab
+  navigator starts on its first screen that is not hidden, which was the order detail, declared
+  before the tabs. N17's test started from `/dnes` and could not see it. Fix: the routes without a tab
+  button are declared after the tabs, and the navigator names "dnes" as its first route. A test opens
+  the app at `/` and expects `/dnes`; it failed before the fix ("/objednavka").
+- **Tab icons**: the tabs never had icons; Expo Router draws a placeholder triangle. Decision: an
+  emoji per tab, drawn as text — 📋 Dnes, ➕ Nová objednávka, 🥖 Plán, 📞 Požadavky, ⚙️ Nastavení,
+  📊 Provoz — the same way as the bell 🔔 in the header. Rejected: `@expo/vector-icons` — a new
+  dependency with icon fonts in the web export, for six icons. Emoji look slightly different per
+  system; acceptable for the demo, revisit with a designed icon set.

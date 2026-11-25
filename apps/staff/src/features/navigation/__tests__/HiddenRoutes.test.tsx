@@ -1,5 +1,5 @@
 import { ROLE_PERMISSIONS } from "@bakery/core/permissions";
-import { router } from "expo-router";
+import { Redirect, router } from "expo-router";
 import { act, fireEvent, renderRouter, screen } from "expo-router/testing-library";
 import { Text } from "react-native";
 import "@/shared/i18n";
@@ -15,6 +15,10 @@ jest.mock("@/features/notifications/api", () => ({
 jest.mock("@/features/requests/api", () => ({ useRequests: () => ({ data: { open: [], done: [] } }) }));
 
 const page = (label: string) => () => <Text>{label}</Text>;
+// the app's own index route: the first tab every role has
+function RedirectToDnes() {
+  return <Redirect href="/dnes" />;
+}
 
 async function open(initialUrl = "/dnes") {
   mockMe.mockReturnValue({
@@ -25,6 +29,7 @@ async function open(initialUrl = "/dnes") {
   await renderRouter(
     {
       "(app)/_layout": StaffTabs,
+      "(app)/index": RedirectToDnes,
       "(app)/dnes": page("dnes"),
       "(app)/nova": page("nova"),
       "(app)/plan": page("plan"),
@@ -39,6 +44,12 @@ async function open(initialUrl = "/dnes") {
 // Routes without a tab button must stay reachable: with `href: null` Expo Router 58 redirected them to
 // the first tab (spec 001 FR-012 order detail, spec 002 FR-007 notification list).
 describe("routes without a tab", () => {
+  it("signing in opens Dnes, not a route without a tab (spec 001 FR-045, research R38)", async () => {
+    await open("/");
+    expect(screen).toHavePathname("/dnes");
+    expect(screen.getByText("dnes")).toBeTruthy();
+  });
+
   it("the bell opens Upozornění", async () => {
     await open();
     await fireEvent.press(screen.getByLabelText("Upozornění, 3 nepřečtená"));
