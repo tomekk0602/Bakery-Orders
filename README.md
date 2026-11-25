@@ -87,6 +87,172 @@ The web form is under the call button. **Nastavení → Reset demo** restores th
 | Quality         | **Vitest** with real PostgreSQL in containers; **Evalite** for repeated agent evals; **GitHub Actions** CI with an eval gate    |
 | Operations      | **Langfuse** traces (EU) with masked personal data; cost and latency per call                                                   |
 
+### Architecture
+
+The whole system at a glance; the two diagrams below show each side in detail with the same names.
+
+```mermaid
+flowchart LR
+  C([Customer]) --> WEB["Customer site<br/>call window · web form"]
+  S([Staff / owner]) --> STAFF["Staff app<br/>/staff"]
+
+  WEB --> API["apps/web API<br/>Vercel fra1"]
+  STAFF --> API
+  WEB <-->|"voice, one-use token"| LIVE["Gemini Live"]
+
+  API --> DB[("PostgreSQL<br/>Neon Frankfurt")]
+  API -->|"dictation"| LITE["Gemini Flash-Lite"]
+  API -->|"traces"| LF["Langfuse"]
+  API -->|"Web Push"| WP["Browser push services"] --> STAFF
+  CRON["Vercel Cron"] --> API
+
+  WEB -. "new order → notification" .-> STAFF
+```
+
+**Customer flow** — website, voice call, web form
+
+```mermaid
+flowchart LR
+  C([Customer])
+
+  subgraph VERCEL["Vercel · Frankfurt (fra1)"]
+    subgraph WEB["apps/web · Next.js"]
+      SITE["Bakery website<br/>server-rendered catalogue"]
+      CALL["Call window<br/>number → calling → live → ended"]
+      FORM["Order form<br/>basket → review → confirm"]
+    end
+
+    subgraph API["apps/web API"]
+      PUB["Public API<br/>/api/catalogue<br/>/api/orders/preview → draft + token<br/>/api/orders confirm"]
+      CALLAPI["Call API<br/>/api/call/start → one-use token<br/>/api/call/:id/tools/:name<br/>/api/call/:id/end"]
+      PUSH["Web Push delivery"]
+      TEL["Telemetry (OTel)"]
+    end
+  end
+
+  subgraph SHARED["Shared logic"]
+    AGENT["packages/core/agent<br/>instructions, tool schemas,<br/>vocabulary, agent version"]
+    CORE["packages/core<br/>prices, calendar, cut-off,<br/>rules, contracts"]
+    DB["packages/db<br/>repositories, drafts, confirmDraft,<br/>runCallTool, rate limits"]
+  end
+
+  PG[("PostgreSQL<br/>Neon · Frankfurt")]
+
+  subgraph EXT["External services"]
+    LIVE["Google Gemini Live"]
+    LITE["Google Gemini Flash-Lite"]
+    LF["Langfuse"]
+  end
+
+  subgraph QA["Agent quality"]
+    CI["GitHub Actions<br/>ci.yml: typecheck, lint, tests, build<br/>eval-gate.yml: on agent changes"]
+    EVALS["packages/evals · Evalite<br/>scripted conversations"]
+    TC[("Testcontainers<br/>PostgreSQL")]
+  end
+
+  C --> SITE
+  SITE --> CALL
+  SITE --> FORM
+  SITE -->|"catalogue"| DB
+
+  FORM -->|"preview, confirm"| PUB
+  CALL -->|"start, tool calls, end"| CALLAPI
+  CALL <-->|"audio · one-use token"| LIVE
+  CALLAPI -->|"session config locked in token"| LIVE
+
+  AGENT -->|"instructions & schemas"| CALLAPI
+  PUB & CALLAPI --> CORE
+  PUB & CALLAPI --> DB
+  DB --> CORE
+  DB --> PG
+
+  PUB & CALLAPI -.->|"IDs of saved notifications · after()"| PUSH
+  CALLAPI --> TEL
+  TEL --> LF
+
+  CI --> EVALS
+  EVALS --> AGENT
+  EVALS -->|"text mode"| LITE
+  EVALS -->|"runCallTool"| DB
+  EVALS -.-> TC
+```
+
+**Staff flow** — orders, dictation, notifications
+
+```mermaid
+flowchart LR
+  S([Staff / owner])
+
+  subgraph VERCEL["Vercel · Frankfurt (fra1)"]
+    subgraph STAFF["apps/staff · Expo (web build at /staff)"]
+      LOGIN["Sign-in"]
+      NEW["New order<br/>form or dictation<br/>(browser / keyboard speech-to-text)"]
+      LISTS["Today, Orders, Plan,<br/>Requests, Archive"]
+      OWNER["Owner: settings, Provoz<br/>offer, limits, call stats & cost,<br/>reset demo"]
+      NOTIF["Notifications<br/>list, banners, sound"]
+      SW["Service Worker<br/>/staff/sw.js"]
+    end
+
+    subgraph API["apps/web API"]
+      AUTH["Better Auth<br/>/api/auth · sessions & roles"]
+      STAFFAPI["Staff API<br/>orders, requests, plan, dictation,<br/>notifications, push subscriptions,<br/>settings, provoz, reset"]
+      PUSH["Web Push delivery"]
+      JOBS["Scheduled jobs<br/>plan summary, retention"]
+      TEL["Telemetry (OTel)"]
+    end
+
+    VCRON["Vercel Cron<br/>02:00 UTC retention<br/>13:00 UTC plan summary"]
+  end
+
+  subgraph SHARED["Shared logic"]
+    AGENT["packages/core/agent<br/>dictation instructions & schema"]
+    CORE["packages/core<br/>rules, plan, permissions,<br/>contracts"]
+    DB["packages/db<br/>repositories, transactions,<br/>notifications, push devices"]
+  end
+
+  PG[("PostgreSQL<br/>Neon · Frankfurt")]
+
+  subgraph EXT["External services"]
+    LITE["Google Gemini Flash-Lite"]
+    WP["Browser push services"]
+    LF["Langfuse"]
+  end
+
+  S --> LOGIN
+  S --> NEW
+  S --> LISTS
+  S --> OWNER
+  S --> NOTIF
+
+  LOGIN -->|"sign-in"| AUTH
+  NEW -->|"text → order data"| STAFFAPI
+  LISTS --> STAFFAPI
+  OWNER --> STAFFAPI
+  NOTIF -->|"polling every 10 s,<br/>register device"| STAFFAPI
+  STAFF -.->|"contracts, permissions"| CORE
+
+  STAFFAPI -->|"session & role check"| AUTH
+  AUTH --> DB
+  STAFFAPI -->|"dictation"| LITE
+  AGENT -->|"instructions & schema"| STAFFAPI
+  STAFFAPI --> CORE
+  STAFFAPI --> DB
+  STAFFAPI --> TEL
+  TEL --> LF
+
+  STAFFAPI -.->|"IDs of saved notifications · after()"| PUSH
+  VCRON --> JOBS
+  JOBS --> DB
+  JOBS -->|"plan summary · inline"| PUSH
+  PUSH -->|"pending sends / attempt results"| DB
+  PUSH --> WP
+  WP --> SW
+  SW -->|"push → banner in open window"| NOTIF
+
+  DB --> CORE
+  DB --> PG
+```
+
 ### Key decisions
 
 Each is one line here and a full record with the rejected options in [`docs/adr/`](docs/adr/README.md);
