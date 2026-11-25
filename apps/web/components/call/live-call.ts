@@ -8,6 +8,8 @@ export type EndReason = "hangup" | "capped" | "error";
 export type CallEvents = {
   onTranscript: (turns: Turn[]) => void;
   onStatus: (status: "connecting" | "live" | "ended", detail?: string) => void;
+  /** When the assistant is on the line, with the call's length cap in seconds (FR-068). */
+  onLive?: (capSeconds: number) => void;
   /** Once, whoever ended the call — the customer, the cap, the assistant or an error (FR-066). */
   onEnded?: (result: { reason: EndReason; orderNumbers: number[] }) => void;
 };
@@ -78,6 +80,7 @@ export class LiveCall {
       });
       this.capTimer = setTimeout(() => void this.end("capped"), body.cap_seconds * 1000);
       this.events.onStatus("live");
+      this.events.onLive?.(body.cap_seconds);
     } catch (e) {
       // a refused microphone or a failed connection: nothing stays open, and the call is ended on the server
       if (!this.ended) {

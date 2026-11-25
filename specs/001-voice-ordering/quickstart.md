@@ -51,3 +51,14 @@ npm run dev              # apps/web on :3000, apps/staff (Expo) on :8081
 | As the owner: Archiv → search the customer's name                                | yesterday's request is found; its history shows                            |
 | Owner: "Vrátit mezi otevřené" in the archive                                     | the request is back among the open ones                                    |
 | `curl -H "Authorization: Bearer $CRON_SECRET" localhost:3000/api/cron/retention` | `requests` counts closed requests older than 30 days                       |
+
+### Amendment 2026-11-25 — the call window (FR-067–FR-071)
+
+| Scenario                                  | Expected                                                                   |
+| ----------------------------------------- | -------------------------------------------------------------------------- |
+| "Zavolat" in the header, on a computer    | a dialog in the middle; the page stays where it was                        |
+| The same on a phone (or a narrow window)  | the window fills the screen                                                |
+| Type the number, press the green button   | "Volám…" with an animation, then "Hovor s pekárnou", time left, transcript |
+| Esc or the close button during the call   | the call ends; the microphone indicator disappears                         |
+| Finish an order and hang up               | the order number in the window                                             |
+| Reload the page and open the window again | the number field is empty                                                  |

@@ -771,3 +771,27 @@ Found in the owner's test on the deployment.
   📊 Provoz — the same way as the bell 🔔 in the header. Rejected: `@expo/vector-icons` — a new
   dependency with icon fonts in the web export, for six icons. Emoji look slightly different per
   system; acceptable for the demo, revisit with a designed icon set.
+
+## R39 — The call window (owner, 2026-11-25)
+
+- **Context**: the owner found the call flow clumsy: "Zavolat" in the header scrolled to the call
+  section, the number was typed there, a second "Zavolat do pekárny" started the call, and the page
+  then waited a few seconds with little feedback. Wanted: a window like a phone's call screen —
+  full screen on a phone, centred on a computer — with the bakery as the callee, a connecting
+  animation, "Hovor s pekárnou" once it talks, and the transcript inside.
+- **Decision**: one `CallDialog` built on the browser's `<dialog>` element opened with `showModal()`
+  — the standard way: focus stays inside, Esc closes, the page behind is inert, no library. A CSS
+  media query makes it fill the screen below 640 px. It drives the existing `LiveCall` (unchanged) and
+  shows the states of FR-068; the time left counts down from the cap the server sends.
+- **Number not remembered** (owner): kept in component state only (FR-071); no `localStorage`.
+- **The waiting**: the seconds before the assistant speaks are the token, the Gemini connection, the
+  microphone and the greeting (first audio ≈ 2 s, research R21). The window makes them read as a
+  ringing call. Opening the microphone in parallel with the token request might save up to a second on
+  the first call; not measured, so not done here — a candidate for a measured change.
+- **Rejected**: a third-party modal library (the platform element covers it); a separate call page
+  (leaves the shop, loses the basket).
+- **Tests (implementation, 2026-11-25)**: the web app has no DOM test setup (jsdom, Testing Library),
+  and adding it for one window is not worth the dependencies. The window's behaviour lives in a plain
+  class, `CallSession` (states, a refused start, closing during a call, late events of a closed call),
+  tested in Node; the component only draws it. The layout was checked with screenshots of a headless
+  Chromium at 1280×800 and 390×844.

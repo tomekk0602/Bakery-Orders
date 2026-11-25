@@ -415,6 +415,23 @@ name, and reopens it; a request closed 31 days ago is gone after the nightly cle
 - **FR-066**: When a call ends for any reason — the customer hangs up, the 3-minute cap, the
   assistant or the voice service closes it, an error — the call screen MUST show the numbers of the
   orders saved in it.
+
+**The call window** _(amended 2026-11-25, owner; research R39)_
+
+- **FR-067**: Every "Zavolat" on the customer site — in the header, the hero and the call section —
+  MUST open a call window where the customer stays; the page does not scroll away.
+- **FR-068**: The window MUST lead through four states: the **number** (the phone field of FR-035, the
+  AI and retention notice of FR-039, the headphones hint of FR-037, a call button); **calling**
+  ("Pekárna U Lípy", "Volám…", a simple animation, a hint to allow the microphone); **in the call**
+  ("Hovor s pekárnou", the time left to the 3-minute cap, the live transcript, a hang-up button);
+  **ended** (the order numbers of FR-066, a close button). Refusals — the rate limit, the quota, an
+  unavailable voice — show in the window with a link that closes it and opens the web form (FR-016).
+- **FR-069**: On a phone-sized screen the window MUST fill the screen; on a larger screen it MUST be
+  a dialog in the middle over a dimmed page. It MUST keep the keyboard focus inside, close with Esc,
+  and announce its state to screen readers.
+- **FR-070**: Closing the window during a call MUST end the call (FR-058).
+- **FR-071**: The phone number MUST NOT be stored in the browser; it is kept only while the page is
+  open (owner, 2026-11-25).
 - **FR-042**: A "Reset demo" action MUST restore the seeded bakery, catalogue and orders (ADR-0014).
 - **FR-043**: Every staff API route MUST check the caller's permission on the server: no session →
   401, missing permission → 403 (ADR-0015).
@@ -477,6 +494,8 @@ name, and reopens it; a request closed 31 days ago is gone after the nightly cle
   same number both times; the same holds for a retried phone or staff confirmation.
 - **SC-018** _(2026-11-25)_: A call ended by the cap still shows its order numbers on the call
   screen.
+- **SC-019** _(2026-11-25)_: From any "Zavolat" the customer starts a call in two steps — the number
+  and the call button — without the page moving.
 - **SC-006**: Voice latency (end of speech to first audio) — target to be set from the voice
   measurement; not yet measured (research R5).
 

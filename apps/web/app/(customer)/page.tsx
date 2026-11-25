@@ -1,4 +1,4 @@
-import { CallPanel } from "@/components/call/CallPanel";
+import { CallButton, CallDialogProvider } from "@/components/call/CallDialog";
 import { Hero } from "@/components/home/Hero";
 import { HowToOrder } from "@/components/home/HowToOrder";
 import { Icon } from "@/components/home/Icon";
@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
 export default async function Home() {
   const c = await catalogue();
   return (
-    <>
+    <CallDialogProvider bakeryName={c.bakeryName}>
       <Hero name={c.bakeryName} deadline={deadline(c.cutoffDaysBefore, c.cutoffTime)} />
       <main>
         <HowToOrder />
@@ -29,7 +29,16 @@ export default async function Home() {
             <blockquote>„Dva kmínové chleby a šest rohlíků na zítra, prosím.“</blockquote>
             <p className="fine-print">Chcete mluvit s člověkem? Požádejte asistenta o zpětné zavolání.</p>
           </div>
-          <CallPanel />
+          <div className="voice-card">
+            <p>Zavolejte nám přímo z prohlížeče. Rezervace pečiva zabere chvilku.</p>
+            <CallButton className="button primary">
+              <Icon kind="phone" />
+              Zavolat do pekárny
+            </CallButton>
+            <p className="fine-print">
+              Hovor vyřizuje asistent s umělou inteligencí (Google Gemini). Přepis hovoru uchováváme 30 dní.
+            </p>
+          </div>
         </section>
         <WebOrderForm catalogue={c} />
       </main>
@@ -44,6 +53,6 @@ export default async function Home() {
           <a href="/staff">Vstup pro obsluhu</a>
         </div>
       </footer>
-    </>
+    </CallDialogProvider>
   );
 }

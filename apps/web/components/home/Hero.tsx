@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { CallButton } from "../call/CallDialog";
 import { Icon } from "./Icon";
 
 export function Hero({ name, deadline }: { name: string; deadline: string }) {
@@ -16,10 +17,10 @@ export function Hero({ name, deadline }: { name: string; deadline: string }) {
           <a href="#pecivo">Naše pečivo</a>
           <a href="#jak-objednat">Jak objednat</a>
         </div>
-        <a href="#telefon" className="nav-call">
+        <CallButton className="nav-call">
           <Icon kind="phone" />
           <span>Zavolat</span>
-        </a>
+        </CallButton>
       </nav>
       <header className="hero shell">
         <div className="hero-copy">
@@ -33,10 +34,10 @@ export function Hero({ name, deadline }: { name: string; deadline: string }) {
             Vyberte si chléb a pečivo, nebo nám zavolejte. Objednávku si vyzvednete v pekárně.
           </p>
           <div className="hero-actions">
-            <a href="#telefon" className="button primary">
+            <CallButton className="button primary">
               <Icon kind="phone" />
               Zavolat do pekárny
-            </a>
+            </CallButton>
             <a href="#pecivo" className="button secondary">
               Vybrat pečivo
             </a>

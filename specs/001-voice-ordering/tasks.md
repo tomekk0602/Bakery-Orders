@@ -303,3 +303,10 @@ Specified in `specs/002-staff-notifications` (spec, plan) with ADR-0016; built f
 
 - [x] T119 The app opens "Dnes" after signing in: routes without a tab declared after the tabs, "dnes" first; test from `/` (FR-045)
 - [x] T120 Tab icons: an emoji per tab as text; test that every tab of a role shows its icon (FR-045)
+
+## The call window (owner, 2026-11-25; research R39)
+
+- [x] T121 `CallDialog` on `<dialog>`: number → calling → in the call → ended, errors with the form link; the time left; transcript inside; closing ends the call; the number only in state (FR-067–FR-071)
+- [x] T122 Every "Zavolat" opens the dialog (header, hero, call section); the call section keeps its text and one button (FR-067)
+- [x] T123 Layout: full screen below 640 px, centred above; the connecting animation; reduced motion respected (FR-069)
+- [ ] T124 _(state tests done in `call-session.test.ts`, research R39; the live run on a phone and a computer is the owner's)_ Component tests: each state, Esc and close during a call end it, a refusal shows the form link, the number is not stored; live run on a phone and a computer (SC-019)
