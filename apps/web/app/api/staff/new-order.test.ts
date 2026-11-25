@@ -91,18 +91,21 @@ describe("staff new order (FR-013, FR-017, FR-019, FR-021)", () => {
     expect(((await res.json()) as { error: { code: string } }).error.code).toBe(code);
   });
 
-  it("confirms the employee's own draft once; the order appears with source staff", async () => {
+  it("confirms the employee's own draft once; a retry gets the same number; source staff", async () => {
     const card = OrderCard.parse(
       await (await prepare(order({ customerPhone: "+420 777 123 456" }), env.cookies.employee)).json(),
     );
     expect(card.customerPhone).toBe("+420777123456");
     const saved = ConfirmDraftResponse.parse(await (await confirm(card.draftId, env.cookies.employee)).json());
-    expect((await confirm(card.draftId, env.cookies.employee)).status).toBe(404);
+    // a retried confirmation answers with the same order, never a second one (FR-065)
+    const again = ConfirmDraftResponse.parse(await (await confirm(card.draftId, env.cookies.employee)).json());
+    expect(again.orderNumber).toBe(saved.orderNumber);
     const { GET } = await import("./orders/route");
     const list = StaffOrdersResponse.parse(
       await (await GET(request(`/api/staff/orders?day=${openDay}`, { cookie: env.cookies.employee }))).json(),
     );
     expect(list.orders.find((o) => o.number === saved.orderNumber)?.source).toBe("staff");
+    expect(list.orders.filter((o) => o.number === saved.orderNumber)).toHaveLength(1);
   });
 
   it("another staff member cannot confirm someone else's draft", async () => {

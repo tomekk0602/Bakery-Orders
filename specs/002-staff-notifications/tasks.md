@@ -52,6 +52,8 @@
 - [x] N025 Push registration: HTTPS at a known push service only, 10 s send timeout, 10 registrations per person per hour; tests incl. a private address (FR-027)
 - [x] N026 Plan notifications link `/plan?day=`; the plan screen reads the day from the address; tests (FR-028)
 
+- [x] N027 Closing a request refreshes the closer's notification list; test (FR-029; 001 research R36)
+
 ## Phase 7: Verification
 
 - [ ] N017 _(automated part done 2026-11-24: 247 tests, `next build`, staff export; the live run with VAPID keys is the owner's)_ Quickstart 1–9 locally; live push in Chrome on the deployment; record in `research.md`; README section (SC-001–SC-006)

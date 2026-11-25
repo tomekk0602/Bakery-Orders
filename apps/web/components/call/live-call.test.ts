@@ -52,7 +52,7 @@ beforeEach(() => {
     json: async () =>
       url === "/api/call/start"
         ? { call_id: "call-1", token: "t", model: "m", cap_seconds: 180 }
-        : { order_numbers: [] },
+        : { order_numbers: [1042] },
   }));
   vi.stubGlobal("fetch", fetchMock);
 });
@@ -64,8 +64,13 @@ const tick = () => new Promise((r) => setTimeout(r, 0));
 async function newCall() {
   const { LiveCall } = await import("./live-call");
   const statuses: string[] = [];
-  const call = new LiveCall({ onTranscript: () => undefined, onStatus: (s) => statuses.push(s) });
-  return { call, statuses };
+  const results: { reason: string; orderNumbers: number[] }[] = [];
+  const call = new LiveCall({
+    onTranscript: () => undefined,
+    onStatus: (s) => statuses.push(s),
+    onEnded: (r) => results.push(r),
+  });
+  return { call, statuses, results };
 }
 
 describe("ending a call at any moment releases everything (spec 001 FR-058)", () => {
@@ -118,5 +123,32 @@ describe("ending a call at any moment releases everything (spec 001 FR-058)", ()
     await call.end("hangup");
     expect(mocks.micStop).toHaveBeenCalledTimes(1);
     expect(ended()).toBe(true);
+  });
+});
+
+describe("the saved orders reach the screen however the call ends (spec 001 FR-066, SC-018)", () => {
+  it("the cap ends the call and the order numbers still come out, once", async () => {
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+    try {
+      const { call, results } = await newCall();
+      mocks.connectGate.open();
+      mocks.micGate.open();
+      await call.start("+420777123456");
+      await vi.advanceTimersByTimeAsync(180 * 1000);
+      await vi.waitFor(() => expect(results).toEqual([{ reason: "capped", orderNumbers: [1042] }]));
+      await call.end("hangup"); // pressing hang-up afterwards changes nothing
+      expect(results).toHaveLength(1);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("the customer's hang-up reports the numbers the same way", async () => {
+    const { call, results } = await newCall();
+    mocks.connectGate.open();
+    mocks.micGate.open();
+    await call.start("+420777123456");
+    await call.end("hangup");
+    expect(results).toEqual([{ reason: "hangup", orderNumbers: [1042] }]);
   });
 });

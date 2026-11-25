@@ -293,16 +293,25 @@ describe("every new order (FR-020, FR-025)", () => {
     const day = buildCalendar(new Date(), (await loadBakery(db())).schedule).filter(
       (d) => !d.closed && d.relative === null,
     )[0]!.date;
+    const preview = await import("../orders/preview/route");
+    const review = (await (
+      await preview.POST(
+        request("/api/orders/preview", {
+          method: "POST",
+          body: JSON.stringify({
+            customerName: "Jana Nováková",
+            customerPhone: "+420777123456",
+            pickupDate: day,
+            items: [{ productId: "rohlik", quantity: 6 }],
+          }),
+        }),
+      )
+    ).json()) as { draftId: string; token: string };
     const { POST } = await import("../orders/route");
     const res = await POST(
       request("/api/orders", {
         method: "POST",
-        body: JSON.stringify({
-          customerName: "Jana Nováková",
-          customerPhone: "+420777123456",
-          pickupDate: day,
-          items: [{ productId: "rohlik", quantity: 6 }],
-        }),
+        body: JSON.stringify({ draftId: review.draftId, token: review.token }),
       }),
     );
     expect(res.status).toBe(200);

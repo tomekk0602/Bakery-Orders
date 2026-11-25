@@ -58,3 +58,11 @@ The call routes accept only a `call_id` issued by `/start` within its cap, from 
 | `GET /api/staff/requests`                             | → `{ open, closedToday }` — replaces `{ open, done }`                                                                                           | `request:view`    |
 | `GET /api/staff/requests/archive?outcome=&q=&cursor=` | → `{ items, nextCursor }`: closed before today, newest closed first, 20 per page; `cursor` is the previous page's `nextCursor`; null at the end | `request:archive` |
 | `GET /api/cron/retention`                             | + `requests`: closed requests deleted (30 days after closing)                                                                                   | cron secret       |
+
+## Amendment 2026-11-25 — one way to confirm (FR-064, FR-065; research R36)
+
+| Method & path                                               | Body → response                                                                                                                                              |
+| ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `POST /api/orders/preview`                                  | the order as before → the summary as before **+ `draftId`, `token`** (the token is shown once; the server keeps only its hash)                               |
+| `POST /api/orders`                                          | **`{ draftId, token }`** → the placed order; the same body again → the same `orderNumber`; unknown / expired / wrong token → 404 `no_draft` ("review again") |
+| `POST /api/staff/drafts/{id}/confirm`, tool `confirm_order` | a draft already confirmed by its owner → the same order number instead of `no_draft`                                                                         |

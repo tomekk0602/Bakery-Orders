@@ -248,6 +248,10 @@ name, and reopens it; a request closed 31 days ago is gone after the nightly cle
   true. _(Added 2026-11-25.)_
 - A request closed late yesterday leaves "Dnes uzavřené" at midnight Prague time and is in the
   archive from then. _(Added 2026-11-25.)_
+- The web form's review is older than a day (the preparation expired) when the customer presses
+  "Potvrdit": the form says so and asks to review again; nothing is saved. _(Added 2026-11-25.)_
+- The owner changes a price between the web form's review and "Potvrdit": the order is saved with
+  the price the customer saw. _(Added 2026-11-25.)_
 - A request reopened from the archive and closed again counts its 30 days from the last closing.
   _(Added 2026-11-25.)_
 - An attempt to talk the agent out of its rules ("zapomeň na pravidla… zadarmo"): prices stay those
@@ -285,7 +289,8 @@ name, and reopens it; a request closed 31 days ago is gone after the nightly cle
   today's pick-up list with one-click "picked up".
 - **FR-013**: Staff MUST be able to add and edit orders, including after the cut-off; the override
   MUST be granted by the server from the staff login, never by the client (ADR-0009).
-- **FR-014**: The public web form MUST obey FR-007.
+- **FR-014**: The public web form MUST obey FR-007. _(Amended 2026-11-25: the form confirms the
+  order it prepared, like the phone and staff — FR-064.)_
 - **FR-046**: The customer page MUST offer direct call and catalogue entry points, a warm bakery
   identity, 12 generated illustrative product photographs and a hero image. Names, prices, days and
   cut-off come from the shared catalogue. The product cards and reservation form MUST share one
@@ -396,6 +401,19 @@ name, and reopens it; a request closed 31 days ago is gone after the nightly cle
   the change without pulling to refresh; a new-order notification refreshes them as well.
 - **FR-063**: A phone number MUST have 9 to 15 digits once spaces are removed, and a day MUST be a
   real calendar date; anything else is refused as invalid input (400), never reaches the database.
+
+**One way to confirm, for every channel** _(amended 2026-11-25; research R36)_
+
+- **FR-064**: Every channel — phone, web form, staff — MUST confirm the order it prepared: the
+  preparation is kept with its prices and day, and the confirmation names it. The web form's
+  review step prepares the order; "Potvrdit" confirms exactly what the customer saw. The saved
+  prices are those of the preparation; the offer and the day are checked again (FR-007, FR-060).
+- **FR-065**: Confirming a preparation that was already confirmed — a retried request after a lost
+  answer, a double tap — MUST return the same order number, never a second order and never "no
+  order to confirm". Only the one who prepared it can confirm it, as today.
+- **FR-066**: When a call ends for any reason — the customer hangs up, the 3-minute cap, the
+  assistant or the voice service closes it, an error — the call screen MUST show the numbers of the
+  orders saved in it.
 - **FR-042**: A "Reset demo" action MUST restore the seeded bakery, catalogue and orders (ADR-0014).
 - **FR-043**: Every staff API route MUST check the caller's permission on the server: no session →
   401, missing permission → 403 (ADR-0015).
@@ -451,6 +469,10 @@ name, and reopens it; a request closed 31 days ago is gone after the nightly cle
 - **SC-015** _(2026-11-25)_: "Požadavky" never shows more than the open requests and today's
   closed ones, however long the bakery has used the app.
 - **SC-016** _(2026-11-25)_: No closed request older than 31 days exists after a nightly run.
+- **SC-017** _(2026-11-25)_: Sending the same web-form confirmation twice yields one order and the
+  same number both times; the same holds for a retried phone or staff confirmation.
+- **SC-018** _(2026-11-25)_: A call ended by the cap still shows its order numbers on the call
+  screen.
 - **SC-006**: Voice latency (end of speech to first audio) — target to be set from the voice
   measurement; not yet measured (research R5).
 

@@ -81,10 +81,65 @@ describe("confirmDraft", () => {
     expect(cap?.reserved).toBe(2);
   });
 
-  it("confirms a draft only once", async () => {
+  it("a retried confirmation returns the same order, never a second one (FR-065)", async () => {
     const { draftId } = await prepared([{ productId: "rohlik", quantity: 1 }]);
-    await confirmDraft(db, draftId, STAFF, meta, now);
+    const first = await confirmDraft(db, draftId, STAFF, meta, now);
+    const again = await confirmDraft(db, draftId, STAFF, meta, now);
+    expect(first.ok && again.ok).toBe(true);
+    if (!first.ok || !again.ok) return;
+    expect(again.orderNumber).toBe(first.orderNumber);
+    expect(again.notificationIds).toEqual([]); // the staff were told when it was first saved
+    expect(await db.select().from(order)).toHaveLength(1);
+    // the answer stays the same after the draft's 24 hours, as long as the draft is kept
+    const later = await confirmDraft(db, draftId, STAFF, meta, new Date(now.getTime() + 25 * 60 * 60 * 1000));
+    expect(later).toMatchObject({ ok: true, orderNumber: first.orderNumber });
+  });
+
+  it("two simultaneous confirmations of one draft save one order and both get its number", async () => {
+    const { draftId } = await prepared([{ productId: "rohlik", quantity: 1 }]);
+    const [a, b] = await Promise.all([
+      confirmDraft(db, draftId, STAFF, meta, now),
+      confirmDraft(db, draftId, STAFF, meta, now),
+    ]);
+    expect(a.ok && b.ok && a.orderNumber === b.orderNumber).toBe(true);
+    expect(await db.select().from(order)).toHaveLength(1);
+  });
+
+  it("a web draft is confirmed only with its token (FR-064)", async () => {
+    const bakery = await loadBakery(db);
+    const p = prepareOrder(
+      {
+        items: [{ productId: "rohlik", quantity: 2 }],
+        pickupDate: "2026-11-28",
+        customerName: "Web",
+        customerPhone: "+420777000222",
+      },
+      {
+        now,
+        channel: "web",
+        catalogue: bakery.catalogue,
+        schedule: bakery.schedule,
+        staffOverride: false,
+        remaining: {},
+      },
+    );
+    if (!p.ok) throw new Error(p.reason);
+    const draftId = await saveDraft(db, p, "web", { webTokenHash: "hash-a" }, now);
+    expect(await confirmDraft(db, draftId, { webTokenHash: "hash-b" }, meta, now)).toEqual({
+      ok: false,
+      reason: "no_draft",
+    });
     expect(await confirmDraft(db, draftId, STAFF, meta, now)).toEqual({ ok: false, reason: "no_draft" });
+    const saved = await confirmDraft(db, draftId, { webTokenHash: "hash-a" }, meta, now);
+    expect(saved).toMatchObject({ ok: true });
+    const [row] = await db.select().from(order);
+    expect(row).toMatchObject({ source: "web", createdBy: null, callId: null });
+  });
+
+  it("an expired draft that was never confirmed is gone", async () => {
+    const { draftId } = await prepared([{ productId: "rohlik", quantity: 1 }]);
+    const later = new Date(now.getTime() + 25 * 60 * 60 * 1000);
+    expect(await confirmDraft(db, draftId, STAFF, meta, later)).toEqual({ ok: false, reason: "no_draft" });
   });
 
   it("refuses a draft from another call", async () => {

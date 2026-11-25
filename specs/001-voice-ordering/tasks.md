@@ -290,3 +290,11 @@ Specified in `specs/002-staff-notifications` (spec, plan) with ADR-0016; built f
 - [x] T111 Staff app: saving/cancelling an order and a new-order banner refresh orders and plan; tests (FR-062)
 - [x] T112 Contracts: real calendar dates; phone digits 9–15; route tests for 400 (FR-063)
 - [x] T113 CI: `build:deploy` in the check job; workspace dependencies declared in the manifests (R35)
+
+## One way to confirm (owner, 2026-11-25; research R36, ADR-0017)
+
+- [x] T114 Schema: `order_draft.web_token_hash`; migration (data-model)
+- [x] T115 `confirmDraft` returns the existing order for a draft its owner already confirmed; web owner by token hash; tests incl. a retry per channel (FR-065, SC-017)
+- [x] T116 Web form: preview saves a draft and returns `draftId` + token; `POST /api/orders` confirms `{ draftId, token }`; prices are the draft's; expired → "review again"; route and form tests (FR-064)
+- [x] T117 Call: one end event with reason and order numbers whoever ended it; the panel shows them; tests incl. the cap (FR-066, SC-018)
+- [ ] T118 Live run: web order with a double "Potvrdit", a call ended by the cap

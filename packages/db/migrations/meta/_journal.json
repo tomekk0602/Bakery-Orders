@@ -57,6 +57,13 @@
       "when": 1795578650160,
       "tag": "0007_request_archive",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1795582980582,
+      "tag": "0008_web_drafts",
+      "breakpoints": true
     }
   ]
 }

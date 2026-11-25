@@ -1,6 +1,6 @@
 "use client";
 
-import type { CatalogueResponse, WebOrderInput, WebOrderPlaced, WebOrderPreview } from "@bakery/core/contracts";
+import type { CatalogueResponse, WebOrderInput, WebOrderPlaced, WebOrderReview } from "@bakery/core/contracts";
 import { useRef, useState } from "react";
 import { ProductGrid } from "../home/ProductGrid";
 import { dayLabel, deadline, money } from "../home/format";
@@ -11,9 +11,7 @@ import { MobileBasket } from "./MobileBasket";
 import { changeQuantity, selectedProducts, type Quantities } from "./selection";
 
 type Step =
-  | { kind: "form" }
-  | { kind: "preview"; preview: WebOrderPreview; input: WebOrderInput }
-  | { kind: "placed"; placed: WebOrderPlaced };
+  { kind: "form" } | { kind: "preview"; preview: WebOrderReview } | { kind: "placed"; placed: WebOrderPlaced };
 
 /** One selection for photo cards, checkout and server-priced preview (FR-046, T093). */
 export function WebOrderForm({ catalogue }: { catalogue: CatalogueResponse }) {
@@ -63,7 +61,7 @@ export function WebOrderForm({ catalogue }: { catalogue: CatalogueResponse }) {
     try {
       const data = input();
       const preview = await previewOrder(data);
-      setStep({ kind: "preview", preview, input: data });
+      setStep({ kind: "preview", preview });
       focusCheckout();
     } catch (e) {
       setError(e instanceof OrderError ? e.message : "Objednávku se nepodařilo zkontrolovat. Zkuste to znovu.");
@@ -73,21 +71,24 @@ export function WebOrderForm({ catalogue }: { catalogue: CatalogueResponse }) {
     }
   }
   async function send() {
-    if (pending.current || uncertain || step.kind !== "preview") return;
+    // a retry after an unknown result is safe: the same review is confirmed at most once (FR-065)
+    if (pending.current || step.kind !== "preview") return;
     pending.current = true;
     setBusy(true);
     setError(null);
     try {
-      const placed = await placeOrder(step.input);
+      const placed = await placeOrder({ draftId: step.preview.draftId, token: step.preview.token });
       setStep({ kind: "placed", placed });
       focusCheckout();
     } catch (e) {
-      // A lost response may follow a successful commit. Do not encourage another POST.
+      // A lost response may follow a successful save. Confirming the same review again is safe: the
+      // server returns the order it already saved (FR-065). Editing stays locked, because a changed
+      // order would be a new one.
       const unknown = !(e instanceof OrderError) || e.uncertain;
       setUncertain(unknown);
       setError(
         unknown
-          ? "Nepodařilo se ověřit, zda se objednávka uložila. Neodesílejte ji znovu. Požádejte prosím pekárnu o ověření."
+          ? "Nepodařilo se ověřit, zda se objednávka uložila. Zkuste ji prosím potvrdit znovu — uloží se nejvýš jednou."
           : e.message,
       );
     } finally {
@@ -217,12 +218,7 @@ export function WebOrderForm({ catalogue }: { catalogue: CatalogueResponse }) {
               </p>
               <Summary order={step.preview} />
               <div className="checkout-actions">
-                <button
-                  type="button"
-                  className="button primary"
-                  onClick={() => void send()}
-                  disabled={busy || uncertain}
-                >
+                <button type="button" className="button primary" onClick={() => void send()} disabled={busy}>
                   {busy ? "Odesíláme…" : "Potvrdit objednávku"}
                 </button>
                 <button type="button" className="button secondary" onClick={edit} disabled={busy || uncertain}>

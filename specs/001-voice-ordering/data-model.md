@@ -87,14 +87,15 @@ re-running the capacity update for the difference.
 
 ### order_draft
 
-| Field      | Type                           | Rules                                           |
-| ---------- | ------------------------------ | ----------------------------------------------- |
-| id         | uuid (PK)                      |                                                 |
-| channel    | enum `phone` · `staff` · `web` |                                                 |
-| call_id    | FK call null                   |                                                 |
-| payload    | jsonb                          | lines, day, name, phone as prepared by the core |
-| summary    | jsonb                          | lines with prices and the total, as read back   |
-| expires_at | timestamptz                    | drafts older than a day are deleted             |
+| Field          | Type                           | Rules                                                      |
+| -------------- | ------------------------------ | ---------------------------------------------------------- |
+| id             | uuid (PK)                      |                                                            |
+| channel        | enum `phone` · `staff` · `web` |                                                            |
+| call_id        | FK call null                   |                                                            |
+| payload        | jsonb                          | lines, day, name, phone as prepared by the core            |
+| summary        | jsonb                          | lines with prices and the total, as read back              |
+| expires_at     | timestamptz                    | drafts older than a day are deleted                        |
+| web_token_hash | text null                      | SHA-256 of the web form's draft token (FR-064, 2026-11-25) |
 
 `confirm` accepts only an existing, unexpired draft from the same call or staff session (FR-006,
 FR-019).

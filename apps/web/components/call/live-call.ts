@@ -4,9 +4,12 @@ import { openMicrophone, openSpeaker, SPEECH_RMS, type Microphone, type Speaker 
 import { FirstAudioClock } from "./first-audio";
 
 export type Turn = { role: "customer" | "agent"; text: string };
+export type EndReason = "hangup" | "capped" | "error";
 export type CallEvents = {
   onTranscript: (turns: Turn[]) => void;
   onStatus: (status: "connecting" | "live" | "ended", detail?: string) => void;
+  /** Once, whoever ended the call — the customer, the cap, the assistant or an error (FR-066). */
+  onEnded?: (result: { reason: EndReason; orderNumbers: number[] }) => void;
 };
 type StartResponse = { call_id: string; token: string; model: string; cap_seconds: number };
 
@@ -24,7 +27,7 @@ export class LiveCall {
   private usage: NonNullable<LiveServerMessage["usageMetadata"]>[] = [];
   private capTimer: ReturnType<typeof setTimeout> | null = null;
   private ended = false;
-  private endReason: "hangup" | "capped" | "error" = "hangup";
+  private endReason: EndReason = "hangup";
   private callId = "";
 
   constructor(private readonly events: CallEvents) {}
@@ -139,7 +142,7 @@ export class LiveCall {
     this.session?.sendToolResponse({ functionResponses });
   }
 
-  async end(reason: "hangup" | "capped" | "error"): Promise<number[]> {
+  async end(reason: EndReason): Promise<number[]> {
     if (this.ended) return [];
     this.ended = true;
     this.endReason = reason;
@@ -148,8 +151,17 @@ export class LiveCall {
     return this.report(reason);
   }
 
-  /** Tells the server the call ended, with the transcript and measurements; the order numbers come back. */
-  private async report(reason: "hangup" | "capped" | "error"): Promise<number[]> {
+  /**
+   * Tells the server the call ended, with the transcript and measurements; the order numbers come back
+   * and go to the screen through `onEnded`, whoever ended the call (FR-066).
+   */
+  private async report(reason: EndReason): Promise<number[]> {
+    const numbers = await this.sendEnd(reason);
+    this.events.onEnded?.({ reason, orderNumbers: numbers });
+    return numbers;
+  }
+
+  private async sendEnd(reason: EndReason): Promise<number[]> {
     if (!this.callId) return [];
     const r = await fetch(`/api/call/${this.callId}/end`, {
       method: "POST",

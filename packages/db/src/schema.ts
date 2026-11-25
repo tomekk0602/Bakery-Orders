@@ -161,9 +161,11 @@ export const orderDraft = pgTable(
     payload: jsonb("payload").notNull(),
     expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
     confirmedOrderId: uuid("confirmed_order_id").references(() => order.id),
+    /** a web form draft belongs to whoever holds its token; only its SHA-256 is kept (FR-064, R36) */
+    webTokenHash: text("web_token_hash"),
   },
-  // exactly one owner: the call it was prepared in, or the staff member (FR-006, FR-019)
-  (t) => [check("order_draft_one_owner", sql`(${t.callId} IS NULL) <> (${t.createdBy} IS NULL)`)],
+  // exactly one owner: the call, the staff member, or the web form's token (FR-006, FR-019, FR-064)
+  (t) => [check("order_draft_one_owner", sql`num_nonnulls(${t.callId}, ${t.createdBy}, ${t.webTokenHash}) = 1`)],
 );
 
 export const staffRequest = pgTable(

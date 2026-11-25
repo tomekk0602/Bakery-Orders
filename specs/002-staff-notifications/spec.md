@@ -273,6 +273,8 @@ the banner disappears by itself on the other after about 30 seconds.
 - **FR-027** _(code review, 2026-11-25)_: A device registration MUST be refused unless its address
   is HTTPS at a known browser push service; sending to a device MUST time out; registrations MUST
   be limited per person. The server never sends a request to an address a user chose freely.
+- **FR-029** _(2026-11-25)_: Closing a request MUST refresh the closing person's notification
+  list at once; the others see it within the polling interval (FR-007).
 - **FR-028** _(code review, 2026-11-25)_: A plan notification (daily summary, plan changed) MUST open
   the plan of the day it names — restoring FR-008 ("open what it is about … the day's plan"), which
   research N11's amendment of 2026-11-24 had narrowed to the plan screen's default day.

@@ -7,6 +7,7 @@ import {
 } from "@bakery/core/contracts";
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
+import { notificationKeys } from "@/features/notifications/api";
 import { refreshOrderViews } from "@/features/orders/api";
 import { api } from "@/shared/api/http";
 
@@ -52,7 +53,12 @@ export function useRequestAction() {
   return useMutation({
     mutationFn: ({ id, ...body }: { id: string } & RequestActionBody) =>
       api(`/api/staff/requests/${id}`, Ok, { method: "PATCH", body: JSON.stringify(body) }),
-    onSettled: () => queryClient.invalidateQueries({ queryKey: requestKeys.all }),
+    onSettled: () =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: requestKeys.all }),
+        // closing a request reads its notifications: the bell follows at once (spec 002 FR-029)
+        queryClient.invalidateQueries({ queryKey: notificationKeys.list }),
+      ]),
   });
 }
 
@@ -68,6 +74,7 @@ export function useCancelFromRequest() {
     onSettled: async () => {
       await queryClient.invalidateQueries({ queryKey: requestKeys.all });
       await refreshOrderViews(queryClient);
+      await queryClient.invalidateQueries({ queryKey: notificationKeys.list });
     },
   });
 }

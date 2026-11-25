@@ -8,7 +8,7 @@ import {
   subjectOf,
 } from "@bakery/core";
 import { loadBakery } from "./bakery.repo.ts";
-import { and, eq, gt, isNull, sql } from "drizzle-orm";
+import { and, eq, isNull, sql } from "drizzle-orm";
 import type { Db } from "./client.ts";
 import { notifyStaff, subjectNotified } from "./notifications.repo.ts";
 import { firstRow } from "./rows.ts";
@@ -17,16 +17,25 @@ import { dailyCapacity, order, orderDraft, orderLine, product } from "./schema.t
 /** A prepared order waits this long for confirmation (data-model `order_draft`). */
 export const DRAFT_TTL_MS = 24 * 60 * 60 * 1000;
 
-/** Who may confirm a draft: the call it was prepared in, or the staff member who prepared it (FR-006, FR-019). */
-export type DraftOwner = { callId: string } | { userId: string };
+/**
+ * Who may confirm a draft: the call it was prepared in, the staff member who prepared it, or — for the
+ * web form — whoever holds the token handed out with the review (FR-006, FR-019, FR-064).
+ */
+export type DraftOwner = { callId: string } | { userId: string } | { webTokenHash: string };
 
 const ownerColumns = (owner: DraftOwner) =>
-  "callId" in owner ? { callId: owner.callId, createdBy: null } : { callId: null, createdBy: owner.userId };
+  "callId" in owner
+    ? { callId: owner.callId, createdBy: null, webTokenHash: null }
+    : "userId" in owner
+      ? { callId: null, createdBy: owner.userId, webTokenHash: null }
+      : { callId: null, createdBy: null, webTokenHash: owner.webTokenHash };
 
 const ownedBy = (owner: DraftOwner) =>
   "callId" in owner
     ? eq(orderDraft.callId, owner.callId)
-    : and(isNull(orderDraft.callId), eq(orderDraft.createdBy, owner.userId));
+    : "userId" in owner
+      ? and(isNull(orderDraft.callId), eq(orderDraft.createdBy, owner.userId))
+      : eq(orderDraft.webTokenHash, owner.webTokenHash);
 
 export async function saveDraft(
   db: Db,
@@ -44,7 +53,7 @@ export async function saveDraft(
 
 export type ConfirmMeta = { promptVersion: string | null; model: string | null };
 export type ConfirmResult =
-  | { ok: true; orderNumber: number; orderId: string; notificationIds: string[] }
+  | { ok: true; orderNumber: number; orderId: string; notificationIds: string[]; order: PreparedOrder }
   | { ok: false; reason: "no_draft" | "over_limit" | "unknown_product" }
   | {
       ok: false;
@@ -188,7 +197,11 @@ const overLimit = (e: unknown) => {
   throw e;
 };
 
-/** Saves a draft as an order, once, and only for its owner (FR-006, FR-019). */
+/**
+ * Saves a draft as an order, once, and only for its owner (FR-006, FR-019). A draft its owner already
+ * confirmed answers with that order again — a retry after a lost answer or a double tap never saves a
+ * second order and never says there is nothing to confirm (FR-065, research R36).
+ */
 export async function confirmDraft(
   db: Db,
   draftId: string,
@@ -205,46 +218,39 @@ export async function confirmDraft(
       const [draft] = await tx
         .select()
         .from(orderDraft)
-        .where(
-          and(
-            eq(orderDraft.id, draftId),
-            gt(orderDraft.expiresAt, now),
-            isNull(orderDraft.confirmedOrderId),
-            ownedBy(owner),
-          ),
-        )
+        .where(and(eq(orderDraft.id, draftId), ownedBy(owner)))
         .for("update");
       if (!draft) return { ok: false, reason: "no_draft" } as const;
       const payload = draft.payload as PreparedOrder;
+      if (draft.confirmedOrderId) {
+        const [done] = await tx
+          .select({ number: order.number })
+          .from(order)
+          .where(eq(order.id, draft.confirmedOrderId));
+        if (done)
+          return {
+            ok: true,
+            orderNumber: done.number,
+            orderId: draft.confirmedOrderId,
+            notificationIds: [] as string[], // told when it was first saved
+            order: payload,
+          } as const;
+      }
+      if (draft.expiresAt <= now) return { ok: false, reason: "no_draft" } as const;
       const refusal = checkPickupDay(payload.pickupDate, now, schedule, draft.channel === "staff");
       if (refusal) return refusal as Extract<ConfirmResult, { reason: RefusalReason }>;
-      const saved = await insertOrder(tx, payload, draft.channel, { ...meta, ...who });
+      const saved = await insertOrder(tx, payload, draft.channel, {
+        ...meta,
+        callId: who.callId,
+        createdBy: who.createdBy,
+      });
       await tx.update(orderDraft).set({ confirmedOrderId: saved.id }).where(eq(orderDraft.id, draft.id));
       return {
         ok: true,
         orderNumber: saved.number,
         orderId: saved.id,
         notificationIds: saved.notificationIds,
-      } as const;
-    })
-    .catch(overLimit);
-}
-
-/** Saves an order the customer confirmed in the web form in the same request (FR-014). */
-export async function placeWebOrder(db: Db, prepared: PreparedOrder): Promise<ConfirmResult> {
-  return db
-    .transaction(async (tx) => {
-      const saved = await insertOrder(tx, prepared, "web", {
-        promptVersion: null,
-        model: null,
-        callId: null,
-        createdBy: null,
-      });
-      return {
-        ok: true,
-        orderNumber: saved.number,
-        orderId: saved.id,
-        notificationIds: saved.notificationIds,
+        order: payload,
       } as const;
     })
     .catch(overLimit);

@@ -45,6 +45,17 @@ export const WebOrderPreview = z.object({
 });
 export type WebOrderPreview = z.infer<typeof WebOrderPreview>;
 
+/**
+ * POST /api/orders/preview — the summary plus the prepared order to confirm: its draft and a token
+ * shown once; only whoever holds the token can confirm it (FR-064, research R36).
+ */
+export const WebOrderReview = WebOrderPreview.extend({ draftId: z.uuid(), token: z.string() });
+export type WebOrderReview = z.infer<typeof WebOrderReview>;
+
+/** POST /api/orders — confirms exactly the reviewed order; the same body again gives the same number (FR-065). */
+export const WebOrderConfirm = z.object({ draftId: z.uuid(), token: z.string().min(20).max(100) });
+export type WebOrderConfirm = z.infer<typeof WebOrderConfirm>;
+
 /** The saved order: its number is what the customer refers to at the counter (FR-040). */
 export const WebOrderPlaced = WebOrderPreview.extend({ orderNumber: z.number().int() });
 export type WebOrderPlaced = z.infer<typeof WebOrderPlaced>;

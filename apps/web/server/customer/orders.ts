@@ -1,7 +1,14 @@
 import "server-only";
+import { createHash, randomBytes } from "node:crypto";
 import { buildCalendar, isAfterCutoff, prepareOrder, type PreparedOrder, type RefusalReason } from "@bakery/core";
-import { CatalogueResponse, WebOrderPlaced, WebOrderPreview, type WebOrderData } from "@bakery/core/contracts";
-import { loadBakery, placeWebOrder, remainingCapacity } from "@bakery/db";
+import {
+  CatalogueResponse,
+  type WebOrderConfirm,
+  WebOrderPlaced,
+  WebOrderReview,
+  type WebOrderData,
+} from "@bakery/core/contracts";
+import { confirmDraft, loadBakery, remainingCapacity, saveDraft } from "@bakery/db";
 import { scheduleDelivery } from "../notifications/deliver";
 import { db } from "../runtime";
 
@@ -50,17 +57,39 @@ const summary = (o: PreparedOrder) => ({
   totalCzk: o.totalCzk,
 });
 
+/** The web form's draft token: 32 random bytes, enough that it cannot be guessed (research R36). */
+const TOKEN_BYTES = 32;
+const hashToken = (token: string) => createHash("sha256").update(token).digest("hex");
+
+/**
+ * The review step: prices the order with the core and keeps it as a draft the customer then confirms
+ * (FR-064). The token goes to the page once; the server keeps only its hash.
+ */
 export async function previewWebOrder(input: WebOrderData, now = new Date()) {
   const r = await prepare(input, now);
-  return r.ok ? { ok: true as const, preview: WebOrderPreview.parse(summary(r.order)) } : r;
+  if (!r.ok) return r;
+  const token = randomBytes(TOKEN_BYTES).toString("base64url");
+  const draftId = await saveDraft(db(), r.order, "web", { webTokenHash: hashToken(token) }, now);
+  return { ok: true as const, review: WebOrderReview.parse({ ...summary(r.order), draftId, token }) };
 }
 
-export async function placeOrder(input: WebOrderData, now = new Date()) {
-  const r = await prepare(input, now);
-  if (!r.ok) return r;
-  const saved = await placeWebOrder(db(), r.order);
-  if (saved.ok) scheduleDelivery(saved.notificationIds); // spec 002 FR-017
-  return saved.ok
-    ? { ok: true as const, placed: WebOrderPlaced.parse({ ...summary(r.order), orderNumber: saved.orderNumber }) }
-    : { ok: false as const, reason: saved.reason };
+/**
+ * Confirms the reviewed order — the same `confirmDraft` as the phone and staff, so the offer and the
+ * day are checked again, the prices are the reviewed ones, and the same request again returns the same
+ * order number (FR-064, FR-065).
+ */
+export async function placeOrder(input: WebOrderConfirm, now = new Date()) {
+  const saved = await confirmDraft(
+    db(),
+    input.draftId,
+    { webTokenHash: hashToken(input.token) },
+    { promptVersion: null, model: null },
+    now,
+  );
+  if (!saved.ok) return { ok: false as const, reason: saved.reason };
+  scheduleDelivery(saved.notificationIds); // spec 002 FR-017, FR-020
+  return {
+    ok: true as const,
+    placed: WebOrderPlaced.parse({ ...summary(saved.order), orderNumber: saved.orderNumber }),
+  };
 }

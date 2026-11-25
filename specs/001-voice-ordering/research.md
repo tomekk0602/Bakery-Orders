@@ -707,3 +707,28 @@ chce zrušit…"` reached the trace unchanged, contrary to `mask.ts`'s own promi
 - **Deferred**: idempotency of the web form and of a confirm retried after a lost answer (review 6,
   already on the list); price confirmation (5); a wider eval-gate filter (costs paid runs — owner's
   call); `plan.md` sync; moving use-case orchestration out of `packages/db` (no value at this scale).
+
+## R36 — One way to confirm; the same answer on a retry; call results always shown (owner, 2026-11-25)
+
+- **Context**: a second outside review proposed an application layer, a shared prepare → confirm
+  flow, the agent as an adapter, an explicit call lifecycle, one refresh strategy and a durable push
+  dispatcher. Checked against the code: the shared confirm flow and the call result are real gaps; the
+  rest is either done already or not worth the risk before hand-over (ADR-0017).
+- **Web form = draft (FR-064)**: `POST /api/orders/preview` prepares the order with the core as today
+  and saves it as a draft (channel `web`, 24 h like every draft). A web customer has no session and no
+  call, so the draft's owner is a **random token** (32 bytes, base64url) returned once with the
+  preview; the server stores only its SHA-256 (`order_draft.web_token_hash`), as with any bearer
+  secret. `POST /api/orders` takes `{ draftId, token }` and runs the same `confirmDraft` as the phone
+  and staff. The prices are the draft's snapshot — what the customer saw (review point 5). The token
+  lives in the page's memory only; a reload means a new review.
+- **Retry returns the result (FR-065)**: `confirmDraft` on a draft its owner already confirmed returns
+  `{ ok: true }` with the existing order's number (`order_draft.confirmed_order_id`), for every
+  channel. An unknown, expired or foreign draft is still `no_draft`. Rejected: an `Idempotency-Key`
+  header and a key table — the draft already is the operation's identity.
+- **Call result (FR-066)**: `LiveCall` reports the end through one event with the reason and the order
+  numbers, whoever ended the call; the call panel shows them. Today only the customer's own "Zavěsit"
+  returned them, so a call cut by the cap saved an order the screen never named.
+- **Request closed → bell (002 FR-029)**: closing a request also refreshes the closing person's
+  notification list at once.
+- **Not changed**: the agent's tools and prompt (only the retry answer of `confirm_order` changes from
+  `no_draft` to the order number); the rate limits (`WEB_PREVIEW_LIMIT`, `WEB_ORDER_LIMIT`).

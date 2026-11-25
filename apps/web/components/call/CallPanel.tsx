@@ -19,7 +19,12 @@ export function CallPanel() {
     setError(null);
     setTurns([]);
     setOrders([]);
-    const c = new LiveCall({ onTranscript: setTurns, onStatus: (s) => setStatus(s) });
+    const c = new LiveCall({
+      onTranscript: setTurns,
+      onStatus: (s) => setStatus(s),
+      // the saved orders show however the call ended: hang-up, the 3-minute cap or the assistant (FR-066)
+      onEnded: ({ orderNumbers }) => setOrders(orderNumbers),
+    });
     call.current = c;
     try {
       await c.start(phone);
@@ -30,8 +35,7 @@ export function CallPanel() {
   }
 
   async function hangUp() {
-    const numbers = (await call.current?.end("hangup")) ?? [];
-    setOrders(numbers);
+    await call.current?.end("hangup");
   }
 
   const inCall = status === "connecting" || status === "live";

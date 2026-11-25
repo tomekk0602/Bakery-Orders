@@ -1,8 +1,9 @@
 import {
   ApiError,
   CatalogueResponse,
+  type WebOrderConfirm,
   WebOrderPlaced,
-  WebOrderPreview,
+  WebOrderReview,
   type WebOrderInput,
 } from "@bakery/core/contracts";
 import type { z } from "zod";
@@ -30,6 +31,7 @@ async function call<S extends z.ZodType>(path: string, schema: S, init?: Request
 
 export const loadCatalogue = () => call("/api/catalogue", CatalogueResponse);
 export const previewOrder = (o: WebOrderInput) =>
-  call("/api/orders/preview", WebOrderPreview, { method: "POST", body: JSON.stringify(o) });
-export const placeOrder = (o: WebOrderInput) =>
-  call("/api/orders", WebOrderPlaced, { method: "POST", body: JSON.stringify(o) });
+  call("/api/orders/preview", WebOrderReview, { method: "POST", body: JSON.stringify(o) });
+/** Confirms the reviewed order; sending the same confirmation again is safe — it returns the same number (FR-065). */
+export const placeOrder = (c: WebOrderConfirm) =>
+  call("/api/orders", WebOrderPlaced, { method: "POST", body: JSON.stringify(c) });
