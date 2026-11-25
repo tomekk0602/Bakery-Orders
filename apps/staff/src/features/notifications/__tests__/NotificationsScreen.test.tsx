@@ -1,10 +1,13 @@
-import type { NotificationList, NotificationSettings } from "@bakery/core/contracts";
+import type { NotificationList } from "@bakery/core/contracts";
 import { fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { renderWithQuery } from "@/test/render";
 import { NotificationsScreen } from "../NotificationsScreen";
 
 const mockApi = jest.fn();
 jest.mock("@/shared/api/http", () => ({ api: (...args: unknown[]) => mockApi(...args) }));
+// The settings have their own tests (NotificationSettingsSection.test.tsx); loading them here made
+// this test wait on a second query that a cold CI run did not finish within the default second.
+jest.mock("../NotificationSettingsSection", () => ({ NotificationSettingsSection: () => null }));
 const mockPush = jest.fn();
 jest.mock("expo-router", () => ({ useRouter: () => ({ push: mockPush }) }));
 
@@ -32,27 +35,12 @@ const list: NotificationList = {
     },
   ],
 };
-const settings: NotificationSettings = {
-  kinds: [
-    { kind: "request", inApp: true, push: true, allowed: true },
-    { kind: "plan_summary", inApp: false, push: false, allowed: true },
-    { kind: "near_limit", inApp: false, push: false, allowed: false },
-    { kind: "plan_changed", inApp: true, push: true, allowed: true },
-    { kind: "assistant_down", inApp: false, push: false, allowed: false },
-  ],
-  quietHours: { enabled: true, from: "20:00", to: "04:00" },
-  vapidPublicKey: null,
-  devices: [],
-};
 
 beforeEach(() => {
   mockApi.mockReset();
   mockPush.mockReset();
-  mockApi.mockImplementation((path: string, _schema: unknown, init?: RequestInit) => {
+  mockApi.mockImplementation((path: string) => {
     if (path === "/api/staff/notifications") return Promise.resolve(list);
-    if (path === "/api/staff/notification-settings" && init?.method === "PUT")
-      return Promise.resolve(JSON.parse(String(init.body)) as unknown);
-    if (path === "/api/staff/notification-settings") return Promise.resolve(settings);
     if (path === "/api/staff/notifications/read-all") return Promise.resolve({ read: 1 });
     return Promise.resolve({ ok: true });
   });
@@ -61,11 +49,10 @@ beforeEach(() => {
 /** The list is read again after a mutation; waiting for it keeps the refetch inside this test. */
 const listReads = () => mockApi.mock.calls.filter((c) => c[0] === "/api/staff/notifications").length;
 
-/** Renders and waits until both the list and the settings have loaded, so no update overlaps the next test. */
+/** Renders and waits until the list has loaded. */
 async function renderScreen() {
   await renderWithQuery(<NotificationsScreen />);
-  await screen.findByText("Plán na další den");
-  await screen.findByText("Toto zařízení upozornění neumí. V aplikaci je uvidíte i tak.");
+  await screen.findByText("Plán na středa 25. 11.");
 }
 
 describe("NotificationsScreen (spec 002 FR-007, FR-008)", () => {
