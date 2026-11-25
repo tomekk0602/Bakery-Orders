@@ -732,3 +732,25 @@ chce zrušit…"` reached the trace unchanged, contrary to `mask.ts`'s own promi
   notification list at once.
 - **Not changed**: the agent's tools and prompt (only the retry answer of `confirm_order` changes from
   `no_draft` to the order number); the rate limits (`WEB_PREVIEW_LIMIT`, `WEB_ORDER_LIMIT`).
+
+## R37 — Requirements not built in this version (owner, 2026-11-25)
+
+A check of the tasks against the code before hand-over found four promises the code does not keep.
+They are recorded here and in the spec rather than left silently open:
+
+- **FR-027 — silence**: the agent does not ask "Jste tam ještě?" after a silence and does not end the
+  call after a second one. The call still ends at the 3-minute cap and saves nothing unconfirmed
+  (FR-006 holds). Building it means a silence timer in the call client and a prompt change, which
+  re-runs the agent evals; left for after hand-over.
+- **FR-029 — simulated customer**: the agent evals (16 customer and 8 staff cases, 5 runs each,
+  ADR-0012) replay **scripted** customer turns against the real instructions, tools and database; no
+  model plays the customer from a goal, and there is no failing-tool case. Scripted turns are
+  repeatable and free; a simulated customer is the next step for coverage.
+- **FR-031 — "Udělat z toho test"**: staff cannot turn a call into an eval case from the app; new
+  cases are written by hand in `packages/evals/cases/`.
+- **ADR-0011 — fallback cascade** (tasks T054, T055): when Gemini Live is unavailable there is no
+  simpler voice mode. FR-016 itself holds: the call screen says the voice is unavailable and offers
+  the form, and the staff app works.
+
+Also recorded: editing an order's items or day in the staff app (T058, T059) is not built — such
+requests are cancelled and taken again (README, "Not in this version yet").

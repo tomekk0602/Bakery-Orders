@@ -150,6 +150,11 @@ column.
 - **Measured on a small sample.** Latency and cost come from a handful of calls; the voice itself
   (recognition of Czech over a phone-quality line) has no repeated eval yet.
 - **Shared demo data.** Reviewers see each other's test orders; **Reset demo** restores the seed.
+- **Not built yet, though specified** ([research R37](specs/001-voice-ordering/research.md)): the
+  assistant does not ask "Jste tam ještě?" after a silence (the 3-minute cap ends a silent call);
+  the agent evals replay scripted conversations rather than a model playing the customer; there is
+  no one-tap "turn this call into a test"; and there is no simpler voice mode when Gemini Live is
+  down — the page says so and offers the form.
 - **Notifications arrive by polling.** The open staff app asks the server every 10 seconds, so a banner
   appears up to 10 s after the order. That is deliberate for the demo: the app runs as serverless
   functions on Vercel, which cannot keep a WebSocket open (the Node counterparts of SignalR —

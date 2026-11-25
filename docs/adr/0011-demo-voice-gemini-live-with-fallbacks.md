@@ -126,3 +126,6 @@ ADR-0005 is superseded: its cascade on the browser's recognition (B1) is no long
 - Gemini API pricing and free tier: https://aistudio.google.com/docs/pricing (read 2026-11-24).
 - Live transcription: https://ai.google.dev/gemini-api/docs/live-api/live-transcribe
 - Supersedes ADR-0005.
+
+- **Amended 2026-11-25** (owner): the fallback cascade is not built in this version; when the live
+  voice is unavailable the call screen says so and offers the form (spec 001 FR-016, research R37).

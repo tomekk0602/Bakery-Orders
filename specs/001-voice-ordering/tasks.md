@@ -24,9 +24,9 @@ they cover and must fail first.
 - [x] T003 [P] Create `packages/core` (TypeScript, Vitest, zod 4, date-fns 4, `@date-fns/tz`, date-holidays) with an empty public index
 - [x] T004 [P] Create `packages/db` (drizzle-orm 0.45, drizzle-kit, `pg`, `@neondatabase/serverless`) and `docker-compose.yml` with PostgreSQL for local runs and tests (R14)
 - [x] T005 [P] Create `apps/web` with Next.js 16 (App Router, Tailwind 4), Czech `lang="cs"`, depending on `@bakery/core` and `@bakery/db`
-- [ ] T006 [P] Create `apps/staff` with Expo SDK 58 + Expo Router (iOS, Android, web), depending on `@bakery/core`; verify it starts in Expo Go and as a web build (FR-023, ADR-0009)
-- [ ] T007 [P] Create `packages/evals` with Evalite 0.19 and Vitest (ADR-0012, R18)
-- [ ] T008 Add root scripts `dev`, `test`, `eval`, `e2e`, `db:up`, `db:migrate`, `db:seed`; extend `.gitignore` (`.env*`, build output, Expo caches)
+- [x] T006 [P] Create `apps/staff` with Expo SDK 58 + Expo Router (iOS, Android, web), depending on `@bakery/core`; verify it starts in Expo Go and as a web build (FR-023, ADR-0009) _(done: Expo SDK 58 app, its web build is exported by `build:deploy` in CI; used in Expo Go during development)_
+- [x] T007 [P] Create `packages/evals` with Evalite 0.19 and Vitest (ADR-0012, R18) _(done)_
+- [x] T008 Add root scripts `dev`, `test`, `eval`, `e2e`, `db:up`, `db:migrate`, `db:seed`; extend `.gitignore` (`.env*`, build output, Expo caches) _(done: `dev`, `test`, `db:up`, `db:migrate`, `db:seed`; evals run as `npm run eval -w @bakery/evals`; `e2e` waits for T078)_
 
 ---
 
@@ -53,23 +53,23 @@ they cover and must fail first.
 - [x] T019 [P] `packages/core/src/agent/prompt.cs.md` + `prompt.ts`: instructions with the greeting and AI notice, the calendar block, the catalogue with prices, read-back from the tool result only, callback after two misunderstandings, customer and staff modes; `VERSION` file (FR-001, FR-002, FR-005, FR-008, FR-030, R5)
 - [x] T020 [P] `packages/core/src/agent/vocabulary.ts`: vocabulary from product spoken forms, capped in size (FR-026, research R12 over-correction note)
 - [x] T021 [P] Tests for T018–T020 in `packages/core/src/agent/agent.test.ts`: the enum equals the active catalogue; the prompt contains the 14-day calendar and no inactive product; changing any agent file without bumping `VERSION` fails a test
-- [ ] T022 [P] `packages/core/src/contracts/`: zod request/response schemas of every route in contracts/http-api.md and the closed error codes
+- [x] T022 [P] `packages/core/src/contracts/`: zod request/response schemas of every route in contracts/http-api.md and the closed error codes _(done)_
 
 ### Database
 
 - [x] T023 Drizzle schema in `packages/db/src/schema.ts` for every table in data-model.md, plus the Better Auth tables; first migration
 - [x] T024 Integration tests in `packages/db/src/orders.repo.test.ts` on PostgreSQL via `@testcontainers/postgresql`: confirm saves lines and capacity in one transaction; **two concurrent confirms for the last piece → exactly one saved** (SC-004, R14); staff edit adjusts capacity by the difference; cancel releases capacity
 - [x] T025 `packages/db/src/orders.repo.ts`: drafts, confirm with the conditional capacity update, edit, cancel, pick-up, order numbers from a sequence (makes T024 pass; FR-006, FR-007, FR-040)
-- [ ] T026 [P] `packages/db/src/requests.repo.ts`, `calls.repo.ts`, `settings.repo.ts`, `rate-limit.repo.ts` (upsert counter per window), each with an integration test
+- [x] T026 [P] `packages/db/src/requests.repo.ts`, `calls.repo.ts`, `settings.repo.ts`, `rate-limit.repo.ts` (upsert counter per window), each with an integration test _(done: requests, calls, settings repositories; the rate limit is `hitRateLimit` in `calls.repo.ts`, tested in `orders.repo.test.ts`)_
 - [x] T027 [P] `packages/db/src/seed.ts`: "Pekárna U Lípy", ~12 products with spoken forms and limits, buffers per weekday, orders for the coming week, the demo staff user with the password from `DEMO_STAFF_PASSWORD` (ADR-0014)
-- [ ] T028 `packages/db/src/reset.ts` + test: truncates bakery data and re-runs the seed (FR-042)
+- [x] T028 `packages/db/src/reset.ts` + test: truncates bakery data and re-runs the seed (FR-042) _(done: `truncateBakery` + seed in `seed.ts`, route `/api/staff/reset`, owner-only test in `staff-auth.test.ts`)_
 
 ### Web app foundation
 
 - [x] T029 Better Auth in `apps/web/lib/auth.ts` and `app/api/auth/[...all]/route.ts` with the drizzle adapter and the Expo plugin; a `requireStaff()` helper for staff routes (FR-015, R15)
-- [ ] T030 [P] Route-handler helpers in `apps/web/lib/http.ts`: zod parsing of bodies with the shared contracts, the error envelope, IP hashing with `IP_HASH_SALT`
+- [x] T030 [P] Route-handler helpers in `apps/web/lib/http.ts`: zod parsing of bodies with the shared contracts, the error envelope, IP hashing with `IP_HASH_SALT` _(done in `apps/web/server/runtime.ts` and `server/customer/respond.ts` instead of `lib/http.ts`)_
 - [x] T031 [P] Observability in `apps/web/instrumentation.ts`: OpenTelemetry with the Langfuse span processor (EU), a masking processor for names and phones, Sentry for Next.js (FR-032, ADR-0013, R19) — _Langfuse done (R27); Sentry moved to T076_
-- [ ] T032 [P] Test of the masking processor in `apps/web/lib/telemetry.test.ts`: no phone number or customer name survives export
+- [x] T032 [P] Test of the masking processor in `apps/web/lib/telemetry.test.ts`: no phone number or customer name survives export _(done: `apps/web/server/mask.test.ts`; tool inputs are allowlisted since R35)_
 
 **Checkpoint**: core, database and web foundation pass their tests.
 
@@ -83,7 +83,7 @@ they cover and must fail first.
 - [x] T033 [P] [US6] API tests in `apps/web/app/api/staff/staff.test.ts`: dictation returns a card with unmatched words and candidates and missing fields; form order returns the same card shape; confirm after the cut-off works with a staff session and is refused without one (FR-013, FR-017–FR-021)
 - [x] T034 [US6] `POST /api/staff/dictation` in `apps/web/app/api/staff/dictation/route.ts`: Gemini 3.5 Flash-Lite with the tool definitions in staff mode; `prepare_order` runs through the core; unmatched words → candidates by spoken-form similarity; trace span `dictation` (R17, FR-019, FR-020)
 - [x] T035 [P] [US6] `POST /api/staff/orders` (form → draft card) and `POST /api/staff/orders/[draftId]/confirm` (FR-017, FR-019)
-- [ ] T036 [P] [US6] Staff login screen `apps/staff/app/(auth)/login.tsx` with `@better-auth/expo`
+- [x] T036 [P] [US6] Staff login screen `apps/staff/app/(auth)/login.tsx` with `@better-auth/expo` _(done: `apps/staff/app/login.tsx`, `features/auth/LoginScreen.tsx`)_
 - [x] T037 [US6] "Nová objednávka" screen `apps/staff/app/(tabs)/nova.tsx`: voice button with expo-speech-recognition (cs-CZ, vocabulary as contextual strings where supported), editable text, form mode, the order card with unmatched-word pickers and missing-field highlights, one-tap confirm (FR-017, FR-018, FR-020, FR-021)
 - [x] T038 [US6] No-microphone / no-recogniser path: the screen says so and opens the form (FR-022)
 - [x] T039 [P] [US6] Component tests for the card states in `apps/staff/components/OrderCard.test.tsx`
@@ -109,17 +109,17 @@ they cover and must fail first.
 **Independent test**: quickstart scenario 4.
 
 - [x] T044 [US1] Spike: check `ai.authTokens.create` and `liveConnectConstraints` field names against `@google/genai` 3.6 types; record the result in research R16 (open item)
-- [ ] T045 [P] [US1] Tests in `apps/web/app/api/call/call.test.ts`: `/start` issues a token bound to our model, instructions, tools and vocabulary; refuses above the per-IP limit; tool route validates arguments with the shared schemas, refuses `confirm_order` without a draft from the same call, takes the phone from the call record (FR-006, FR-035, FR-036)
+- [ ] T045 [P] [US1] Tests in `apps/web/app/api/call/call.test.ts`: `/start` issues a token bound to our model, instructions, tools and vocabulary; refuses above the per-IP limit; tool route validates arguments with the shared schemas, refuses `confirm_order` without a draft from the same call, takes the phone from the call record (FR-006, FR-035, FR-036) _(partly: the end route and the tool runner are tested; no route test of `/start` yet)_
 - [x] T046 [US1] `POST /api/call/start`: per-IP limit, call record, ephemeral Live token locked to the bakery config, cap seconds (R16, FR-036)
 - [x] T047 [US1] `POST /api/call/[id]/tools/[name]`: runs `prepare_order`, `confirm_order`, `request_staff` through the core and repositories; span `tool.<name>` (contracts/agent-tools.md)
 - [x] T048 [P] [US1] ~~`POST /api/call/[id]/events`~~ — not built: first-audio samples and usage arrive with `end` (research R27). Was: `POST /api/call/[id]/events`: first-audio latency, fallback and error events into the call record and trace (FR-032)
 - [x] T049 [US1] `POST /api/call/[id]/end`: stores the transcript, runs the promised-callback check, sets the outcome, closes the trace (FR-008, FR-009)
 - [x] T050 [P] [US1] Test of the promised-callback check: "zavolá vám kolega" without a record → a `promised_not_recorded` request (FR-008, research R3)
 - [x] T051 [US1] Call client `apps/web/components/call/live-client.ts`: Live session with the token, AudioWorklet capture at 16 kHz with echo cancellation, 24 kHz playback, tool calls forwarded to the API, first-audio timing, cap timer with a polite end (FR-027, FR-036, FR-037, R16)
-- [ ] T052 [US1] Silence and slow-tool handling: the prompt's "Jste tam ještě?" after silence and "Moment, ověřuji" when a tool exceeds the threshold (thresholds proposed, unmeasured) (FR-027, FR-028, ADR-0010)
-- [ ] T053 [US1] Customer page `apps/web/app/(customer)/page.tsx`: phone field, "Zavolat do pekárny", AI and retention notice under the button, live captions, headphones hint, error states for rate limit, quota and unavailable voice with a link to the form (FR-016, FR-035, FR-037, FR-039)
-- [ ] T054 [US1] Fallback cascade `apps/web/components/call/cascade.ts` + `POST /api/call/[id]/turn`: Transcribe Live → Flash-Lite with the same tools → browser speech synthesis; the page says the call continues in a simpler mode (ADR-0011, FR-016)
-- [ ] T055 [P] [US1] Test that a forced Live failure switches to the cascade and that a forced cascade failure offers the form (ADR-0011 confirmation)
+- [ ] T052 [US1] Silence and slow-tool handling: the prompt's "Jste tam ještě?" after silence and "Moment, ověřuji" when a tool exceeds the threshold (thresholds proposed, unmeasured) (FR-027, FR-028, ADR-0010) _(partly: "Moment, ověřuji" is in the prompt; the silence handling of FR-027 is deferred — research R37)_
+- [x] T053 [US1] Customer page `apps/web/app/(customer)/page.tsx`: phone field, "Zavolat do pekárny", AI and retention notice under the button, live captions, headphones hint, error states for rate limit, quota and unavailable voice with a link to the form (FR-016, FR-035, FR-037, FR-039) _(done; the page became the shop of T090–T094)_
+- [ ] T054 [US1] Fallback cascade `apps/web/components/call/cascade.ts` + `POST /api/call/[id]/turn`: Transcribe Live → Flash-Lite with the same tools → browser speech synthesis; the page says the call continues in a simpler mode (ADR-0011, FR-016) _(deferred — research R37, ADR-0011 amendment)_
+- [ ] T055 [P] [US1] Test that a forced Live failure switches to the cascade and that a forced cascade failure offers the form (ADR-0011 confirmation) _(deferred with T054)_
 
 **Checkpoint**: a call from the browser ends in an order visible to staff.
 
@@ -134,9 +134,9 @@ they cover and must fail first.
 
 ## Phase 7: User Story 4 — Staff check and handle orders (P2)
 
-- [ ] T058 [P] [US4] `GET /api/staff/orders`, `PATCH /api/staff/orders/[id]` + tests (edit, pick-up, cancel with capacity) (FR-012, FR-013) — _list, pick-up and cancel with capacity done (research R31); editing lines or the day is open_
-- [ ] T059 [US4] "Odběry" screen `apps/staff/app/(tabs)/odbery.tsx`: today's pick-ups, one-tap picked up; order detail with source and transcript; edit (FR-012)
-- [ ] T060 [P] [US4] "Udělat z toho test" action: `POST /api/staff/eval-cases` with anonymisation + test (FR-031, ADR-0012)
+- [ ] T058 [P] [US4] `GET /api/staff/orders`, `PATCH /api/staff/orders/[id]` + tests (edit, pick-up, cancel with capacity) (FR-012, FR-013) — _list, pick-up and cancel with capacity done (research R31); editing lines or the day is open_ _(list, pick-up and cancel done; editing lines or the day deferred — research R37)_
+- [x] T059 [US4] "Odběry" screen `apps/staff/app/(tabs)/odbery.tsx`: today's pick-ups, one-tap picked up; order detail with source and transcript; edit (FR-012) _(done as "Dnes" with one-tap hand-over and the order detail with the transcript; editing deferred with T058)_
+- [ ] T060 [P] [US4] "Udělat z toho test" action: `POST /api/staff/eval-cases` with anonymisation + test (FR-031, ADR-0012) _(deferred — FR-031, research R37)_
 
 ---
 
@@ -144,7 +144,7 @@ they cover and must fail first.
 
 - [x] T061 [P] [US5] `GET /api/catalogue`, `POST /api/orders/preview`, `POST /api/orders` + tests: same rules as the agent, order number, 10 orders per IP per hour (FR-014, FR-040)
 - [x] T062 [US5] Form on the customer page with a review step and an inline confirmation with the order number; no public page per order number (R23) (FR-014, FR-040)
-- [ ] T090 [US5] Customer page as a shop: header, "how to order", product grid with photos and prices from the catalogue, call and form, notice; generated illustrative photos in `apps/web/public/images/` (R32) (FR-046, research R29)
+- [x] T090 [US5] Customer page as a shop: header, "how to order", product grid with photos and prices from the catalogue, call and form, notice; generated illustrative photos in `apps/web/public/images/` (R32) (FR-046, research R29) _(done in T091–T094)_
 
 ---
 
@@ -154,11 +154,11 @@ they cover and must fail first.
 - [x] T064 [P] Graders in `packages/evals/src/graders.ts`: order equality against the test database, no save without confirmation, enum membership, dates from the calendar
 - [x] T065 [P] Statistics in `packages/evals/src/stats.ts` + tests: Wilson interval, pass@k, pass^k
 - [x] T066 Customer and staff suites in one `agent.eval.ts` (one process, one request pacer): each case N = 5 on Flash-Lite with the real tools (`runCallTool`) against a test database; report with intervals (research R24)
-- [ ] T067 `simulated.eval.ts`: a simulated Czech customer from a goal (Sonnet through the CLI locally, a free Gemini model in CI); scenarios include an unavailable product, a failing tool, silence, a correction, a request for a human (FR-029)
+- [ ] T067 `simulated.eval.ts`: a simulated Czech customer from a goal (Sonnet through the CLI locally, a free Gemini model in CI); scenarios include an unavailable product, a failing tool, silence, a correction, a request for a human (FR-029) _(deferred — FR-029, research R37: the suite replays scripted conversations)_
 - [x] T068 Gate: `baseline.json`, a comparison script, `npm run eval -- --gate` exits non-zero on regression; a test that removes the calendar block and expects the gate to fail (SC-010)
 - [ ] T089 Fix d05: after a refused manipulation attempt the agent asks again for what the customer already said (4/5 at `2026-11-24.4`, research R25); re-measure, then a new baseline (SC-010)
-- [ ] T069 [P] Voice eval `packages/evals/voice/`: the spike's Live runner with the vocabulary, clean and phone-band clips, latency report (nightly)
-- [ ] T070 [P] Judge for tone and Czech: calibration set of ~20 transcripts labelled by the owner, agreement reported in research.md; used in the gate only above the agreed threshold
+- [ ] T069 [P] Voice eval `packages/evals/voice/`: the spike's Live runner with the vocabulary, clean and phone-band clips, latency report (nightly) _(deferred: no repeated voice eval yet — README "How I know it works")_
+- [ ] T070 [P] Judge for tone and Czech: calibration set of ~20 transcripts labelled by the owner, agreement reported in research.md; used in the gate only above the agreed threshold _(deferred)_
 
 ---
 
@@ -169,13 +169,13 @@ they cover and must fail first.
 - [x] T073 [P] `GET /api/cron/retention` + Vercel Cron: delete transcripts after 30 days, expired drafts and old rate-limit rows; test with a fixed clock (FR-009, ADR-0008)
 - [x] T074 [P] Shadow cost: `packages/core/src/agent/prices.ts` with source URL and date; cost per call and per dictation on the trace and the call record (ADR-0013)
 - [x] T075 [US4] "Provoz" screen `apps/staff/app/(tabs)/provoz.tsx` + `GET /api/staff/provoz`: first-audio p50/p95, outcome shares, share of phone orders edited by staff (FR-033)
-- [ ] T076 [P] Sentry for the Expo app with the same masking; alerts (latency p95, failed calls, quota, order-path errors) to e-mail with proposed thresholds marked as debt (ADR-0013)
+- [ ] T076 [P] Sentry for the Expo app with the same masking; alerts (latency p95, failed calls, quota, order-path errors) to e-mail with proposed thresholds marked as debt (ADR-0013) _(deferred: Langfuse traces and the Provoz screen cover operations for the demo)_
 - [x] T077 [P] "Reset demo" in the staff app settings calling `POST /api/staff/reset` (FR-042)
-- [ ] T078 [P] Playwright smoke `apps/web/tests/e2e/`: web form order; staff login (quickstart 11)
-- [ ] T079 Deployment config: Vercel project for `apps/web` and the staff web build (EU region), Neon branch per preview, EAS Update for Expo Go — **set up and deployed only with the owner's yes; accounts and keys created by the owner**
-- [ ] T080 README for reviewers: links, how to log in (credentials sent separately), the three-minute walkthrough, the decisions in short with links to the ADRs, known limits (free tiers, browser call instead of a phone line)
-- [ ] T081 Walk through quickstart.md on the deployed preview; record results in research.md; a person other than the author follows the README once (ADR-0014)
-- [ ] T082 Record the two-minute backup video of the walkthrough (ADR-0014)
+- [ ] T078 [P] Playwright smoke `apps/web/tests/e2e/`: web form order; staff login (quickstart 11) _(deferred: CI builds the deployable artifacts — R35 — but no browser smoke)_
+- [x] T079 Deployment config: Vercel project for `apps/web` and the staff web build (EU region), Neon branch per preview, EAS Update for Expo Go — **set up and deployed only with the owner's yes; accounts and keys created by the owner** _(done: Vercel fra1 with the staff web build under `/staff`, Neon Frankfurt; a Neon branch per preview and EAS Update not set up)_
+- [x] T080 README for reviewers: links, how to log in (credentials sent separately), the three-minute walkthrough, the decisions in short with links to the ADRs, known limits (free tiers, browser call instead of a phone line) _(done)_
+- [ ] T081 Walk through quickstart.md on the deployed preview; record results in research.md; a person other than the author follows the README once (ADR-0014) _(open: the owner's walk-through on the deployment)_
+- [ ] T082 Record the two-minute backup video of the walkthrough (ADR-0014) _(open: the owner's video)_
 
 ---
 
@@ -253,17 +253,17 @@ No task is committed, pushed or deployed without the owner's explicit yes (const
 
 ## Homepage implementation (owner-approved plan, 2026-11-24)
 
-- [ ] T091 Generate and optimize 12 consistent product photographs and one hero; save prompts and asset mapping (FR-046).
-- [ ] T092 Build responsive bakery navigation, hero, ordering guidance, call section and disclosure (FR-046).
-- [ ] T093 Unify product-card quantities with the existing preview/confirmation flow, accessible mobile summary and failure states (FR-046).
-- [ ] T094 Verify types, lint, selection logic and browser layouts/preview flow; document verification limits (FR-046).
+- [x] T091 Generate and optimize 12 consistent product photographs and one hero; save prompts and asset mapping (FR-046). _(done: the photographs were provided by the owner; their prompts are not in the repository — amended 2026-11-25)_
+- [x] T092 Build responsive bakery navigation, hero, ordering guidance, call section and disclosure (FR-046). _(done)_
+- [x] T093 Unify product-card quantities with the existing preview/confirmation flow, accessible mobile summary and failure states (FR-046). _(done)_
+- [x] T094 Verify types, lint, selection logic and browser layouts/preview flow; document verification limits (FR-046). _(done)_
 
 ## Later — notifications (owner, 2026-11-24)
 
 Specified in `specs/002-staff-notifications` (spec, plan) with ADR-0016; built from that feature's tasks.
 
-- [ ] T095 Notifications for staff in the app: a new order, a callback / change / cancel request, an order close to the day's limit — shown in the app while it is open (spec first)
-- [ ] T096 Push notifications to the staff mobile app (Expo push; device registration per signed-in staff member; personal data kept out of the notification text) — spec and ADR first
+- [x] T095 Notifications for staff in the app: a new order, a callback / change / cancel request, an order close to the day's limit — shown in the app while it is open (spec first) _(superseded by spec 002, done there)_
+- [ ] T096 Push notifications to the staff mobile app (Expo push; device registration per signed-in staff member; personal data kept out of the notification text) — spec and ADR first _(superseded by spec 002: Web Push done; native push deferred — ADR-0016)_
 
 ## Working a request through (owner, 2026-11-25; User Story 7, research R33)
 

@@ -10,7 +10,8 @@ Three ways to order — a Czech voice agent called from the browser, a staff app
 spoken sentence or a form, and a customer web form — over one order core that owns every rule:
 catalogue, calendar with closed days and holidays, totals, cut-off, daily limits, confirmation,
 callbacks and the baking plan (ADR-0003, ADR-0009). The call runs on Gemini Live with the catalogue
-enum and a speech vocabulary, with a free cascade and a paid transcriber as fallbacks (ADR-0010,
+enum and a speech vocabulary, with a free cascade and a paid transcriber as fallbacks _(the cascade
+is not built in this version — research R37)_ (ADR-0010,
 ADR-0011). The agent is evaluated as a probabilistic system with a regression gate in CI, and every
 call is traced with latency, tokens and shadow cost (ADR-0012, ADR-0013). The demo is two links, an
 Expo Go code and one login on seeded data with a reset (ADR-0014).
@@ -33,7 +34,7 @@ Expo Go code and one login on seeded data with a reset (ADR-0014).
 | Time and holidays             | date-fns + `@date-fns/tz`, date-holidays                              | 4.4 / 1.5 / 3.39 |
 | Styling (web)                 | Tailwind CSS                                                          | 4.3              |
 | Observability                 | `@langfuse/tracing` + `@langfuse/otel` (OpenTelemetry)                | 6.1              |
-| Errors                        | `@sentry/nextjs`, `@sentry/react-native`                              | 11.17 / 8.36     |
+| Errors                        | `@sentry/nextjs`, `@sentry/react-native` _(deferred — T076)_          | 11.17 / 8.36     |
 
 **Storage**: one PostgreSQL database — Neon (EU, Frankfurt) in production with a branch per preview;
 PostgreSQL in a container for tests.
@@ -135,3 +136,11 @@ the web app's API over HTTP with the shared zod contracts.
 ## Complexity Tracking
 
 No constitution violations to justify.
+
+## Status at hand-over (2026-11-25)
+
+Not built from this plan, each recorded with its reason: Sentry (T076), the Playwright smoke (T078;
+CI builds the deployable artifacts instead), the fallback cascade (T054, T055; ADR-0011 amendment),
+the silence handling (FR-027), the simulated customer (FR-029), "Udělat z toho test" (FR-031) — see
+research R37. Added since the plan: staff notifications (spec 002), requests worked through to an
+archive (User Stories 7–8), one way to confirm for every channel (research R36).

@@ -326,13 +326,14 @@ name, and reopens it; a request closed 31 days ago is gone after the nightly cle
   (ADR-0010).
 - **FR-027**: After a silence the agent MUST ask whether the customer is still there and end the call
   politely after a second silence; nothing unconfirmed is saved (ADR-0010; threshold unmeasured).
+  _(Deferred 2026-11-25, research R37: not built in this version.)_
 - **FR-028**: When a tool has not answered quickly, the agent MUST tell the customer it is checking
   instead of staying silent (ADR-0010; threshold unmeasured — research R7 measured one 20 s response).
 - **FR-030**: Every order and every call trace MUST record the prompt version and the model that
   handled it (ADR-0012).
 - **FR-031**: Staff MUST be able to turn a corrected phone order or a call that ended in a callback
   into an evaluation case with one action; name and phone MUST be replaced before it is stored
-  (ADR-0012).
+  (ADR-0012). _(Deferred 2026-11-25, research R37: not built in this version.)_
 - **FR-032**: Every call and every staff dictation MUST produce a trace with tool calls, step
   latencies, end-of-speech → first-audio latency, token usage, shadow cost, prompt version and
   outcome; names and phone numbers MUST be masked before the trace leaves the server (ADR-0013).
@@ -424,6 +425,7 @@ name, and reopens it; a request closed 31 days ago is gone after the nightly cle
 - **FR-029**: The agent's behaviour MUST be covered by a simulated-customer suite: a model plays a
   Czech customer from a goal; the saved order is compared in code with the expected order; the suite
   includes an unavailable product and a failing tool (ADR-0010).
+  _(Deferred 2026-11-25, research R37: the suite is scripted conversations, not a simulated customer.)_
 - **FR-016**: When the voice part fails, the call screen MUST say so; the form and the panel MUST
   keep working.
 
