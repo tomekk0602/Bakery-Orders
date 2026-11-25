@@ -480,6 +480,10 @@ name, and reopens it; a request closed 31 days ago is gone after the nightly cle
 - **FR-084** _(clarifies FR-010)_: A product the owner switched off MUST appear in the baking plan only
   with its reserved pieces; the walk-in buffer applies to products on offer only. _(Proposed in the
   review, research R43; the owner may reverse it.)_
+- **FR-085** _(2026-11-25, research R44; amends FR-018)_: Names and words read from a staff sentence
+  MUST reach the order card as the letters spoken: when the model writes a letter as an HTML entity
+  (`Horv&#225;th`), the server MUST turn it back into the letter (`Horváth`) before the card is
+  built. The same rule MUST apply in the evals, so they test what staff get.
 - **FR-042**: A "Reset demo" action MUST restore the seeded bakery, catalogue and orders (ADR-0014).
 - **FR-043**: Every staff API route MUST check the caller's permission on the server: no session →
   401, missing permission → 403 (ADR-0015).

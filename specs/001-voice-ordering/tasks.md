@@ -346,3 +346,9 @@ Second batch:
 - [x] T144 README: the opening line says the call is made from the browser (R43)
 - [x] T145 `withLines`: group lines by order once (R43)
 - [ ] T146 _(gates green 2026-11-25: typecheck, lint, format, 338 tests, `build:deploy`; the walk-through of the quickstart amendment is the owner's)_ Gates green (typecheck, lint, tests, build); quickstart amendment walked through locally
+
+## HTML entities in the dictation output (2026-11-25; research R44)
+
+- [x] T147 `entities` added to `@bakery/core`; the lockfile gains only that change (R44)
+- [x] T148 Dictation schema: the customer name and an unmatched word are decoded before trimming and the length check; the JSON Schema for the model stays the input side; tests `Horv&#225;th` → `Horváth` and a named entity (FR-085)
+- [ ] T149 Gates green; the eval gate re-run on the push shows `staff/s07-slovak` back within its baseline (FR-085)

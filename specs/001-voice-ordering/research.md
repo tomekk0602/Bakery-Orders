@@ -911,3 +911,31 @@ Decisions:
 - **Also** (no behaviour change): the README's opening line says at once that the call is made from
   the browser, not on the bakery's phone number; `withLines` groups lines by order once (O(n + m)
   instead of O(n × m)).
+
+## R44 — HTML entities in the dictation output (2026-11-25)
+
+- **Found by**: the eval gate on `f31c7f6`. `staff/s07-slovak` ("Horváth, päť croissantov na sobotu.")
+  passed 1 of 5 trials (baseline 4/5); in the other four the name came back as `Horv&#225;th`, the
+  day and the items right.
+- **Cause**: the model. The sentence reaches it unchanged (`contents: input.text`, the same in the
+  evals) and nothing on our side escapes HTML. The answer is parsed with `JSON.parse`; a letter the
+  model had escaped for JSON (`\u00e1`) would come out as "á", so `&#225;` was written by the model
+  itself into a JSON string. `gemini-3.5-flash-lite` with `responseJsonSchema` and temperature 0 did
+  it in 4 of 5 trials of this Slovak sentence; the same letter in Czech names passed in the other
+  cases. Nothing in the agent changed since the baseline of 2026-11-24, so whether this is new
+  behaviour of the model or a rare one seen more often today is not known.
+- **Effect**: `customerName` accepts any text up to 80 characters, so staff would have saved an
+  order for "Horv&#225;th".
+- **Decision**: decode HTML entities in the free-text fields of the extraction — the customer name and
+  an unmatched word — inside the dictation schema, as a `z.preprocess` before trimming and the length
+  check. The server and the evals both parse with that schema, so one place serves both (FR-085). A
+  preprocess, not a transform: the JSON Schema given to the model is built from the schema's output
+  side and stays byte for byte the same, so the agent fingerprint and the baseline are unchanged (a
+  transform with `io: "input"` dropped `additionalProperties: false` and changed the fingerprint).
+- **Library**: `entities` (BSD-2-Clause, by the author of htmlparser2, already in the lockfile through
+  the test tooling) — HTML entity decoding is parsing, which we do not write ourselves.
+- **Rejected**: changing the test sentence so it passes (it would hide a defect staff would see); a
+  prompt line "never write HTML entities" alone (it asks the model, it does not guarantee); rejecting
+  such output as invalid (the dictation would fail when the content is right).
+- **Not decided here**: `customer/d05-injection` (3/5, a gate case) is T089, and one errored trial of
+  `staff/s06` was the provider; both are left as they are.

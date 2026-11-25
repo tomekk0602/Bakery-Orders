@@ -33,6 +33,30 @@ describe("dictation schema (FR-020, FR-021, research R22)", () => {
     expect(schema.safeParse({ ...ok, ...change }).success).toBe(false);
   });
 
+  it("turns HTML entities the model wrote back into letters (FR-085, research R44)", () => {
+    const r = schema.parse({
+      ...ok,
+      customerName: "Horv&#225;th",
+      unmatched: [{ word: "ra&zcaron;ný", quantity: 1, candidateIds: ["chleb-kminovy"] }],
+    });
+    expect(r.customerName).toBe("Horváth");
+    expect(r.unmatched[0]?.word).toBe("ražný");
+  });
+
+  it("an entity of a space alone is not accepted as a name", () => {
+    expect(schema.safeParse({ ...ok, customerName: "&#32;" }).success).toBe(false);
+  });
+
+  it("the JSON Schema for the model keeps the text limits (decoding does not change what the model is asked for)", () => {
+    const json = dictationJsonSchema(schema) as {
+      properties: { customerName: unknown; unmatched: { items: { properties: { word: unknown } } } };
+    };
+    expect(json.properties.customerName).toEqual({
+      anyOf: [{ type: "string", minLength: 1, maxLength: 80 }, { type: "null" }],
+    });
+    expect(json.properties.unmatched.items.properties.word).toEqual({ type: "string", minLength: 1, maxLength: 60 });
+  });
+
   it("the JSON Schema for the model carries the enums and no $schema key", () => {
     const json = JSON.stringify(dictationJsonSchema(schema));
     expect(json).toContain('"chleb-kminovy","chleb-celozrnny"]');
