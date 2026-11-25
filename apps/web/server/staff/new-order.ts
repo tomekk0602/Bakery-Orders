@@ -2,6 +2,7 @@ import "server-only";
 import { buildCalendar, prepareOrder, type RefusalReason } from "@bakery/core";
 import { ConfirmDraftResponse, OrderCard, OrderFormResponse, type StaffOrderData } from "@bakery/core/contracts";
 import { confirmDraft, loadBakery, remainingCapacity, saveDraft } from "@bakery/db";
+import { scheduleDelivery } from "../notifications/deliver";
 import { REFUSAL_MESSAGES } from "../refusals";
 import { db } from "../runtime";
 
@@ -44,6 +45,7 @@ export async function prepareStaffOrder(
 
 export async function confirmStaffDraft(draftId: string, userId: string) {
   const r = await confirmDraft(db(), draftId, { userId }, { promptVersion: null, model: null });
+  if (r.ok) scheduleDelivery(r.notificationIds); // spec 002 FR-017, FR-018
   return r.ok
     ? { ok: true as const, ...ConfirmDraftResponse.parse({ orderId: r.orderId, orderNumber: r.orderNumber }) }
     : r;

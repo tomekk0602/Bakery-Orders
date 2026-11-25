@@ -2,10 +2,20 @@ import { Tabs, useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 import { useMe } from "@/features/auth/use-me";
+import { disableDevice } from "@/features/notifications/device";
+import { NotificationBanner } from "@/features/notifications/NotificationBanner";
+import { NotificationBell } from "@/features/notifications/NotificationBell";
 import { useRequests } from "@/features/requests/api";
 import { authClient } from "@/shared/auth/client";
 import { Button, colors, font, Screen, space } from "@/shared/ui";
 import { TABS } from "./tabs";
+
+/**
+ * A route reachable by navigation but without a tab button. Not `href: null`: since Expo Router 58 that
+ * marks the screen hidden, and navigating to a hidden screen redirects to the first tab — the order
+ * detail and "Upozornění" bounced to "Dnes".
+ */
+const NOT_A_TAB = { tabBarButton: () => null, tabBarItemStyle: { display: "none" } } as const;
 
 /** Tabs of the signed-in role. Hiding is convenience; the server checks every request (FR-043, FR-045). */
 export function StaffTabs() {
@@ -15,6 +25,14 @@ export function StaffTabs() {
   const requests = useRequests(me.data?.permissions.includes("request:view") ?? false);
   const openRequests = requests.data?.open.length ?? 0;
   const router = useRouter();
+  // Back to the screen this came from; opened straight from a link or a device notification there is
+  // none, so "Dnes" (the first tab every role has).
+  const goBack = () => (router.canGoBack() ? router.back() : router.replace("/dnes"));
+  // Signing out also stops this device's notifications for the account (spec 002 FR-012).
+  const signOut = async () => {
+    await disableDevice().catch(() => undefined);
+    await authClient.signOut();
+  };
 
   if (me.isPending)
     return <ActivityIndicator style={styles.center} color={colors.primary} accessibilityLabel={t("common.loading")} />;
@@ -28,45 +46,78 @@ export function StaffTabs() {
 
   const granted = new Set(me.data.permissions);
   return (
-    <Tabs
-      screenOptions={{
-        tabBarActiveTintColor: colors.primary,
-        headerRight: () => (
-          <View style={styles.header}>
-            <Text style={styles.role}>{t(`roles.${me.data.user.role}`)}</Text>
-            <Pressable accessibilityRole="button" onPress={() => void authClient.signOut()} hitSlop={12}>
-              <Text style={styles.signOut}>{t("common.signOut")}</Text>
-            </Pressable>
-          </View>
-        ),
-      }}
-    >
-      {/* Routes that are not tabs: the redirect and the order detail opened from a list. */}
-      <Tabs.Screen name="index" options={{ href: null }} />
-      <Tabs.Screen
-        name="objednavka/[id]"
-        options={{
-          href: null,
-          title: t("orders.detailTitle"),
-          headerLeft: () => (
-            <Pressable accessibilityRole="button" onPress={() => router.back()} hitSlop={12} style={styles.back}>
-              <Text style={styles.signOut}>{t("orders.back")}</Text>
-            </Pressable>
+    <View style={styles.center}>
+      <Tabs
+        // tabs remember where the person came from, so "Zpět" from a detail returns there
+        backBehavior="history"
+        screenOptions={{
+          tabBarActiveTintColor: colors.primary,
+          headerRight: () => (
+            <View style={styles.header}>
+              <NotificationBell />
+              <Text style={styles.role}>{t(`roles.${me.data.user.role}`)}</Text>
+              <Pressable accessibilityRole="button" onPress={() => void signOut()} hitSlop={12}>
+                <Text style={styles.signOut}>{t("common.signOut")}</Text>
+              </Pressable>
+            </View>
           ),
         }}
-      />
-      {TABS.map((tab) => (
-        <Tabs.Protected key={tab.name} guard={granted.has(tab.permission)}>
+      >
+        {/* Routes that are not tabs: the redirect, the order detail and the notifications opened from the bell. */}
+        <Tabs.Screen name="index" options={{ href: null }} />
+        <Tabs.Screen
+          name="objednavka/[id]"
+          options={{
+            ...NOT_A_TAB,
+            title: t("orders.detailTitle"),
+            headerLeft: () => (
+              <Pressable accessibilityRole="button" onPress={goBack} hitSlop={12} style={styles.back}>
+                <Text style={styles.signOut}>{t("orders.back")}</Text>
+              </Pressable>
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="upozorneni"
+          options={{
+            ...NOT_A_TAB,
+            title: t("notifications.title"),
+            headerLeft: () => (
+              <Pressable accessibilityRole="button" onPress={goBack} hitSlop={12} style={styles.back}>
+                <Text style={styles.signOut}>{t("orders.back")}</Text>
+              </Pressable>
+            ),
+          }}
+        />
+        {/* the owner's archive of closed requests (spec 001 FR-054) */}
+        <Tabs.Protected guard={granted.has("request:archive")}>
           <Tabs.Screen
-            name={tab.name}
+            name="archiv"
             options={{
-              title: t(tab.titleKey),
-              tabBarBadge: tab.name === "pozadavky" && openRequests > 0 ? openRequests : undefined,
+              ...NOT_A_TAB,
+              title: t("requests.archive.title"),
+              headerLeft: () => (
+                <Pressable accessibilityRole="button" onPress={goBack} hitSlop={12} style={styles.back}>
+                  <Text style={styles.signOut}>{t("orders.back")}</Text>
+                </Pressable>
+              ),
             }}
           />
         </Tabs.Protected>
-      ))}
-    </Tabs>
+        {TABS.map((tab) => (
+          <Tabs.Protected key={tab.name} guard={granted.has(tab.permission)}>
+            <Tabs.Screen
+              name={tab.name}
+              options={{
+                title: t(tab.titleKey),
+                tabBarBadge: tab.name === "pozadavky" && openRequests > 0 ? openRequests : undefined,
+              }}
+            />
+          </Tabs.Protected>
+        ))}
+      </Tabs>
+      <NotificationBanner />
+    </View>
   );
 }
 

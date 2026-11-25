@@ -8,6 +8,13 @@ import { StaffTabs } from "../StaffTabs";
 jest.mock("@/shared/auth/client", () => ({ authClient: { signOut: jest.fn() }, useSession: jest.fn() }));
 const mockMe = jest.fn();
 jest.mock("@/features/auth/use-me", () => ({ useMe: () => mockMe() }));
+// the banner has its own tests and needs a query client this test does not set up
+jest.mock("@/features/notifications/NotificationBanner", () => ({ NotificationBanner: () => null }));
+jest.mock("@/features/notifications/api", () => ({
+  notificationKeys: { list: ["notifications"] },
+  useNotifications: () => ({ data: { unread: 3, quiet: false, items: [] } }),
+  useReadNotification: () => ({ mutate: jest.fn() }),
+}));
 jest.mock("@/features/requests/api", () => ({
   useRequests: () => ({ data: { open: [{ id: "a" }, { id: "b" }], done: [] } }),
 }));
@@ -28,6 +35,7 @@ async function signInAs(role: Role) {
       "(app)/pozadavky": tab,
       "(app)/nastaveni": tab,
       "(app)/provoz": tab,
+      "(app)/upozorneni": tab,
     },
     { initialUrl: "/dnes" },
   );

@@ -2,6 +2,7 @@ import "server-only";
 import { buildCalendar, isAfterCutoff, prepareOrder, type PreparedOrder, type RefusalReason } from "@bakery/core";
 import { CatalogueResponse, WebOrderPlaced, WebOrderPreview, type WebOrderData } from "@bakery/core/contracts";
 import { loadBakery, placeWebOrder, remainingCapacity } from "@bakery/db";
+import { scheduleDelivery } from "../notifications/deliver";
 import { db } from "../runtime";
 
 /** Per-IP limits for the public form; proposed values, not measured (ADR-0014). */
@@ -58,6 +59,7 @@ export async function placeOrder(input: WebOrderData, now = new Date()) {
   const r = await prepare(input, now);
   if (!r.ok) return r;
   const saved = await placeWebOrder(db(), r.order);
+  if (saved.ok) scheduleDelivery(saved.notificationIds); // spec 002 FR-017
   return saved.ok
     ? { ok: true as const, placed: WebOrderPlaced.parse({ ...summary(r.order), orderNumber: saved.orderNumber }) }
     : { ok: false as const, reason: saved.reason };

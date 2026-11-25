@@ -1,12 +1,13 @@
 import type { OrderStatus, StaffOrder, StaffOrderDetail, TranscriptTurn } from "@bakery/core/contracts";
-import { and, asc, eq, inArray, ne, sql } from "drizzle-orm";
+import { and, asc, eq, gte, inArray, ne, sql } from "drizzle-orm";
 import type { Db } from "./client.ts";
 import { firstRow } from "./rows.ts";
 import { call, dailyCapacity, order, orderLine, product } from "./schema.ts";
 
 type OrderRow = typeof order.$inferSelect;
+type Tx = Parameters<Parameters<Db["transaction"]>[0]>[0];
 
-async function withLines(db: Db, rows: OrderRow[]): Promise<StaffOrder[]> {
+async function withLines(db: Db | Tx, rows: OrderRow[]): Promise<StaffOrder[]> {
   if (rows.length === 0) return [];
   const lines = await db
     .select({
@@ -86,24 +87,46 @@ export type CancelResult = { ok: true } | { ok: false; reason: "not_found" | "ca
  * is not cancelled: the bread has left the shop.
  */
 export async function cancelOrder(db: Db, id: string, now = new Date()): Promise<CancelResult> {
-  return db.transaction(async (tx) => {
-    const [current] = await tx
-      .select({ status: order.status, day: order.pickupDay })
-      .from(order)
-      .where(eq(order.id, id))
-      .for("update");
-    if (!current) return { ok: false, reason: "not_found" } as const;
-    if (current.status !== "confirmed") return { ok: false, reason: current.status } as const;
-    await tx.update(order).set({ status: "cancelled", updatedAt: now }).where(eq(order.id, id));
-    const lines = await tx
-      .select({ productId: orderLine.productId, quantity: orderLine.quantity })
-      .from(orderLine)
-      .where(eq(orderLine.orderId, id));
-    for (const l of lines)
-      await tx
-        .update(dailyCapacity)
-        .set({ reserved: sql`greatest(${dailyCapacity.reserved} - ${l.quantity}, 0)` })
-        .where(and(eq(dailyCapacity.productId, l.productId), eq(dailyCapacity.day, current.day)));
-    return { ok: true } as const;
-  });
+  return db.transaction((tx) => cancelOrderIn(tx, id, now));
+}
+
+/** The cancel itself, inside a caller's transaction — also used when a request is handled (FR-052). */
+export async function cancelOrderIn(tx: Tx, id: string, now: Date): Promise<CancelResult> {
+  const [current] = await tx
+    .select({ status: order.status, day: order.pickupDay })
+    .from(order)
+    .where(eq(order.id, id))
+    .for("update");
+  if (!current) return { ok: false, reason: "not_found" } as const;
+  if (current.status !== "confirmed") return { ok: false, reason: current.status } as const;
+  await tx.update(order).set({ status: "cancelled", updatedAt: now }).where(eq(order.id, id));
+  const lines = await tx
+    .select({ productId: orderLine.productId, quantity: orderLine.quantity })
+    .from(orderLine)
+    .where(eq(orderLine.orderId, id));
+  for (const l of lines)
+    await tx
+      .update(dailyCapacity)
+      .set({ reserved: sql`greatest(${dailyCapacity.reserved} - ${l.quantity}, 0)` })
+      .where(and(eq(dailyCapacity.productId, l.productId), eq(dailyCapacity.day, current.day)));
+  return { ok: true } as const;
+}
+
+/**
+ * A phone number's confirmed orders from `fromDay` on, matched on the last nine digits however the
+ * number was written (spec 001 FR-052, research R33).
+ */
+export async function confirmedOrdersForPhone(db: Db | Tx, key: string, fromDay: string): Promise<StaffOrder[]> {
+  const rows = await db
+    .select()
+    .from(order)
+    .where(
+      and(
+        eq(order.status, "confirmed"),
+        gte(order.pickupDay, fromDay),
+        sql`right(regexp_replace(coalesce(${order.customerPhone}, ''), '[^0-9]', '', 'g'), 9) = ${key}`,
+      ),
+    )
+    .orderBy(asc(order.pickupDay), asc(order.number));
+  return withLines(db, rows);
 }

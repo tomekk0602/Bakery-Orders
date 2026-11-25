@@ -11,6 +11,7 @@ import { createStaffRequest, endCall, hasStaffRequest, orderNumbersForCall } fro
 import { startObservation } from "@langfuse/tracing";
 import { z } from "zod";
 import { activeCall } from "@/server/active-call";
+import { scheduleDelivery } from "@/server/notifications/deliver";
 import { db, fail, json } from "@/server/runtime";
 import { callTraceId, inCallTrace } from "@/server/telemetry";
 
@@ -52,13 +53,14 @@ export async function POST(req: Request, { params }: Ctx) {
 
   const promised = transcript.some((t) => t.role === "agent" && promisesCallback(t.text));
   if (promised && !(await hasStaffRequest(db(), id))) {
-    await createStaffRequest(db(), {
+    const created = await createStaffRequest(db(), {
       kind: "callback",
       origin: "promised_not_recorded",
       customerPhone: active.call.callerPhone,
       note: "Asistent slíbil zpětné zavolání, ale požadavek nezapsal.",
       callId: id,
     });
+    scheduleDelivery(created.notificationIds); // spec 002 FR-009
   }
 
   const orders = await orderNumbersForCall(db(), id);

@@ -75,6 +75,10 @@ export function ProvozScreen() {
         <Row label={t("ops.perOrder")} value={usd(p.cost.perPhoneOrderUsd)} />
         <Text style={styles.note}>{t("ops.costHint", { date: formatDay(p.cost.pricesReadOn) })}</Text>
       </Card>
+      <Card>
+        <Text style={styles.heading}>{t("ops.notifications")}</Text>
+        <Row label={t("ops.pushFailed")} value={String(p.notifications.pushFailed)} />
+      </Card>
       {p.promptVersions.length > 0 ? (
         <Card>
           <Text style={styles.heading}>{t("ops.versions")}</Text>

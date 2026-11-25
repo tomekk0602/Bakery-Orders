@@ -1,0 +1,1 @@
+CREATE INDEX "staff_request_closed" ON "staff_request" USING btree ("done_at","id");

@@ -1,6 +1,7 @@
 import { and, eq, isNotNull, lt, max, notExists, sql } from "drizzle-orm";
 import type { Db } from "./client.ts";
-import { call, order, orderDraft, rateLimit } from "./schema.ts";
+import { deleteOldNotifications } from "./notifications.repo.ts";
+import { call, order, orderDraft, rateLimit, staffRequest } from "./schema.ts";
 
 export type RetentionCutoffs = {
   /** a transcript whose last pickup day is before this day goes (FR-009: 30 days after pickup) */
@@ -11,6 +12,10 @@ export type RetentionCutoffs = {
   draftExpiredBefore: Date;
   /** rate-limit counters whose window started before this time can no longer limit anything */
   rateWindowBefore: Date;
+  /** notifications created before this time go (spec 002 FR-016: 30 days) */
+  notificationCreatedBefore: Date;
+  /** closed requests whose closing is before this time go, with their steps (spec 001 FR-057) */
+  requestClosedBefore: Date;
 };
 
 /** Deletes what is past its retention (FR-009, ADR-0008) and says how much, for the log. */
@@ -52,6 +57,18 @@ export async function applyRetention(db: Db, c: RetentionCutoffs) {
       .delete(rateLimit)
       .where(lt(rateLimit.windowStart, c.rateWindowBefore))
       .returning({ key: rateLimit.key });
-    return { transcripts: withOrder.length + withoutOrder.length, drafts: drafts.length, rateLimits: rates.length };
+    const notifications = await deleteOldNotifications(tx, c.notificationCreatedBefore);
+    // open requests have no done_at and are never matched
+    const requests = await tx
+      .delete(staffRequest)
+      .where(lt(staffRequest.doneAt, c.requestClosedBefore))
+      .returning({ id: staffRequest.id });
+    return {
+      transcripts: withOrder.length + withoutOrder.length,
+      drafts: drafts.length,
+      rateLimits: rates.length,
+      notifications,
+      requests: requests.length,
+    };
   });
 }

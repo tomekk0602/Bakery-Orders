@@ -2,15 +2,17 @@ import "@/shared/i18n";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ActivityIndicator } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { linkManifest } from "@/features/notifications/device";
 import { createQueryClient } from "@/shared/api/query-client";
 import { useSession } from "@/shared/auth/client";
 import { colors } from "@/shared/ui";
 
 export default function RootLayout() {
   const [queryClient] = useState(createQueryClient);
+  useEffect(linkManifest, []);
   return (
     <SafeAreaProvider>
       <QueryClientProvider client={queryClient}>

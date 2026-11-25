@@ -1,8 +1,10 @@
+import { NOTIFICATION_KINDS } from "@bakery/core";
 import { sql } from "drizzle-orm";
 import {
   boolean,
   check,
   date,
+  index,
   integer,
   jsonb,
   numeric,
@@ -13,6 +15,7 @@ import {
   text,
   time,
   timestamp,
+  unique,
   uuid,
 } from "drizzle-orm/pg-core";
 import { user } from "./auth-schema.ts";
@@ -23,6 +26,17 @@ export const orderSource = pgEnum("order_source", ["phone", "web", "staff"]);
 export const orderStatus = pgEnum("order_status", ["confirmed", "picked_up", "cancelled"]);
 export const requestKind = pgEnum("request_kind", ["callback", "change", "cancel"]);
 export const requestOrigin = pgEnum("request_origin", ["agent", "promised_not_recorded", "web"]);
+/** How a request ended (spec 001 FR-047, amended 2026-11-25). */
+export const requestOutcome = pgEnum("request_outcome", ["handled", "unreachable"]);
+/** One step on a request, for its history (FR-048–FR-052; research R33). */
+export const requestStep = pgEnum("request_step", [
+  "call_started",
+  "unanswered",
+  "handled",
+  "unreachable",
+  "reopened",
+  "order_cancelled",
+]);
 export const callMode = pgEnum("call_mode", ["live", "cascade", "cascade_paid"]);
 export const callOutcome = pgEnum("call_outcome", ["order", "request", "abandoned", "error", "capped"]);
 
@@ -152,17 +166,42 @@ export const orderDraft = pgTable(
   (t) => [check("order_draft_one_owner", sql`(${t.callId} IS NULL) <> (${t.createdBy} IS NULL)`)],
 );
 
-export const staffRequest = pgTable("staff_request", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  kind: requestKind("kind").notNull(),
-  origin: requestOrigin("origin").notNull(),
-  customerName: text("customer_name"),
-  customerPhone: text("customer_phone"),
-  note: text("note").notNull(),
-  callId: uuid("call_id").references(() => call.id),
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-  doneAt: timestamp("done_at", { withTimezone: true }),
-});
+export const staffRequest = pgTable(
+  "staff_request",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    kind: requestKind("kind").notNull(),
+    origin: requestOrigin("origin").notNull(),
+    customerName: text("customer_name"),
+    customerPhone: text("customer_phone"),
+    note: text("note").notNull(),
+    callId: uuid("call_id").references(() => call.id),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    doneAt: timestamp("done_at", { withTimezone: true }),
+    outcome: requestOutcome("outcome"),
+    /** "Volá …": who started a call and until when it shows (FR-050) */
+    claimedBy: text("claimed_by").references(() => user.id, { onDelete: "set null" }),
+    claimedUntil: timestamp("claimed_until", { withTimezone: true }),
+  },
+  // the archive's pages and the nightly clean-up (spec 001 FR-055, FR-057)
+  (t) => [index("staff_request_closed").on(t.doneAt, t.id)],
+);
+
+export const staffRequestEvent = pgTable(
+  "staff_request_event",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    requestId: uuid("request_id")
+      .notNull()
+      .references(() => staffRequest.id, { onDelete: "cascade" }),
+    userId: text("user_id").references(() => user.id, { onDelete: "set null" }),
+    kind: requestStep("kind").notNull(),
+    note: text("note"),
+    orderId: uuid("order_id").references(() => order.id, { onDelete: "set null" }),
+    at: timestamp("at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("staff_request_event_history").on(t.requestId, t.at)],
+);
 
 export const rateLimit = pgTable(
   "rate_limit",
@@ -173,3 +212,72 @@ export const rateLimit = pgTable(
   },
   (t) => [primaryKey({ columns: [t.key, t.windowStart] })],
 );
+
+// Staff notifications (spec 002, data-model.md, ADR-0016).
+
+export const notificationKind = pgEnum("notification_kind", NOTIFICATION_KINDS);
+export const pushChannel = pgEnum("push_channel", ["web"]);
+
+export const notification = pgTable(
+  "notification",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    recipientId: text("recipient_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    kind: notificationKind("kind").notNull(),
+    /** what it is about, also the dedupe key: request:<id>, summary:<day>, … (FR-002, FR-005) */
+    subject: text("subject").notNull(),
+    title: text("title").notNull(),
+    body: text("body").notNull(),
+    link: text("link").notNull(),
+    /** the recipient's preference when it was created: shown in the app, pushed to devices (FR-014) */
+    inApp: boolean("in_app").notNull(),
+    push: boolean("push").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    readAt: timestamp("read_at", { withTimezone: true }),
+    pushSentAt: timestamp("push_sent_at", { withTimezone: true }),
+    pushError: text("push_error"),
+  },
+  (t) => [
+    unique("notification_one_per_subject").on(t.recipientId, t.subject),
+    index("notification_inbox").on(t.recipientId, t.readAt, t.createdAt),
+  ],
+);
+
+export const notificationPreference = pgTable(
+  "notification_preference",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    kind: notificationKind("kind").notNull(),
+    inApp: boolean("in_app").notNull(),
+    push: boolean("push").notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.kind] })],
+);
+
+export const notificationQuietHours = pgTable("notification_quiet_hours", {
+  userId: text("user_id")
+    .primaryKey()
+    .references(() => user.id, { onDelete: "cascade" }),
+  enabled: boolean("enabled").notNull(),
+  quietFrom: time("quiet_from").notNull(),
+  quietTo: time("quiet_to").notNull(),
+});
+
+export const pushSubscription = pgTable("push_subscription", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  channel: pushChannel("channel").notNull().default("web"),
+  endpoint: text("endpoint").notNull().unique(),
+  p256dh: text("p256dh").notNull(),
+  auth: text("auth").notNull(),
+  userAgent: text("user_agent"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  lastSuccessAt: timestamp("last_success_at", { withTimezone: true }),
+  failures: integer("failures").notNull().default(0),
+});

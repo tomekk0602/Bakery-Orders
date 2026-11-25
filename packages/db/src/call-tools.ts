@@ -6,7 +6,14 @@ import type { Db } from "./client.ts";
 import { confirmDraft, saveDraft } from "./orders.repo.ts";
 
 /** The call a tool runs for: whose drafts it may confirm, and the phone number the order gets. */
-export type CallToolContext = { callId: string; callerPhone: string; bakery: Bakery; model: string };
+export type CallToolContext = {
+  callId: string;
+  callerPhone: string;
+  bakery: Bakery;
+  model: string;
+  /** receives the notifications a tool created, for delivery after the response (spec 002) */
+  onNotifications?: (ids: string[]) => void;
+};
 
 /** What the model gets back. Refusals are results, not errors, so the agent can explain them. */
 export type CallToolResult = Record<string, unknown> & { ok: boolean };
@@ -80,11 +87,13 @@ export async function runCallTool(
       { promptVersion: PROMPT_VERSION, model: ctx.model },
       now,
     );
-    return r.ok ? { ok: true, order_number: r.orderNumber } : r;
+    if (!r.ok) return r;
+    ctx.onNotifications?.(r.notificationIds);
+    return { ok: true, order_number: r.orderNumber };
   }
 
   const a = schemas.request_staff.parse(args.data);
-  await createStaffRequest(db, {
+  const request = await createStaffRequest(db, {
     kind: a.kind,
     origin: "agent",
     customerName: a.customer_name ?? null,
@@ -92,5 +101,6 @@ export async function runCallTool(
     note: a.note,
     callId: ctx.callId,
   });
+  ctx.onNotifications?.(request.notificationIds);
   return { ok: true };
 }

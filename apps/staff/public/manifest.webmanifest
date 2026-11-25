@@ -1,0 +1,10 @@
+{
+  "name": "Pekárna U Lípy — obsluha",
+  "short_name": "Obsluha",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "background_color": "#FAF7F2",
+  "theme_color": "#B45309",
+  "lang": "cs"
+}

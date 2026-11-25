@@ -1,7 +1,16 @@
-import { checkPickupDay, type OrderChannel, type PreparedOrder, type RefusalReason } from "@bakery/core";
+import {
+  checkPickupDay,
+  NEAR_LIMIT_SHARE,
+  notificationText,
+  type OrderChannel,
+  type PreparedOrder,
+  type RefusalReason,
+  subjectOf,
+} from "@bakery/core";
 import { loadBakery } from "./bakery.repo.ts";
 import { and, eq, gt, isNull, sql } from "drizzle-orm";
 import type { Db } from "./client.ts";
+import { notifyStaff, subjectNotified } from "./notifications.repo.ts";
 import { firstRow } from "./rows.ts";
 import { dailyCapacity, order, orderDraft, orderLine, product } from "./schema.ts";
 
@@ -35,7 +44,7 @@ export async function saveDraft(
 
 export type ConfirmMeta = { promptVersion: string | null; model: string | null };
 export type ConfirmResult =
-  | { ok: true; orderNumber: number; orderId: string }
+  | { ok: true; orderNumber: number; orderId: string; notificationIds: string[] }
   | { ok: false; reason: "no_draft" | "over_limit" }
   | {
       ok: false;
@@ -59,9 +68,10 @@ async function insertOrder(
   source: OrderSourceValue,
   meta: ConfirmMeta & { callId: string | null; createdBy: string | null },
 ) {
+  const taken: { productId: string; name: string; dailyLimit: number; reserved: number }[] = [];
   for (const line of p.lines) {
     const [limit] = await tx
-      .select({ dailyLimit: product.dailyLimit })
+      .select({ dailyLimit: product.dailyLimit, name: product.name })
       .from(product)
       .where(eq(product.id, line.productId));
     await tx
@@ -81,7 +91,10 @@ async function insertOrder(
         ),
       )
       .returning({ reserved: dailyCapacity.reserved });
-    if (updated.length === 0) throw new OverLimit();
+    const [after] = updated;
+    if (!after) throw new OverLimit();
+    if (limit?.dailyLimit != null)
+      taken.push({ ...line, name: limit.name, dailyLimit: limit.dailyLimit, reserved: after.reserved });
   }
   const saved = firstRow(
     await tx
@@ -108,7 +121,59 @@ async function insertOrder(
       unitPriceCzk: l.unitPriceCzk,
     })),
   );
-  return saved;
+  const notificationIds = await notifyAfterOrder(tx, p, { id: saved.id, source }, taken, meta.createdBy);
+  return { ...saved, notificationIds };
+}
+
+/**
+ * Notifications an order causes, in its transaction (spec 002 FR-001): every staff member but its
+ * author learns of the new order (FR-020); the owner's warning when a
+ * product reaches the warning share of its daily limit, once per product and day (FR-017), and — for
+ * an order staff add after the day's summary went out — the other staff learn the plan changed (FR-018).
+ */
+async function notifyAfterOrder(
+  tx: Tx,
+  p: PreparedOrder,
+  saved: { id: string; source: OrderSourceValue },
+  taken: { productId: string; name: string; dailyLimit: number; reserved: number }[],
+  createdBy: string | null,
+): Promise<string[]> {
+  const ids = await notifyStaff(tx, {
+    kind: "new_order",
+    subject: subjectOf.newOrder(saved.id),
+    text: notificationText.newOrder({
+      orderId: saved.id,
+      day: p.pickupDate,
+      weekdayName: p.pickupWeekdayName,
+      channel: saved.source,
+    }),
+    except: createdBy ?? undefined,
+  });
+  for (const t of taken) {
+    if (t.dailyLimit <= 0 || t.reserved < Math.ceil(t.dailyLimit * NEAR_LIMIT_SHARE)) continue;
+    ids.push(
+      ...(await notifyStaff(tx, {
+        kind: "near_limit",
+        subject: subjectOf.nearLimit(t.productId, p.pickupDate),
+        text: notificationText.nearLimit({
+          day: p.pickupDate,
+          weekdayName: p.pickupWeekdayName,
+          product: t.name,
+          left: t.dailyLimit - t.reserved,
+        }),
+      })),
+    );
+  }
+  if (createdBy && (await subjectNotified(tx, subjectOf.planSummary(p.pickupDate))))
+    ids.push(
+      ...(await notifyStaff(tx, {
+        kind: "plan_changed",
+        subject: subjectOf.planChanged(saved.id),
+        text: notificationText.planChanged({ day: p.pickupDate, weekdayName: p.pickupWeekdayName }),
+        except: createdBy,
+      })),
+    );
+  return ids;
 }
 
 const overLimit = (e: unknown) => {
@@ -148,7 +213,12 @@ export async function confirmDraft(
       if (refusal) return refusal as Extract<ConfirmResult, { reason: RefusalReason }>;
       const saved = await insertOrder(tx, payload, draft.channel, { ...meta, ...who });
       await tx.update(orderDraft).set({ confirmedOrderId: saved.id }).where(eq(orderDraft.id, draft.id));
-      return { ok: true, orderNumber: saved.number, orderId: saved.id } as const;
+      return {
+        ok: true,
+        orderNumber: saved.number,
+        orderId: saved.id,
+        notificationIds: saved.notificationIds,
+      } as const;
     })
     .catch(overLimit);
 }
@@ -163,7 +233,12 @@ export async function placeWebOrder(db: Db, prepared: PreparedOrder): Promise<Co
         callId: null,
         createdBy: null,
       });
-      return { ok: true, orderNumber: saved.number, orderId: saved.id } as const;
+      return {
+        ok: true,
+        orderNumber: saved.number,
+        orderId: saved.id,
+        notificationIds: saved.notificationIds,
+      } as const;
     })
     .catch(overLimit);
 }

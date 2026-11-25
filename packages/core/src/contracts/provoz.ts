@@ -35,6 +35,8 @@ export const ProvozResponse = z.object({
     perPhoneOrderUsd: Usd,
     pricesReadOn: IsoDate,
   }),
+  /** device notifications that could not be delivered in the period (spec 002 FR-011, SC-006) */
+  notifications: z.object({ pushFailed: Count }),
   promptVersions: z.array(z.object({ version: z.string(), calls: Count })),
 });
 export type ProvozResponse = z.infer<typeof ProvozResponse>;

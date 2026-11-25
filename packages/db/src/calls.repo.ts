@@ -1,5 +1,7 @@
+import { notificationText, subjectOf } from "@bakery/core";
 import { eq, sql } from "drizzle-orm";
 import type { Db } from "./client.ts";
+import { notifyStaff } from "./notifications.repo.ts";
 import { firstRow } from "./rows.ts";
 import { call, order, orderLine, rateLimit, staffRequest } from "./schema.ts";
 
@@ -48,6 +50,10 @@ export async function endCall(
     .where(eq(call.id, id));
 }
 
+/**
+ * Records a request for a person and, in the same transaction, a notification for every staff member
+ * who can handle it (spec 002 FR-001, FR-002). Returns the request and the notifications to deliver.
+ */
 export async function createStaffRequest(
   db: Db,
   v: {
@@ -58,17 +64,25 @@ export async function createStaffRequest(
     note: string;
     callId?: string | null;
   },
-): Promise<string> {
-  const rows = await db
-    .insert(staffRequest)
-    .values({
-      ...v,
-      customerName: v.customerName ?? null,
-      customerPhone: v.customerPhone ?? null,
-      callId: v.callId ?? null,
-    })
-    .returning({ id: staffRequest.id });
-  return firstRow(rows, "staff_request").id;
+): Promise<{ id: string; notificationIds: string[] }> {
+  return db.transaction(async (tx) => {
+    const rows = await tx
+      .insert(staffRequest)
+      .values({
+        ...v,
+        customerName: v.customerName ?? null,
+        customerPhone: v.customerPhone ?? null,
+        callId: v.callId ?? null,
+      })
+      .returning({ id: staffRequest.id });
+    const id = firstRow(rows, "staff_request").id;
+    const notificationIds = await notifyStaff(tx, {
+      kind: "request",
+      subject: subjectOf.request(id),
+      text: notificationText.request(v.kind),
+    });
+    return { id, notificationIds };
+  });
 }
 
 export async function hasStaffRequest(db: Db, callId: string): Promise<boolean> {

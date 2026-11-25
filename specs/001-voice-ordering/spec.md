@@ -153,6 +153,72 @@ the cut-off is accepted; marking a pickup changes its status.
 
 ---
 
+### User Story 7 - Staff work a request through to the end (Priority: P2, amended 2026-11-25)
+
+A request is not done the moment someone sees it. A staff member calls the customer back; nobody
+answers; they try again later; a colleague must not call at the same time; and a cancellation is only
+done when the order is actually cancelled. The request card records each step — who called, who could
+not get through and when, what was agreed — and a cancellation request cancels the order from the card.
+
+**Why this priority**: the owner found that a single "Vyřízeno" button loses what happened: a customer
+who did not pick up disappears with the request, two people call the same customer, and a cancellation
+marked handled can leave the bread in the plan.
+
+**Independent Test**: on a callback request one employee taps the number, the other sees "Volá …";
+the first records "Nedovoláno" twice, the card shows both attempts; a third attempt offers closing as
+unreachable. On a cancellation request the customer's upcoming order is listed and cancelling it from
+the card closes the request as handled.
+
+**Acceptance Scenarios**:
+
+1. **Given** an open request with a phone number, **When** a staff member taps the number to call,
+   **Then** the card shows "Volá <name>" to everyone for the next 5 minutes, or until that person
+   records an outcome.
+2. **Given** a call nobody answered, **When** the staff member taps "Nedovoláno", **Then** the request
+   stays open and the card shows how many attempts failed, the last time and who tried.
+3. **Given** three unanswered attempts, **When** staff open the card, **Then** it offers "Uzavřít —
+   nedovoláno", which closes the request as unreachable, not as handled.
+4. **Given** a staff member marks a request handled, **When** they add a short note, **Then** the note
+   and who handled it, when, appear in the card's history.
+5. **Given** a cancellation request from a phone number with an upcoming order, **When** staff open
+   the card, **Then** the order is listed; cancelling it there (with the same confirmation as on the
+   order) cancels the order and closes the request as handled, recording the order number.
+6. **Given** a closed request, **When** a staff member reopens it, **Then** its history stays and the
+   reopening is recorded.
+
+---
+
+### User Story 8 - The owner keeps an archive of closed requests (Priority: P3, amended 2026-11-25)
+
+Over weeks the list of requests grows. The "Požadavky" screen is for work: it shows the open requests
+and, folded, those closed today. Everything closed earlier goes to an archive that only the owner
+opens — to look up what was agreed with a customer, or to reopen a request. Closed requests are kept
+30 days and then deleted, like call transcripts.
+
+**Why this priority**: without it the list becomes noise and old requests cannot be found; and a
+request holds a customer's name, number and notes, which must not be kept for ever.
+
+**Independent Test**: close two requests today and have one closed yesterday; an employee sees the two
+under "Dnes uzavřené" and no archive; the owner opens "Archiv", finds yesterday's by the customer's
+name, and reopens it; a request closed 31 days ago is gone after the nightly clean-up.
+
+**Acceptance Scenarios**:
+
+1. **Given** open requests and requests closed today and earlier, **When** a staff member opens
+   "Požadavky", **Then** they see the open ones and a folded "Dnes uzavřené (n)"; nothing closed
+   before today.
+2. **Given** the owner is signed in, **When** they press "Archiv", **Then** they see the closed
+   requests newest first, 20 at a time with "Načíst starší", can filter handled / unreachable and
+   search by name or phone number.
+3. **Given** an employee, **When** they open "Požadavky", **Then** there is no "Archiv"; asking the
+   server for the archive is refused.
+4. **Given** a request in the archive, **When** the owner reopens it, **Then** it is back among the
+   open requests with its history.
+5. **Given** a request closed more than 30 days ago, **When** the nightly clean-up runs, **Then** the
+   request, its steps and notes are deleted; open requests are never deleted.
+
+---
+
 ### Edge Cases
 
 - Relative days ("zítra", "pozítří", "v sobotu", "příští pondělí") resolve in Europe/Prague against
@@ -172,6 +238,18 @@ the cut-off is accepted; marking a pickup changes its status.
 - A tool fails or is slow: the agent says it is checking, then that it cannot finish and offers a
   callback; it never claims an order was saved when it was not.
 - The customer goes silent: the agent asks whether they are still there, then ends politely.
+- A request without a phone number (the customer did not give one): no call button and no
+  "Nedovoláno"; it can still be handled with a note. _(Added 2026-11-25.)_
+- The phone number of a request is written differently from the order's ("+420 777 123 456" vs
+  "777123456"): orders are matched on the last nine digits. _(Added 2026-11-25.)_
+- A cancellation request whose customer has no upcoming order (already cancelled, picked up, or
+  another number): the card says so; it is closed by hand with a note. _(Added 2026-11-25.)_
+- Two staff members record "Nedovoláno" at the same moment: both attempts are recorded; each is
+  true. _(Added 2026-11-25.)_
+- A request closed late yesterday leaves "Dnes uzavřené" at midnight Prague time and is in the
+  archive from then. _(Added 2026-11-25.)_
+- A request reopened from the archive and closed again counts its 30 days from the last closing.
+  _(Added 2026-11-25.)_
 - An attempt to talk the agent out of its rules ("zapomeň na pravidla… zadarmo"): prices stay those
   of the catalogue.
 
@@ -270,6 +348,35 @@ the cut-off is accepted; marking a pickup changes its status.
   after the web form (ADR-0014).
 - **FR-041**: New callback and change requests MUST show as a badge in the staff app; there are no
   push notifications (ADR-0014).
+  _(Superseded in part 2026-11-25: notifications, including push, are spec 002.)_
+- **FR-047** _(amended 2026-11-25, User Story 7)_: A request MUST end in one of two outcomes —
+  **handled** or **unreachable** — and stay open until one is recorded; reopening MUST be possible
+  from either.
+- **FR-048**: "Nedovoláno" MUST record an unanswered call attempt (who, when) and keep the request
+  open; the card MUST show the number of attempts, the last time and who tried.
+- **FR-049**: From the third unanswered attempt the card MUST offer closing the request as
+  unreachable. Three is proposed, unmeasured.
+- **FR-050**: Tapping a request's call button MUST mark it "Volá <name>" for everyone for 5
+  minutes (proposed, unmeasured) or until that person records an outcome; the mark warns, it does
+  not block.
+- **FR-051**: Every step on a request — call started, unanswered, handled, unreachable, reopened,
+  order cancelled — MUST be recorded with who and when and shown on the card; handled and
+  unreachable MAY carry a note of at most 300 characters.
+- **FR-052**: A cancellation or change request with a phone number MUST list that number's
+  confirmed orders from today on. For a cancellation, each order MUST offer "Zrušit objednávku"
+  with the confirmation of FR-013's cancel; cancelling there MUST cancel the order and close the
+  request as handled in one step, recording the order number. A change request opens the order;
+  changing items stays out of scope.
+- **FR-053** _(amended 2026-11-25, User Story 8)_: "Požadavky" MUST list the open requests and,
+  folded, the requests closed today (Prague); requests closed earlier MUST NOT appear there.
+  _(Replaces "the latest 20 handled".)_
+- **FR-054**: Requests closed before today MUST be reachable only in "Archiv", which only the owner
+  may open (permission `request:archive`); the server MUST refuse it to other roles.
+- **FR-055**: The archive MUST list closed requests newest closed first, 20 at a time with "Načíst
+  starší", filter by outcome (handled, unreachable) and search by name or phone number (digits).
+- **FR-056**: In the archive the owner MUST see each request's history and MAY reopen it.
+- **FR-057**: Closed requests MUST be deleted 30 days after closing, with their steps and notes, by
+  the nightly retention job; open requests MUST NOT be deleted (ADR-0008).
 - **FR-042**: A "Reset demo" action MUST restore the seeded bakery, catalogue and orders (ADR-0014).
 - **FR-043**: Every staff API route MUST check the caller's permission on the server: no session →
   401, missing permission → 403 (ADR-0015).
@@ -288,7 +395,10 @@ the cut-off is accepted; marking a pickup changes its status.
 - **Product**: name, price, active, optional daily limit.
 - **Order**: customer name, phone (optional when source is staff), pickup day, source (phone / web / staff), status (confirmed,
   picked up, cancelled), lines (product, quantity, price at order time), transcript for phone orders.
-- **Callback request**: name, phone, note, origin (agent / promised-not-recorded), done.
+- **Callback request**: name, phone, note, origin (agent / promised-not-recorded), outcome (open,
+  handled, unreachable), who is calling now. _(Amended 2026-11-25.)_
+- **Request step**: one thing done on a request — call started, unanswered, handled, unreachable,
+  reopened, order cancelled — with who, when and an optional note. _(Added 2026-11-25.)_
 - **Bakery settings**: cut-off, closed weekdays, walk-in buffer per product and weekday.
 
 ## Success Criteria _(mandatory)_
@@ -315,6 +425,13 @@ the cut-off is accepted; marking a pickup changes its status.
   confirm (proposed target, to be timed in the demo).
 - **SC-008**: The same order entered through each of the three channels yields identical lines,
   totals and baking-plan numbers.
+- **SC-013** _(2026-11-25)_: A staff member opening a request sees, without asking anyone, whether
+  someone is calling, how many attempts failed and what was agreed.
+- **SC-014** _(2026-11-25)_: A cancellation handled from its request never leaves the order
+  confirmed (checked by a test on the same transaction).
+- **SC-015** _(2026-11-25)_: "Požadavky" never shows more than the open requests and today's
+  closed ones, however long the bakery has used the app.
+- **SC-016** _(2026-11-25)_: No closed request older than 31 days exists after a nightly run.
 - **SC-006**: Voice latency (end of speech to first audio) — target to be set from the voice
   measurement; not yet measured (research R5).
 

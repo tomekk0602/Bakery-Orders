@@ -101,15 +101,18 @@ FR-019).
 
 ### staff_request
 
-| Field                         | Type                                           | Rules                                  |
-| ----------------------------- | ---------------------------------------------- | -------------------------------------- |
-| id                            | uuid (PK)                                      |                                        |
-| kind                          | enum `callback` · `change` · `cancel`          | (FR-008, FR-034)                       |
-| origin                        | enum `agent` · `promised_not_recorded` · `web` |                                        |
-| customer_name, customer_phone | text null                                      |                                        |
-| note                          | text                                           | what the agent understood              |
-| call_id                       | FK call null                                   |                                        |
-| done_at                       | timestamptz null                               | open requests show as a badge (FR-041) |
+| Field                         | Type                                           | Rules                                   |
+| ----------------------------- | ---------------------------------------------- | --------------------------------------- |
+| id                            | uuid (PK)                                      |                                         |
+| kind                          | enum `callback` · `change` · `cancel`          | (FR-008, FR-034)                        |
+| origin                        | enum `agent` · `promised_not_recorded` · `web` |                                         |
+| customer_name, customer_phone | text null                                      |                                         |
+| note                          | text                                           | what the agent understood               |
+| call_id                       | FK call null                                   |                                         |
+| done_at                       | timestamptz null                               | open requests show as a badge (FR-041)  |
+| outcome                       | enum `handled` · `unreachable` null            | set with `done_at` (FR-047, 2026-11-25) |
+| claimed_by                    | FK user null                                   | "Volá …" (FR-050)                       |
+| claimed_until                 | timestamptz null                               | now + 5 min when a call starts          |
 
 ### call
 
@@ -169,3 +172,22 @@ adapter.
 | order_draft       | 1 day                                                  | nightly job            |
 | rate_limit        | 1 day                                                  | nightly job            |
 | Langfuse traces   | 30 days (Hobby plan)                                   | provider               |
+
+### staff_request_event _(added 2026-11-25, FR-048–FR-052; research R33)_
+
+| Field      | Type                                                                                            | Rules                    |
+| ---------- | ----------------------------------------------------------------------------------------------- | ------------------------ |
+| id         | uuid (PK)                                                                                       |                          |
+| request_id | FK staff_request, on delete cascade                                                             |                          |
+| user_id    | FK user null, on delete set null                                                                | who did it               |
+| kind       | enum `call_started` · `unanswered` · `handled` · `unreachable` · `reopened` · `order_cancelled` |                          |
+| note       | text null                                                                                       | at most 300 characters   |
+| order_id   | FK order null                                                                                   | for `order_cancelled`    |
+| at         | timestamptz default now()                                                                       | index `(request_id, at)` |
+
+### staff_request — archive and retention _(added 2026-11-25, FR-053–FR-057; research R34)_
+
+- Index `staff_request_closed (done_at, id)` for the archive's pages and the nightly clean-up.
+- Retention: a closed request is deleted 30 days after `done_at`, with its `staff_request_event` rows
+  (cascade). Open requests (`done_at` null) are kept.
+- Permission `request:archive` (owner) in `packages/core/src/permissions.ts`.

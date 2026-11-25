@@ -13,6 +13,7 @@ const stats = (over: Partial<ProvozResponse> = {}): ProvozResponse => ({
   orders: { phone: 8, web: 3, staff: 5 },
   phoneCorrectedShare: null,
   cost: { shadowUsd: 0.12, perCallUsd: 0.01, perPhoneOrderUsd: 0.015, pricesReadOn: "2026-11-24" },
+  notifications: { pushFailed: 0 },
   promptVersions: [{ version: "2026-11-24.4", calls: 12 }],
   ...over,
 });

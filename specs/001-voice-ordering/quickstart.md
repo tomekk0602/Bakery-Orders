@@ -31,3 +31,23 @@ npm run dev              # apps/web on :3000, apps/staff (Expo) on :8081
 | 9   | Exceed the per-IP limit on `/api/call/start`                                                                                              | the page says so and offers the form                                                                         | FR-036                 |
 | 10  | "Reset demo"                                                                                                                              | the seed is back                                                                                             | FR-042                 |
 | 11  | `npm run e2e`                                                                                                                             | Playwright: web form order and staff login                                                                   | smoke                  |
+
+### Amendment 2026-11-25 — working a request through (User Story 7)
+
+| Scenario                                                     | Expected                                                                           |
+| ------------------------------------------------------------ | ---------------------------------------------------------------------------------- |
+| Two accounts; one taps the number on a callback request      | the other sees "Volá <name>" on the card                                           |
+| "Nedovoláno" twice                                           | the request stays open; the card shows 2 attempts, the last time and who           |
+| A third "Nedovoláno"                                         | "Uzavřít — nedovoláno" appears; closing moves it to the closed list as unreachable |
+| "Vyřízeno" with a note                                       | the note, who and when show in the card's history                                  |
+| A phone order, then a call asking to cancel it (same number) | the card lists the order; "Zrušit objednávku" → order cancelled, request handled   |
+
+### Amendment 2026-11-25 — archive (User Story 8)
+
+| Scenario                                                                         | Expected                                                                   |
+| -------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| Close two requests today; one closed yesterday exists                            | "Požadavky": open ones + folded "Dnes uzavřené (2)"; yesterday's not shown |
+| As the employee                                                                  | no "Archiv" button                                                         |
+| As the owner: Archiv → search the customer's name                                | yesterday's request is found; its history shows                            |
+| Owner: "Vrátit mezi otevřené" in the archive                                     | the request is back among the open ones                                    |
+| `curl -H "Authorization: Bearer $CRON_SECRET" localhost:3000/api/cron/retention` | `requests` counts closed requests older than 30 days                       |

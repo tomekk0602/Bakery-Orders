@@ -1,7 +1,7 @@
 import "server-only";
 import { percentile, pragueDate, PRICES_READ_ON } from "@bakery/core";
 import { ProvozResponse } from "@bakery/core/contracts";
-import { provozRows } from "@bakery/db";
+import { provozRows, pushFailures } from "@bakery/db";
 import { db } from "../runtime";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -9,7 +9,7 @@ const OUTCOMES = ["order", "request", "abandoned", "capped", "error"] as const;
 
 /**
  * "Provoz" for the last `days` days (FR-033, ADR-0013): call outcomes, end-of-speech → first-audio
- * latency over every measured turn, orders per channel and the shadow cost. Latency percentiles are
+ * latency over every measured turn, orders per channel, the shadow cost and failed device notifications (spec 002 FR-011). Latency percentiles are
  * nearest-rank over all samples of the period, not an average of per-call medians.
  */
 export async function provoz(days: number, now = new Date()): Promise<ProvozResponse> {
@@ -39,6 +39,7 @@ export async function provoz(days: number, now = new Date()): Promise<ProvozResp
       perPhoneOrderUsd: ordersBy("phone") ? shadowUsd / ordersBy("phone") : null,
       pricesReadOn: PRICES_READ_ON,
     },
+    notifications: { pushFailed: await pushFailures(db(), from, now) },
     promptVersions: [...versions].map(([version, n]) => ({ version, calls: n })).sort((a, b) => b.calls - a.calls),
   });
 }

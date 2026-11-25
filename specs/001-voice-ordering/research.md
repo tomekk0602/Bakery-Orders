@@ -620,3 +620,52 @@ intervals.
 - **Verification**: types/lint, selection regression checks and browser QA. Backend reservation rules
   remain authoritative. Existing public POST has no idempotency-key contract; this UI does not add
   automatic retries or claim that lost-response retries are safe. Backend idempotency remains separate.
+
+## R33 — Working a request through: attempts, "Volám", history, cancel from the card (owner, 2026-11-25)
+
+- **Context**: the owner asked what happens when a callback is not answered. One "Vyřízeno" button
+  loses it: the request either disappears though the customer still waits, or stays with no trace that
+  someone tried; two people may call the same customer; a cancellation marked handled can leave the
+  order confirmed and the bread in the plan.
+- **Decision**:
+  - Outcome instead of a bare "done": `handled` or `unreachable`, both closing the request (`done_at`
+    stays the closing time, so the badge, notifications and existing queries keep working).
+  - A history table `staff_request_event` (who, when, kind, optional note, optional order) — the card
+    shows it; counts of unanswered attempts are read from it, not stored twice.
+  - "Volám": tapping the number records a `call_started` step and sets `claimed_by`/`claimed_until`
+    (now + 5 min) on the request. It warns, it does not lock: a lock that outlives a dropped phone
+    would block the request.
+  - Three unanswered attempts offer "Uzavřít — nedovoláno". Three and five minutes are proposals,
+    to revisit with the owner after use.
+  - Cancel from the card: the server finds the phone number's confirmed orders from today on, matching
+    the last nine digits (the agent stores `+420…`, staff may type spaces). Cancelling uses the same
+    `cancelOrder` as the order screen (capacity released) and closes the request in the same
+    transaction — SC-014.
+  - Closing a request (either outcome) reads its notifications for everyone, as handling did (spec
+    002 FR-003).
+- **Alternatives rejected**: a hard lock while someone calls (stuck when the call drops); a free-text
+  log only (no counts, no outcome); cancelling automatically when the agent records a cancellation
+  (FR-034: the agent never cancels; a person confirms which order).
+- **Retention**: steps go with their request; notes may contain what the customer said and follow the
+  request's own retention.
+
+## R34 — Archive of closed requests, owner only; 30 days (owner, 2026-11-25)
+
+- **Context**: the owner saw that the request list will grow. Until now the screen showed every open
+  request and the latest 20 closed ones under them for ever; older ones could not be found, and
+  closed requests (name, number, notes) were never deleted.
+- **Decision**:
+  - "Požadavky" shows open requests and, folded, those closed **today** (Prague) — the day's work.
+  - Closing is archiving: nothing extra to press. Requests closed before today are in "Archiv".
+  - **Only the owner** opens the archive (owner, 2026-11-25: "tylko admin może zrobić archiv"). A new
+    permission `request:archive` in the one permission map (ADR-0015), held by the owner; the archive
+    route checks it, the app hides the button for others. Interpreted as "only the owner sees and
+    works the archive"; employees still close and reopen today's requests.
+  - Archive paging by keyset on `(done_at, id)` — 20 per page, stable while new requests close;
+    filter by outcome; search on the customer's name (case-insensitive) or, when the query has at
+    least three digits, on the digits of the phone number.
+  - **Retention 30 days after closing** (owner, 2026-11-25), the same as call transcripts (ADR-0008):
+    the nightly job deletes closed requests whose `done_at` is older, their steps go by cascade. Open
+    requests are never deleted. Rejected: 90 days (a longer trail for complaints, but personal data
+    kept three times longer).
+- **Index**: `staff_request (done_at, id)` for the archive pages and the clean-up.

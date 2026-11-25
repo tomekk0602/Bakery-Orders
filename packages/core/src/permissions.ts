@@ -9,7 +9,7 @@ export type Role = (typeof ROLES)[number];
 export const STATEMENTS = {
   order: ["create", "view", "pickup", "edit", "cancel"],
   plan: ["view"],
-  request: ["view", "resolve"],
+  request: ["view", "resolve", "archive"],
   settings: ["edit"],
   ops: ["view"],
   demo: ["reset"],
@@ -37,7 +37,7 @@ const EMPLOYEE: readonly Permission[] = [
 
 export const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
   employee: EMPLOYEE,
-  owner: [...EMPLOYEE, "settings:edit", "ops:view", "demo:reset", "eval:create"],
+  owner: [...EMPLOYEE, "settings:edit", "ops:view", "demo:reset", "eval:create", "request:archive"],
 };
 
 export const isRole = (value: unknown): value is Role =>

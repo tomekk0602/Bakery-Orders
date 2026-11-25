@@ -127,7 +127,57 @@
     "done": "Vyřízeno",
     "reopen": "Vrátit mezi otevřené",
     "none": "Žádné otevřené požadavky.",
-    "handled": "Vyřízené"
+    "outcome": {
+      "handled": "Vyřízeno",
+      "unreachable": "Nedovoláno"
+    },
+    "calling": "Volá {{name}}",
+    "attempts_one": "Nedovoláno {{count}}×, naposledy {{time}} ({{name}})",
+    "attempts_few": "Nedovoláno {{count}}×, naposledy {{time}} ({{name}})",
+    "attempts_many": "Nedovoláno {{count}}×, naposledy {{time}} ({{name}})",
+    "attempts_other": "Nedovoláno {{count}}×, naposledy {{time}} ({{name}})",
+    "unanswered": "Nedovoláno",
+    "closeUnreachable": "Uzavřít — nedovoláno",
+    "noteLabel": "Poznámka (nepovinné)",
+    "notePlaceholder": "např. přesunuto na sobotu",
+    "confirmHandled": "Uložit jako vyřízené",
+    "confirmUnreachable": "Uzavřít jako nedovoláno",
+    "back": "Zpět",
+    "orders": "Objednávky zákazníka",
+    "noOrders": "Na toto číslo nejsou žádné nadcházející objednávky.",
+    "openOrder": "Otevřít objednávku",
+    "cancelHint": "Pečivo se uvolní z plánu a požadavek se uzavře jako vyřízený.",
+    "showHistory_one": "Historie ({{count}} krok)",
+    "showHistory_few": "Historie ({{count}} kroky)",
+    "showHistory_many": "Historie ({{count}} kroků)",
+    "showHistory_other": "Historie ({{count}} kroků)",
+    "hideHistory": "Skrýt historii",
+    "step": {
+      "call_started": "začal(a) volat",
+      "unanswered": "nedovoláno",
+      "handled": "vyřízeno",
+      "unreachable": "uzavřeno — nedovoláno",
+      "reopened": "vráceno mezi otevřené",
+      "order_cancelled": "zrušena objednávka č. {{number}}"
+    },
+    "closedToday_one": "Dnes uzavřený ({{count}})",
+    "closedToday_few": "Dnes uzavřené ({{count}})",
+    "closedToday_many": "Dnes uzavřených ({{count}})",
+    "closedToday_other": "Dnes uzavřených ({{count}})",
+    "archive": {
+      "open": "Archiv",
+      "title": "Archiv požadavků",
+      "hint": "Uzavřené požadavky před dneškem. Po 30 dnech od uzavření se mažou.",
+      "search": "Hledat jméno nebo telefon",
+      "searchPlaceholder": "např. Nováková nebo 777",
+      "filter": {
+        "all": "Vše",
+        "handled": "Vyřízeno",
+        "unreachable": "Nedovoláno"
+      },
+      "empty": "V archivu nic není.",
+      "more": "Načíst starší"
+    }
   },
   "settings": {
     "cutoff": "Uzávěrka objednávek",
@@ -213,6 +263,66 @@
     "perOrder": "Na telefonickou objednávku",
     "costHint": "Dnes běží zdarma; toto by stálo placené API (ceny k {{date}}).",
     "versions": "Verze asistenta",
-    "versionCalls": "{{count}} hovorů"
+    "versionCalls": "{{count}} hovorů",
+    "notifications": "Upozornění",
+    "pushFailed": "Nedoručená do zařízení"
+  },
+  "notifications": {
+    "title": "Upozornění",
+    "bell_one": "Upozornění, {{count}} nepřečtené",
+    "bell_few": "Upozornění, {{count}} nepřečtená",
+    "bell_many": "Upozornění, {{count}} nepřečtených",
+    "bell_other": "Upozornění, {{count}} nepřečtených",
+    "unread": "Nepřečtené",
+    "none": "Zatím žádná upozornění.",
+    "readAll": "Označit vše jako přečtené",
+    "settings": "Nastavení upozornění",
+    "inApp": "V aplikaci",
+    "push": "Do zařízení",
+    "kind": {
+      "request": "Nový požadavek",
+      "plan_summary": "Plán na další den",
+      "near_limit": "Téměř vyprodáno",
+      "plan_changed": "Změna plánu po uzávěrce",
+      "assistant_down": "Telefonní asistent nefunguje",
+      "new_order": "Nová objednávka"
+    },
+    "quiet": "Noční klid",
+    "quietFrom": "Od",
+    "quietTo": "Do",
+    "quietHint": "V nočním klidu nic nezazvoní, upozornění počkají v aplikaci. Výpadek asistenta dostane majitel i v noci.",
+    "quietInvalid": "Čas zadejte jako HH:MM, např. 20:00.",
+    "save": "Uložit upozornění",
+    "saved": "Uloženo.",
+    "device": {
+      "title": "Toto zařízení",
+      "on": "Upozornění do tohoto zařízení jsou zapnutá.",
+      "off": "Do tohoto zařízení upozornění nechodí.",
+      "enable": "Zapnout upozornění v tomto zařízení",
+      "disable": "Vypnout v tomto zařízení",
+      "testSent": "Zkušební upozornění odesláno — mělo by se ukázat.",
+      "testFailed": "Zařízení je přihlášené, ale zkušební upozornění se nepodařilo doručit.",
+      "denied": "Prohlížeč upozornění nepovolil. Povolte je v nastavení prohlížeče a zkuste znovu.",
+      "failed": "Upozornění se nepodařilo zapnout. Zkuste to znovu.",
+      "serverOff": "Upozornění do zařízení nejsou na serveru zapnutá. V aplikaci je uvidíte i tak.",
+      "unsupported": "Toto zařízení upozornění neumí. V aplikaci je uvidíte i tak.",
+      "iosHint": "Na iPhonu přidejte aplikaci na plochu (Sdílet → Přidat na plochu) a otevřete ji odtud — pak půjdou upozornění zapnout."
+    },
+    "summaryHint": "Plán na další den chodí jednou denně odpoledne, mezi 14. a 16. hodinou, i když se uzávěrka změní.",
+    "banner": {
+      "order": "Nová objednávka č. {{number}}",
+      "open": "Otevře podrobnosti",
+      "close": "Zavřít upozornění",
+      "more_one": "a {{count}} další",
+      "more_few": "a {{count}} další",
+      "more_many": "a {{count}} dalších",
+      "more_other": "a {{count}} dalších"
+    },
+    "sound": {
+      "title": "Zvuk v tomto zařízení",
+      "hint": "Při novém upozornění zazní krátký tón. V nočním klidu je ticho. Po obnovení stránky zazní až po prvním klepnutí.",
+      "test": "Přehrát zkušební zvuk",
+      "unsupported": "Zvuk zatím umí jen webová verze aplikace."
+    }
   }
 }

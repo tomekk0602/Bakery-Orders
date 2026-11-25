@@ -63,7 +63,13 @@ describe("retention (FR-009, ADR-0008)", () => {
 
   it("deletes transcripts 30 days after pickup (or after the call without an order), expired drafts and spent counters", async () => {
     const { runRetention } = await import("@/server/retention");
-    expect(await runRetention(NOW)).toEqual({ transcripts: 2, drafts: 1, rateLimits: 1 });
+    expect(await runRetention(NOW)).toEqual({
+      transcripts: 2,
+      drafts: 1,
+      rateLimits: 1,
+      notifications: 0,
+      requests: 0,
+    });
     expect(await transcriptOf("oldPickup")).toBeNull();
     expect(await transcriptOf("oldNoOrder")).toBeNull();
     expect(await transcriptOf("recentPickup")).not.toBeNull();

@@ -260,8 +260,23 @@ No task is committed, pushed or deployed without the owner's explicit yes (const
 
 ## Later — notifications (owner, 2026-11-24)
 
-Not specified yet: each needs its requirements in `spec.md` (what triggers a notification, who
-receives it, quiet hours, what it may contain) and a decision record before any code.
+Specified in `specs/002-staff-notifications` (spec, plan) with ADR-0016; built from that feature's tasks.
 
 - [ ] T095 Notifications for staff in the app: a new order, a callback / change / cancel request, an order close to the day's limit — shown in the app while it is open (spec first)
 - [ ] T096 Push notifications to the staff mobile app (Expo push; device registration per signed-in staff member; personal data kept out of the notification text) — spec and ADR first
+
+## Working a request through (owner, 2026-11-25; User Story 7, research R33)
+
+- [x] T097 [US7] Schema: `staff_request.outcome`, `claimed_by`, `claimed_until`; table `staff_request_event`; migration (data-model)
+- [x] T098 [US7] Repository + tests on PostgreSQL: actions call / unanswered / handled / unreachable (from 3 attempts) / reopen with history and notes; close reads notifications; phone match on the last nine digits; cancel-from-request in one transaction (FR-047–FR-052, SC-014)
+- [x] T099 [US7] Routes: `PATCH /api/staff/requests/{id}` `{ action, note? }`, `POST …/cancel-order`; list fields; route tests incl. 403/422 (contracts)
+- [x] T100 [US7] Staff app request card: "Volá …", call button records the call, "Nedovoláno", attempts line, "Uzavřít — nedovoláno" from the third, note on closing, history, the customer's orders with "Zrušit objednávku"; component tests
+- [x] T101 [US7] Quickstart rows and a live run with two accounts (SC-013, SC-014) _(owner's live run 2026-11-25: call, three unanswered calls; "works")_
+
+## Archive of closed requests (owner, 2026-11-25; User Story 8, research R34)
+
+- [x] T102 [US8] Core: permission `request:archive` for the owner; contracts `{ open, closedToday }`, archive page and query; index migration
+- [x] T103 [US8] Repository + tests: list open + closed today (Prague); archive page by keyset, outcome filter, name / phone search; retention deletes closed requests after 30 days with their steps, never open ones (FR-053–FR-057, SC-015, SC-016)
+- [x] T104 [US8] Routes: list shape, `GET /api/staff/requests/archive` (403 for employees), retention count; route tests
+- [x] T105 [US8] Staff app: "Dnes uzavřené (n)" folded; "Archiv" button for the owner; archive screen with filter, search, "Načíst starší", history and reopen; tests
+- [x] T106 [US8] Quickstart rows and a live run (owner and employee) _(owner's live run 2026-11-25: "działa")_

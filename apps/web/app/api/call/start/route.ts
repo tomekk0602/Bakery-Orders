@@ -4,6 +4,7 @@ import { createCall, hitRateLimit, loadBakery } from "@bakery/db";
 import { z } from "zod";
 import { CALL_START_LIMIT, liveConfig } from "@/server/call-session";
 import { log } from "@/server/log";
+import { alertAssistantDown } from "@/server/notifications/deliver";
 import { db, fail, genai, ipHash, json, LIVE_MODEL } from "@/server/runtime";
 import { inCallTrace } from "@/server/telemetry";
 
@@ -60,6 +61,9 @@ export async function POST(req: Request) {
       log.error({ err: message }, "call token failed");
       span.update({ level: "ERROR", statusMessage: message }).end();
       const quota = /quota|RESOURCE_EXHAUSTED|429/.test(message);
+      await alertAssistantDown(quota ? "quota" : "unavailable", now).catch((err: unknown) =>
+        log.error({ err: err instanceof Error ? err.message : String(err) }, "assistant-down alert not recorded"),
+      );
       return quota
         ? fail("quota_exhausted", "Hlasový asistent je teď vytížený. Objednejte prosím přes formulář.", 503)
         : fail("voice_unavailable", "Hlasový asistent teď není dostupný. Objednejte prosím přes formulář.", 503);

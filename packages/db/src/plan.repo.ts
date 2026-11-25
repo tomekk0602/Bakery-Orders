@@ -1,4 +1,4 @@
-import { and, eq, inArray, sql } from "drizzle-orm";
+import { and, count, eq, inArray, sql } from "drizzle-orm";
 import type { Db } from "./client.ts";
 import { order, orderLine, walkInBuffer } from "./schema.ts";
 
@@ -20,4 +20,13 @@ export async function buffersForWeekday(db: Db, weekday: number): Promise<Record
     .from(walkInBuffer)
     .where(eq(walkInBuffer.weekday, weekday));
   return Object.fromEntries(rows.map((r) => [r.productId, r.quantity]));
+}
+
+/** Orders for a day that will be picked up (cancelled excluded) — the daily summary's count (spec 002 FR-004). */
+export async function ordersForDay(db: Db, day: string): Promise<number> {
+  const [r] = await db
+    .select({ n: count() })
+    .from(order)
+    .where(and(eq(order.pickupDay, day), inArray(order.status, ["confirmed", "picked_up"])));
+  return r?.n ?? 0;
 }

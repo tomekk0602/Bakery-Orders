@@ -28,6 +28,12 @@
   with a badge until someone handles them. Closed days, the order deadline and daily limits are
   respected automatically, so the bakery never promises bread it will not bake. When a customer calls
   off an order, staff cancel it in two taps and the bread goes back into the plan.
+- **Staff hear about new orders and requests at once.** While the app is open, every new order,
+  callback request or the next day's baking summary slides in from the top of the screen with a
+  short sound — who ordered, for when, what and for how much — and a tap opens it. The same
+  notifications wait under the bell 🔔, and on a computer or phone where staff allow it they arrive
+  as device notifications too (without the customer's name on the lock screen). Each person chooses
+  what reaches them and sets quiet hours.
 - **The owner sees how it is going**: how many calls ended in an order, how fast the assistant
   answers, and what it would cost.
 
@@ -58,7 +64,11 @@ operations) and **Prodavač** (shop assistant — orders, plan, requests).
    kaiserek na zítra"_. An unknown word (try _"razowy"_) is never guessed: you pick from suggestions.
 4. **Ask for a person.** Call again and say you want to speak to someone. The request appears in
    **Požadavky** with a badge.
-5. **Owner only — Provoz.** Calls by outcome, the assistant's response time, orders per channel and
+5. **See the notifications.** Keep the staff app open (both accounts in two browser windows, if you
+   like) and place an order on the customer site: within about 10 seconds a banner with the order
+   slides in from the top, with a sound after the first click in the app. Tap it to open the order.
+   Under 🔔 → **Zapnout upozornění v tomto zařízení** the browser also gets device notifications.
+6. **Owner only — Provoz.** Calls by outcome, the assistant's response time, orders per channel and
    the cost on a paid tier.
 
 The web form is under the call button. **Nastavení → Reset demo** restores the demo data.
@@ -82,16 +92,17 @@ The web form is under the call button. **Nastavení → Reset demo** restores th
 Each is one line here and a full record with the rejected options in [`docs/adr/`](docs/adr/README.md);
 "R" numbers are measurements in [`research.md`](specs/001-voice-ordering/research.md).
 
-| Decision                                                                                    | Why                                                                                                  | Rejected                                                                          | ADR                                                                          |
-| ------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
-| A voice agent answers the calls; a staff panel plans the baking                             | The time goes into the phone; the plan is arithmetic                                                 | Only a web form — assumed many callers would not switch (to check with the owner) | [0002](docs/adr/0002-voice-agent-answers-calls-staff-panel-plans-baking.md)  |
-| **The model chooses, the code decides**                                                     | Dates, prices and limits must be right every time; the model only picks from lists the code gives it | Letting the model compute dates and totals — measured wrong (R1)                  | [0003](docs/adr/0003-model-chooses-code-decides.md)                          |
-| Products and pickup days are enumerations in the tool schema                                | A product or a day outside the offer cannot even be expressed                                        | Free text checked afterwards                                                      | [0010](docs/adr/0010-voice-agent-patterns-from-reference-implementations.md) |
-| Gemini Live speech-to-speech for the call; Flash-Lite for staff dictation                   | Measured on Czech: first audio ~2 s; free tiers                                                      | A transcription → LLM → speech cascade — slower (R11, R12)                        | [0011](docs/adr/0011-demo-voice-gemini-live-with-fallbacks.md)               |
-| Three ways to order over one core                                                           | Phone, web and staff share every rule; one implementation                                            | Separate logic per channel                                                        | [0009](docs/adr/0009-three-order-channels-one-core-staff-app.md)             |
-| The agent is evaluated as a probabilistic system                                            | One passing run proves little; quality is a rate with an interval                                    | Manual testing; single runs                                                       | [0012](docs/adr/0012-evaluation-of-a-probabilistic-agent.md)                 |
-| Traces, cost and latency from the first call                                                | Wrong orders and slow answers must be traceable to a prompt version                                  | Logs only                                                                         | [0013](docs/adr/0013-llmops-ci-cd-observability-cost.md)                     |
-| Disclosure in the first sentence; transcripts deleted after 30 days; names masked in traces | GDPR and honesty towards the caller                                                                  | Keeping transcripts                                                               | [0008](docs/adr/0008-ai-disclosure-and-transcript-retention.md)              |
+| Decision                                                                                      | Why                                                                                                  | Rejected                                                                                    | ADR                                                                                    |
+| --------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| A voice agent answers the calls; a staff panel plans the baking                               | The time goes into the phone; the plan is arithmetic                                                 | Only a web form — assumed many callers would not switch (to check with the owner)           | [0002](docs/adr/0002-voice-agent-answers-calls-staff-panel-plans-baking.md)            |
+| **The model chooses, the code decides**                                                       | Dates, prices and limits must be right every time; the model only picks from lists the code gives it | Letting the model compute dates and totals — measured wrong (R1)                            | [0003](docs/adr/0003-model-chooses-code-decides.md)                                    |
+| Products and pickup days are enumerations in the tool schema                                  | A product or a day outside the offer cannot even be expressed                                        | Free text checked afterwards                                                                | [0010](docs/adr/0010-voice-agent-patterns-from-reference-implementations.md)           |
+| Gemini Live speech-to-speech for the call; Flash-Lite for staff dictation                     | Measured on Czech: first audio ~2 s; free tiers                                                      | A transcription → LLM → speech cascade — slower (R11, R12)                                  | [0011](docs/adr/0011-demo-voice-gemini-live-with-fallbacks.md)                         |
+| Three ways to order over one core                                                             | Phone, web and staff share every rule; one implementation                                            | Separate logic per channel                                                                  | [0009](docs/adr/0009-three-order-channels-one-core-staff-app.md)                       |
+| The agent is evaluated as a probabilistic system                                              | One passing run proves little; quality is a rate with an interval                                    | Manual testing; single runs                                                                 | [0012](docs/adr/0012-evaluation-of-a-probabilistic-agent.md)                           |
+| Traces, cost and latency from the first call                                                  | Wrong orders and slow answers must be traceable to a prompt version                                  | Logs only                                                                                   | [0013](docs/adr/0013-llmops-ci-cd-observability-cost.md)                               |
+| Disclosure in the first sentence; transcripts deleted after 30 days; names masked in traces   | GDPR and honesty towards the caller                                                                  | Keeping transcripts                                                                         | [0008](docs/adr/0008-ai-disclosure-and-transcript-retention.md)                        |
+| Notifications are records saved with the event; the app polls every 10 s, Web Push on devices | Nothing is lost if delivery fails; works on serverless hosting with no extra service                 | A realtime channel now — needs a long-running server or a hosted service (see Known limits) | [0016](docs/adr/0016-staff-notifications-record-with-the-event-in-app-and-web-push.md) |
 
 ### How I know it works
 
@@ -139,6 +150,15 @@ column.
 - **Measured on a small sample.** Latency and cost come from a handful of calls; the voice itself
   (recognition of Czech over a phone-quality line) has no repeated eval yet.
 - **Shared demo data.** Reviewers see each other's test orders; **Reset demo** restores the seed.
+- **Notifications arrive by polling.** The open staff app asks the server every 10 seconds, so a banner
+  appears up to 10 s after the order. That is deliberate for the demo: the app runs as serverless
+  functions on Vercel, which cannot keep a WebSocket open (the Node counterparts of SignalR —
+  Socket.IO, `ws` — need a long-running server), and polling needs no extra service. Where device
+  notifications are switched on, the push reaches the open app at once. **In production** the
+  better design is a hosted realtime channel (Pusher, Ably or Supabase Realtime) or a small
+  Socket.IO service: after an order is saved the server publishes a signal without personal data and
+  every open app refreshes immediately, with polling kept only as a slow fallback. Details in
+  [research N16](specs/002-staff-notifications/research.md).
 
 ### Run it locally
 
@@ -149,6 +169,7 @@ npm run db:migrate && npm run db:seed
 npm run seed:staff -w @bakery/web     # demo accounts, passwords written to a git-ignored file
 npm run dev                           # customer site and API on :3000
 npm run web -w @bakery/staff          # staff app on :8081
+npx web-push generate-vapid-keys      # optional: device notifications (VAPID_* in apps/web/.env.local)
 npm test                              # all workspaces
 npm run eval -w @bakery/evals         # agent evals (needs GEMINI_API_KEY, ~20 min)
 ```
@@ -158,15 +179,16 @@ Keys go into git-ignored `.env` files; the full list is in
 
 ### Repository map
 
-| Where                      | What                                                                                       |
-| -------------------------- | ------------------------------------------------------------------------------------------ |
-| `apps/web`                 | Next.js: customer site, call client, API, server side of the agent                         |
-| `apps/staff`               | Expo (React Native) staff app; its web build is served under `/staff`                      |
-| `packages/core`            | The bakery's rules and the agent definition — no I/O                                       |
-| `packages/db`              | Schema, migrations, repositories, the agent's tool runner                                  |
-| `packages/evals`           | Eval cases, graders, statistics, the regression gate, baseline                             |
-| `specs/001-voice-ordering` | Spec, plan, tasks, and **research.md — every measurement and decision inside the feature** |
-| `docs/adr`                 | Cross-cutting decisions with the options rejected                                          |
+| Where                           | What                                                                                       |
+| ------------------------------- | ------------------------------------------------------------------------------------------ |
+| `apps/web`                      | Next.js: customer site, call client, API, server side of the agent                         |
+| `apps/staff`                    | Expo (React Native) staff app; its web build is served under `/staff`                      |
+| `packages/core`                 | The bakery's rules and the agent definition — no I/O                                       |
+| `packages/db`                   | Schema, migrations, repositories, the agent's tool runner                                  |
+| `packages/evals`                | Eval cases, graders, statistics, the regression gate, baseline                             |
+| `specs/001-voice-ordering`      | Spec, plan, tasks, and **research.md — every measurement and decision inside the feature** |
+| `specs/002-staff-notifications` | Notifications for staff: bell, banner with sound, device notifications, daily summary      |
+| `docs/adr`                      | Cross-cutting decisions with the options rejected                                          |
 
 Built spec-first: requirements, tasks and decisions are written before the code, and a decision or a
 measurement that changes the plan is recorded with what changed it.

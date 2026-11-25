@@ -2,6 +2,7 @@ import { runCallTool } from "@bakery/db";
 import { startObservation } from "@langfuse/tracing";
 import { activeCall } from "@/server/active-call";
 import { db, json, LIVE_MODEL } from "@/server/runtime";
+import { scheduleDelivery } from "@/server/notifications/deliver";
 import { inCallTrace } from "@/server/telemetry";
 
 type Ctx = { params: Promise<{ id: string; name: string }> };
@@ -17,7 +18,14 @@ export async function POST(req: Request, { params }: Ctx) {
     const span = startObservation(`tool.${name}`, { input: args }, { asType: "tool", parentSpanContext: parent });
     const result = await runCallTool(
       db(),
-      { callId: call.id, callerPhone: call.callerPhone, bakery, model: LIVE_MODEL },
+      {
+        callId: call.id,
+        callerPhone: call.callerPhone,
+        bakery,
+        model: LIVE_MODEL,
+        // a recorded request reaches the staff's devices after the response (spec 002 FR-009)
+        onNotifications: scheduleDelivery,
+      },
       name,
       args,
     );

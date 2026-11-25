@@ -1,14 +1,19 @@
+import { useRouter } from "expo-router";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ActivityIndicator, StyleSheet, Text } from "react-native";
+import { ActivityIndicator, Pressable, StyleSheet, Text } from "react-native";
+import { useMe } from "@/features/auth/use-me";
 import { Button, colors, font, Screen } from "@/shared/ui";
-import { useRequests, useSetRequestDone } from "./api";
+import { useRequests } from "./api";
 import { RequestCard } from "./RequestCard";
 
-/** "Požadavky": callbacks, changes and cancellations waiting for a person (FR-008, FR-034, FR-041). */
+/** "Požadavky": callbacks, changes and cancellations waiting for a person, worked through to the end; closed ones only from today, older ones in the owner's archive (FR-008, FR-034, FR-041, FR-047–FR-053). */
 export function RequestsScreen() {
   const { t } = useTranslation();
   const requests = useRequests();
-  const setDone = useSetRequestDone();
+  const router = useRouter();
+  const canArchive = useMe().data?.permissions.includes("request:archive") ?? false;
+  const [showClosed, setShowClosed] = useState(false);
 
   if (requests.isPending)
     return <ActivityIndicator style={styles.center} color={colors.primary} accessibilityLabel={t("common.loading")} />;
@@ -20,20 +25,26 @@ export function RequestsScreen() {
       </Screen>
     );
 
-  const { open, done } = requests.data;
-  const toggle = (id: string, isDone: boolean) => setDone.mutate({ id, done: !isDone });
-  const busy = (id: string) => setDone.isPending && setDone.variables?.id === id;
+  const { open, closedToday } = requests.data;
 
   return (
     <Screen title={t("tabs.requests")} refreshing={requests.isRefetching} onRefresh={() => void requests.refetch()}>
       {open.length === 0 ? <Text style={styles.muted}>{t("requests.none")}</Text> : null}
       {open.map((r) => (
-        <RequestCard key={r.id} item={r} busy={busy(r.id)} onToggle={() => toggle(r.id, false)} />
+        <RequestCard key={r.id} item={r} />
       ))}
-      {done.length > 0 ? <Text style={styles.heading}>{t("requests.handled")}</Text> : null}
-      {done.map((r) => (
-        <RequestCard key={r.id} item={r} busy={busy(r.id)} onToggle={() => toggle(r.id, true)} />
-      ))}
+      {closedToday.length > 0 ? (
+        <Pressable accessibilityRole="button" onPress={() => setShowClosed((v) => !v)} hitSlop={8}>
+          <Text style={styles.heading}>
+            {showClosed ? "▾ " : "▸ "}
+            {t("requests.closedToday", { count: closedToday.length })}
+          </Text>
+        </Pressable>
+      ) : null}
+      {showClosed ? closedToday.map((r) => <RequestCard key={r.id} item={r} />) : null}
+      {canArchive ? (
+        <Button label={t("requests.archive.open")} variant="secondary" onPress={() => router.push("/archiv")} />
+      ) : null}
     </Screen>
   );
 }
