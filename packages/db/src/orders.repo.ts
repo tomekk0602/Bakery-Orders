@@ -45,7 +45,7 @@ export async function saveDraft(
 export type ConfirmMeta = { promptVersion: string | null; model: string | null };
 export type ConfirmResult =
   | { ok: true; orderNumber: number; orderId: string; notificationIds: string[] }
-  | { ok: false; reason: "no_draft" | "over_limit" }
+  | { ok: false; reason: "no_draft" | "over_limit" | "unknown_product" }
   | {
       ok: false;
       reason: Extract<RefusalReason, "past_day" | "outside_window" | "closed_day" | "after_cutoff">;
@@ -57,10 +57,13 @@ type OrderSourceValue = typeof order.$inferInsert.source;
 
 /** Thrown inside the transaction when a daily limit would be exceeded; rolls everything back. */
 class OverLimit extends Error {}
+/** Thrown when a product was switched off after the read-back (spec 001 FR-060); rolls everything back. */
+class NoLongerOffered extends Error {}
 
 /**
  * Inserts an order with its lines and takes the daily capacity with a conditional update, so two
- * concurrent orders can never take the same last pieces (research R14, spec E4).
+ * concurrent orders can never take the same last pieces (research R14, spec E4). Lines are taken in
+ * product order, as a cancel releases them, so two orders never wait on each other in a cycle (FR-061).
  */
 async function insertOrder(
   tx: Tx,
@@ -69,11 +72,14 @@ async function insertOrder(
   meta: ConfirmMeta & { callId: string | null; createdBy: string | null },
 ) {
   const taken: { productId: string; name: string; dailyLimit: number; reserved: number }[] = [];
-  for (const line of p.lines) {
+  const inLockOrder = [...p.lines].sort((a, b) => (a.productId < b.productId ? -1 : a.productId > b.productId ? 1 : 0));
+  for (const line of inLockOrder) {
     const [limit] = await tx
-      .select({ dailyLimit: product.dailyLimit, name: product.name })
+      .select({ dailyLimit: product.dailyLimit, name: product.name, active: product.active })
       .from(product)
       .where(eq(product.id, line.productId));
+    // the offer is checked again at the yes: the owner may have switched the product off since (FR-060)
+    if (!limit?.active) throw new NoLongerOffered();
     await tx
       .insert(dailyCapacity)
       .values({ productId: line.productId, day: p.pickupDate, reserved: 0 })
@@ -178,6 +184,7 @@ async function notifyAfterOrder(
 
 const overLimit = (e: unknown) => {
   if (e instanceof OverLimit) return { ok: false, reason: "over_limit" } as const;
+  if (e instanceof NoLongerOffered) return { ok: false, reason: "unknown_product" } as const;
   throw e;
 };
 

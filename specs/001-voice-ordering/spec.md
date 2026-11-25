@@ -331,6 +331,9 @@ name, and reopens it; a request closed 31 days ago is gone after the nightly cle
 - **FR-032**: Every call and every staff dictation MUST produce a trace with tool calls, step
   latencies, end-of-speech → first-audio latency, token usage, shadow cost, prompt version and
   outcome; names and phone numbers MUST be masked before the trace leaves the server (ADR-0013).
+  _(Clarified 2026-11-25, review: a tool call's trace carries only its technical fields — product
+  ids, quantities, dates, ids, the request kind — never free text such as a request's note, and
+  never arguments that failed validation; research R35.)_
 - **FR-033**: The staff app MUST show a "Provoz" screen with p50/p95 first-audio latency and the share
   of calls ending in an order, a callback or abandoned, and of phone orders corrected by staff
   (ADR-0013).
@@ -377,6 +380,22 @@ name, and reopens it; a request closed 31 days ago is gone after the nightly cle
 - **FR-056**: In the archive the owner MUST see each request's history and MAY reopen it.
 - **FR-057**: Closed requests MUST be deleted 30 days after closing, with their steps and notes, by
   the nightly retention job; open requests MUST NOT be deleted (ADR-0008).
+
+**Fixes from the code review of 2026-11-25** _(research R35)_
+
+- **FR-058**: Ending a call at any moment — also while it is still connecting — MUST stop the
+  microphone and close the voice session and the speaker; a call that fails to start MUST release
+  everything it opened. The microphone is never left on after the call screen says it ended.
+- **FR-059**: Signing out or signing in as another person in the staff app MUST discard everything
+  the app holds about the previous person before the next one sees a screen.
+- **FR-060**: Confirming an order MUST check again that every product is still offered; a product
+  the owner switched off since the read-back is refused as unknown, like at preparation.
+- **FR-061**: Simultaneous orders that share products, in any order of lines, MUST each be saved or
+  refused by a limit — never fail because they wait on each other.
+- **FR-062**: After staff save or cancel an order, the day's order list and the baking plan MUST show
+  the change without pulling to refresh; a new-order notification refreshes them as well.
+- **FR-063**: A phone number MUST have 9 to 15 digits once spaces are removed, and a day MUST be a
+  real calendar date; anything else is refused as invalid input (400), never reaches the database.
 - **FR-042**: A "Reset demo" action MUST restore the seeded bakery, catalogue and orders (ADR-0014).
 - **FR-043**: Every staff API route MUST check the caller's permission on the server: no session →
   401, missing permission → 403 (ADR-0015).

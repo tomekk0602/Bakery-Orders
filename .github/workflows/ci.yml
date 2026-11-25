@@ -29,3 +29,6 @@ jobs:
       - run: npm run lint
       - run: npm run format:check
       - run: npm test
+      # the production build itself: only `next build` caught a CommonJS import the tests passed
+      # (spec 001 research R35, spec 002 research N10); it also exports the staff web app
+      - run: npm run build:deploy

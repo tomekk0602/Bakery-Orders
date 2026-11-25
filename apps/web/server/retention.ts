@@ -2,6 +2,7 @@ import "server-only";
 import { CLOSED_REQUEST_RETENTION_DAYS, pragueDate } from "@bakery/core";
 import { applyRetention } from "@bakery/db";
 import { CALL_START_LIMIT } from "./call-session";
+import { PUSH_REGISTRATION_LIMIT } from "./notifications/push";
 import { WEB_ORDER_LIMIT, WEB_PREVIEW_LIMIT } from "./customer/orders";
 import { log } from "./log";
 import { db } from "./runtime";
@@ -16,6 +17,7 @@ const LONGEST_RATE_WINDOW_MS = Math.max(
   CALL_START_LIMIT.windowMs,
   WEB_ORDER_LIMIT.windowMs,
   WEB_PREVIEW_LIMIT.windowMs,
+  PUSH_REGISTRATION_LIMIT.windowMs,
 );
 
 /** The nightly clean-up: transcripts past retention, expired drafts, spent rate-limit counters, old notifications, closed requests after 30 days. */

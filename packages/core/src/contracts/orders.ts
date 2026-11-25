@@ -1,6 +1,14 @@
 import { z } from "zod";
 
-export const IsoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "YYYY-MM-DD");
+/** A real calendar day as YYYY-MM-DD: "2026-02-30" is refused, not passed on (spec 001 FR-063). */
+export const IsoDate = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/, "YYYY-MM-DD")
+  .refine((s) => {
+    const [y, m, d] = s.split("-").map(Number) as [number, number, number];
+    const t = new Date(Date.UTC(y, m - 1, d));
+    return t.getUTCFullYear() === y && t.getUTCMonth() === m - 1 && t.getUTCDate() === d;
+  }, "date");
 export const OrderSource = z.enum(["phone", "web", "staff"]);
 export type OrderSource = z.infer<typeof OrderSource>;
 export const OrderStatus = z.enum(["confirmed", "picked_up", "cancelled"]);

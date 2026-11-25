@@ -24,41 +24,78 @@ export class LiveCall {
   private usage: NonNullable<LiveServerMessage["usageMetadata"]>[] = [];
   private capTimer: ReturnType<typeof setTimeout> | null = null;
   private ended = false;
+  private endReason: "hangup" | "capped" | "error" = "hangup";
   private callId = "";
 
   constructor(private readonly events: CallEvents) {}
 
+  /**
+   * Opens the call step by step. The caller can hang up at any moment, also while this is still
+   * connecting: after every wait the call checks whether it has ended meanwhile and then releases
+   * what it opened, so the microphone is never left on (FR-058). A failed start releases everything.
+   */
   async start(callerPhone: string): Promise<void> {
     this.events.onStatus("connecting");
-    const res = await fetch("/api/call/start", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ caller_phone: callerPhone }),
-    });
-    const body = (await res.json()) as StartResponse & { error?: { message: string } };
-    if (!res.ok) throw new Error(body.error?.message ?? "Hovor se nepodařilo zahájit.");
-    this.callId = body.call_id;
+    try {
+      const res = await fetch("/api/call/start", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ caller_phone: callerPhone }),
+      });
+      const body = (await res.json()) as StartResponse & { error?: { message: string } };
+      if (!res.ok) throw new Error(body.error?.message ?? "Hovor se nepodařilo zahájit.");
+      this.callId = body.call_id;
+      // hung up while the call was being created: the server still learns it ended
+      if (this.ended) return void this.report(this.endReason);
 
-    this.speaker = openSpeaker();
-    const ai = new GoogleGenAI({ apiKey: body.token, httpOptions: { apiVersion: "v1beta" } });
-    this.session = await ai.live.connect({
-      model: body.model,
-      // Everything else is locked by the token on the server side (FR-036).
-      config: {},
-      callbacks: {
-        onmessage: (m) => void this.onMessage(m),
-        onerror: () => void this.end("error"),
-        onclose: () => void this.end("hangup"),
-      },
-    });
-    this.mic = await openMicrophone((data, rms) => {
-      if (rms > SPEECH_RMS) this.firstAudio.speech(performance.now());
-      this.session?.sendRealtimeInput({ audio: { data, mimeType: "audio/pcm;rate=16000" } });
-    });
-    // The agent speaks first: greeting with the AI notice (FR-001).
-    this.session.sendClientContent({ turns: [{ role: "user", parts: [{ text: CALL_OPENING }] }], turnComplete: true });
-    this.capTimer = setTimeout(() => void this.end("capped"), body.cap_seconds * 1000);
-    this.events.onStatus("live");
+      this.speaker = openSpeaker();
+      const ai = new GoogleGenAI({ apiKey: body.token, httpOptions: { apiVersion: "v1beta" } });
+      this.session = await ai.live.connect({
+        model: body.model,
+        // Everything else is locked by the token on the server side (FR-036).
+        config: {},
+        callbacks: {
+          onmessage: (m) => void this.onMessage(m),
+          onerror: () => void this.end("error"),
+          onclose: () => void this.end("hangup"),
+        },
+      });
+      if (this.ended) return this.release();
+
+      this.mic = await openMicrophone((data, rms) => {
+        if (rms > SPEECH_RMS) this.firstAudio.speech(performance.now());
+        this.session?.sendRealtimeInput({ audio: { data, mimeType: "audio/pcm;rate=16000" } });
+      });
+      if (this.ended) return this.release();
+
+      // The agent speaks first: greeting with the AI notice (FR-001).
+      this.session.sendClientContent({
+        turns: [{ role: "user", parts: [{ text: CALL_OPENING }] }],
+        turnComplete: true,
+      });
+      this.capTimer = setTimeout(() => void this.end("capped"), body.cap_seconds * 1000);
+      this.events.onStatus("live");
+    } catch (e) {
+      // a refused microphone or a failed connection: nothing stays open, and the call is ended on the server
+      if (!this.ended) {
+        this.ended = true;
+        this.release();
+        void this.report("error");
+      }
+      throw e;
+    }
+  }
+
+  /** Stops everything the call opened; safe to call more than once. */
+  private release(): void {
+    if (this.capTimer) clearTimeout(this.capTimer);
+    this.capTimer = null;
+    this.mic?.stop();
+    this.mic = null;
+    this.session?.close();
+    this.session = null;
+    this.speaker?.close();
+    this.speaker = null;
   }
 
   private append(role: Turn["role"], text: string) {
@@ -105,11 +142,14 @@ export class LiveCall {
   async end(reason: "hangup" | "capped" | "error"): Promise<number[]> {
     if (this.ended) return [];
     this.ended = true;
-    if (this.capTimer) clearTimeout(this.capTimer);
-    this.mic?.stop();
-    this.session?.close();
-    this.speaker?.close();
+    this.endReason = reason;
+    this.release();
     this.events.onStatus("ended", reason);
+    return this.report(reason);
+  }
+
+  /** Tells the server the call ended, with the transcript and measurements; the order numbers come back. */
+  private async report(reason: "hangup" | "capped" | "error"): Promise<number[]> {
     if (!this.callId) return [];
     const r = await fetch(`/api/call/${this.callId}/end`, {
       method: "POST",

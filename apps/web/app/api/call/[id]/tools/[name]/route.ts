@@ -1,9 +1,11 @@
+import { buildCalendar, buildToolSchemas } from "@bakery/core";
 import { runCallTool } from "@bakery/db";
 import { startObservation } from "@langfuse/tracing";
 import { activeCall } from "@/server/active-call";
 import { db, json, LIVE_MODEL } from "@/server/runtime";
 import { scheduleDelivery } from "@/server/notifications/deliver";
 import { inCallTrace } from "@/server/telemetry";
+import { toolTraceInput } from "@/server/trace-input";
 
 type Ctx = { params: Promise<{ id: string; name: string }> };
 
@@ -15,7 +17,10 @@ export async function POST(req: Request, { params }: Ctx) {
   const { call, bakery } = active;
   const args: unknown = await req.json().catch(() => null);
   return inCallTrace(call.id, async (parent) => {
-    const span = startObservation(`tool.${name}`, { input: args }, { asType: "tool", parentSpanContext: parent });
+    // only validated technical fields leave the server, never a note or a name (FR-032, research R35)
+    const schemas = buildToolSchemas(bakery.catalogue, buildCalendar(new Date(), bakery.schedule));
+    const input = toolTraceInput(schemas, name, args);
+    const span = startObservation(`tool.${name}`, { input }, { asType: "tool", parentSpanContext: parent });
     const result = await runCallTool(
       db(),
       {

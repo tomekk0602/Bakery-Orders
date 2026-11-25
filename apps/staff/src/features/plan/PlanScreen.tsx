@@ -1,5 +1,5 @@
 import type { BakingPlanResponse } from "@bakery/core/contracts";
-import { useState } from "react";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import { Button, Card, colors, font, Screen, space } from "@/shared/ui";
@@ -10,7 +10,10 @@ import { DayPicker } from "./DayPicker";
 /** "Plán": how many of each product to bake for a day. Read-only; buffers are the owner's settings (FR-010, FR-044). */
 export function PlanScreen() {
   const { t } = useTranslation();
-  const [day, setDay] = useState<string | null>(null);
+  // the day lives in the address, so a plan notification opens the day it names (spec 002 FR-028)
+  const router = useRouter();
+  const params = useLocalSearchParams<{ day?: string }>();
+  const day = typeof params.day === "string" && /^\d{4}-\d{2}-\d{2}$/.test(params.day) ? params.day : null;
   const plan = usePlan(day);
 
   if (plan.isPending)
@@ -30,7 +33,7 @@ export function PlanScreen() {
       refreshing={plan.isRefetching}
       onRefresh={() => void plan.refetch()}
     >
-      <DayPicker days={p.days} selected={p.day.date} onSelect={setDay} />
+      <DayPicker days={p.days} selected={p.day.date} onSelect={(d) => router.setParams({ day: d })} />
       {p.day.closed ? <Text style={styles.note}>{t("plan.closedNote")}</Text> : null}
       <PlanTable plan={p} />
       <Text style={styles.note}>{t("plan.explain")}</Text>

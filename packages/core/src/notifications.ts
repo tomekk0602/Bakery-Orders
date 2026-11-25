@@ -112,7 +112,8 @@ export const notificationText = {
       s.orders === 0
         ? "Žádné objednávky, pečete jen pro prodejnu."
         : `${ordersCount(s.orders)}${top ? `. Nejvíc upéct: ${top}.` : "."}`;
-    return { title: `Plán na ${s.weekdayName} ${czDay(s.day)}`, body, link: "/plan" };
+    // the plan of the day it names, not the screen's default day (spec 002 FR-028)
+    return { title: `Plán na ${s.weekdayName} ${czDay(s.day)}`, body, link: `/plan?day=${s.day}` };
   },
 
   nearLimit(s: { day: string; weekdayName: string; product: string; left: number }): NotificationText {
@@ -127,7 +128,7 @@ export const notificationText = {
     return {
       title: `Plán na ${s.weekdayName} ${czDay(s.day)} se změnil`,
       body: "Po uzávěrce přibyla objednávka.",
-      link: "/plan",
+      link: `/plan?day=${s.day}`,
     };
   },
 

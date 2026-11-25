@@ -36,7 +36,11 @@ const order: StaffOrderDetail = {
   createdAt: "2026-11-25T09:05:00.000Z",
   transcript: null,
 };
-jest.mock("@/features/orders/api", () => ({ useOrder: () => ({ data: order }) }));
+const mockRefresh = jest.fn();
+jest.mock("@/features/orders/api", () => ({
+  useOrder: () => ({ data: order }),
+  refreshOrderViews: () => mockRefresh(),
+}));
 
 const newOrder = {
   id: "22222222-2222-4222-8222-222222222222",
@@ -54,6 +58,7 @@ beforeEach(() => {
   mockRead.mockReset();
   mockPush.mockReset();
   mockChime.mockReset();
+  mockRefresh.mockReset();
 });
 
 const METRICS = { frame: { x: 0, y: 0, width: 390, height: 844 }, insets: { top: 47, left: 0, right: 0, bottom: 34 } };
@@ -82,6 +87,7 @@ describe("NotificationBanner (spec 002 FR-021–FR-024)", () => {
     expect(screen.getByText("2× Kmínový chléb, 6× Rohlík")).toBeTruthy();
     expect(screen.getByText("162 Kč")).toBeTruthy();
     expect(mockChime).toHaveBeenCalledTimes(1);
+    expect(mockRefresh).toHaveBeenCalledTimes(1); // the day's list and the plan follow (spec 001 FR-062)
   });
 
   it("no sound in quiet hours", async () => {

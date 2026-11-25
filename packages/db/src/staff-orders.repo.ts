@@ -103,7 +103,9 @@ export async function cancelOrderIn(tx: Tx, id: string, now: Date): Promise<Canc
   const lines = await tx
     .select({ productId: orderLine.productId, quantity: orderLine.quantity })
     .from(orderLine)
-    .where(eq(orderLine.orderId, id));
+    .where(eq(orderLine.orderId, id))
+    // the same order in which orders take capacity (spec 001 FR-061)
+    .orderBy(asc(orderLine.productId));
   for (const l of lines)
     await tx
       .update(dailyCapacity)

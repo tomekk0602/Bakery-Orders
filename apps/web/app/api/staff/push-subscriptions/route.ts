@@ -1,6 +1,6 @@
 import { PushSubscriptionBody, RemovePushSubscriptionBody } from "@bakery/core/contracts";
-import { recordDeviceTest, removePushSubscription, savePushSubscription } from "@bakery/db";
-import { sendTestPush, vapidPublicKey } from "@/server/notifications/push";
+import { hitRateLimit, recordDeviceTest, removePushSubscription, savePushSubscription } from "@bakery/db";
+import { PUSH_REGISTRATION_LIMIT, sendTestPush, vapidPublicKey } from "@/server/notifications/push";
 import { requireStaff } from "@/server/notifications/staff";
 import { db, fail, json } from "@/server/runtime";
 
@@ -13,7 +13,11 @@ export async function POST(req: Request) {
   if ("response" in r) return r.response;
   if (!vapidPublicKey()) return fail("push_off", "Upozornění do zařízení nejsou na serveru zapnutá.", 503);
   const body = PushSubscriptionBody.safeParse(await req.json().catch(() => null));
+  // also refuses an address that is not a browser's push service (FR-027)
   if (!body.success) return fail("invalid", "Neplatné zařízení.", 400);
+  const { max, windowMs } = PUSH_REGISTRATION_LIMIT;
+  if (!(await hitRateLimit(db(), `push-register:${r.user.id}`, max, windowMs)))
+    return fail("rate_limited", "Příliš mnoho pokusů. Zkuste to prosím za hodinu.", 429);
   const id = await savePushSubscription(db(), r.user.id, body.data);
   const test = await sendTestPush({ endpoint: body.data.endpoint, ...body.data.keys });
   await recordDeviceTest(db(), id, test.result);

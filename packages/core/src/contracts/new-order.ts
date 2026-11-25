@@ -2,12 +2,22 @@ import { z } from "zod";
 import { IsoDate } from "./orders.ts";
 import { PlanDay } from "./plan.ts";
 
-/** A Czech or international phone number as staff type it; spaces are allowed and dropped. */
+/** E.164 allows at most 15 digits; a Czech number has 9 without the country code (spec 001 FR-063). */
+const PHONE_DIGITS = { min: 9, max: 15 } as const;
+
+/**
+ * A Czech or international phone number as people type it; spaces are allowed and dropped. The digits
+ * are counted after the spaces go: "1        2" is two digits, not a phone number.
+ */
 export const Phone = z
   .string()
   .trim()
-  .regex(/^\+?[0-9 ]{9,16}$/, "phone")
-  .transform((v) => v.replace(/\s+/g, ""));
+  .regex(/^\+?[0-9 ]+$/, "phone")
+  .transform((v) => v.replace(/\s+/g, ""))
+  .refine((v) => {
+    const digits = v.replace(/\D/g, "").length;
+    return digits >= PHONE_DIGITS.min && digits <= PHONE_DIGITS.max;
+  }, "phone");
 
 /** GET /api/staff/order-form — what the new-order form offers: active products and open days. */
 export const OrderFormResponse = z.object({

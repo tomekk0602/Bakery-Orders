@@ -195,3 +195,16 @@ none`); only the redirecting `index` keeps `href: null`. Regression test
   now keep history (`backBehavior="history"`), so back returns to the tab the person came from; with no
   history (opened from a link or a device notification) it goes to "Dnes". Both cases are in the same
   regression test and fail without the fix.
+
+## N18 — Fixes from the code review of 2026-11-25
+
+- **Push endpoints (FR-027)**: a subscription's endpoint must be `https:` on a host of a known push
+  service — `fcm.googleapis.com` (Chrome, Edge on Android), `*.notify.windows.com` (Edge on Windows),
+  `updates.push.services.mozilla.com` (Firefox), `*.push.apple.com` (Safari). Anything else is refused
+  (400) before it is stored, so the test push can never be aimed at a private or internal address
+  (SSRF). `web-push` sends with a 10 s timeout. Registrations: at most 10 per person per hour, with the
+  existing rate-limit table. Confirmed by the review: `z.url()` accepted `https://127.0.0.1:8443/…`.
+- **Plan links (FR-028)**: plan notifications link to `/plan?day=<YYYY-MM-DD>`, and the plan screen
+  takes the day from the address. This reverses the part of N11's 2026-11-24 amendment about the plan:
+  a summary sent in the afternoon and opened the next morning showed the plan of the day after.
+  Request notifications keep `/pozadavky`.

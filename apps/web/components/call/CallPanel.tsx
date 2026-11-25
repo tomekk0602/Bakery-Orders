@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { LiveCall, type Turn } from "./live-call";
 
 type Status = "idle" | "connecting" | "live" | "ended";
@@ -12,6 +12,8 @@ export function CallPanel() {
   const [turns, setTurns] = useState<Turn[]>([]);
   const [orders, setOrders] = useState<number[]>([]);
   const call = useRef<LiveCall | null>(null);
+  // leaving the page ends the call: the microphone must not stay on (FR-058)
+  useEffect(() => () => void call.current?.end("hangup"), []);
 
   async function start() {
     setError(null);

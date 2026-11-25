@@ -68,5 +68,7 @@ describe("baking plan (FR-010, FR-044)", () => {
 
   it("refuses a malformed day", async () => {
     expect((await plan("?day=zitra", env.cookies.employee)).status).toBe(400);
+    // a well-formed but impossible date never reaches the database (spec 001 FR-063)
+    expect((await plan("?day=2026-99-99", env.cookies.employee)).status).toBe(400);
   });
 });

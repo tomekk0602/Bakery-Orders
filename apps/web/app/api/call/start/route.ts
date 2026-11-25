@@ -1,4 +1,5 @@
 import { PROMPT_VERSION } from "@bakery/core";
+import { Phone } from "@bakery/core/contracts";
 import { startObservation } from "@langfuse/tracing";
 import { createCall, hitRateLimit, loadBakery } from "@bakery/db";
 import { z } from "zod";
@@ -8,12 +9,7 @@ import { alertAssistantDown } from "@/server/notifications/deliver";
 import { db, fail, genai, ipHash, json, LIVE_MODEL } from "@/server/runtime";
 import { inCallTrace } from "@/server/telemetry";
 
-const Body = z.object({
-  caller_phone: z
-    .string()
-    .trim()
-    .regex(/^\+?[0-9 ]{9,16}$/, "phone"),
-});
+const Body = z.object({ caller_phone: Phone });
 
 /** Begins a browser call: per-IP limit, a call record, a one-use Live token locked to our config (FR-035, FR-036). */
 export async function POST(req: Request) {
@@ -31,7 +27,7 @@ export async function POST(req: Request) {
   const bakery = await loadBakery(db());
   const now = new Date();
   const callId = await createCall(db(), {
-    callerPhone: parsed.data.caller_phone.replace(/\s+/g, ""),
+    callerPhone: parsed.data.caller_phone,
     ipHash: hash,
     promptVersion: PROMPT_VERSION,
     model: LIVE_MODEL,

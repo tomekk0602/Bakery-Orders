@@ -7,7 +7,7 @@ import {
 } from "@bakery/core/contracts";
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
-import { orderKeys } from "@/features/orders/api";
+import { refreshOrderViews } from "@/features/orders/api";
 import { api } from "@/shared/api/http";
 
 export const requestKeys = { all: ["requests"] as const };
@@ -67,7 +67,7 @@ export function useCancelFromRequest() {
       }),
     onSettled: async () => {
       await queryClient.invalidateQueries({ queryKey: requestKeys.all });
-      await queryClient.invalidateQueries({ queryKey: orderKeys.all });
+      await refreshOrderViews(queryClient);
     },
   });
 }

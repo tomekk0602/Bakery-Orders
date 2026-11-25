@@ -669,3 +669,41 @@ intervals.
     requests are never deleted. Rejected: 90 days (a longer trail for complaints, but personal data
     kept three times longer).
 - **Index**: `staff_request (done_at, id)` for the archive pages and the clean-up.
+
+## R35 — Fixes from the code review of 2026-11-25
+
+An outside review (GPT, 2026-11-25) was checked against the code; ten of eleven findings were
+confirmed, one partly. Decisions:
+
+- **Call lifecycle (FR-058)**: `LiveCall` checks after every `await` in `start()` whether the call
+  has ended meanwhile and, if so, releases what it opened; a failed start releases everything; the
+  call component ends the call when it unmounts. Confirmed: the microphone stayed on after "ended"
+  during "connecting".
+- **Traces (FR-032 clarified)**: the tool span's input is the tool's validated arguments with only
+  allowlisted technical keys; `note` and any unknown key are dropped; arguments that fail validation
+  are not exported at all (the span records only that they were invalid). An allowlist, not a better
+  name detector: a name inside free text cannot be found reliably. Confirmed: `note: "Pan Jan Novák
+chce zrušit…"` reached the trace unchanged, contrary to `mask.ts`'s own promise.
+- **Cache per person (FR-059)**: the staff app clears its query cache when the signed-in user
+  changes (sign-out included), keyed on the session's user id. _Corrected 2026-11-25 in the owner's test: `clear()` removed
+  the "/api/staff/me" query a screen was already waiting on right after sign-in, and the app spun
+  for ever; `resetQueries()` empties every answer and asks again for those on screen. A test keeps
+  that query in flight across the change and fails with `clear()`._ The server's permission checks were
+  never affected; the stale data was only on screen.
+- **Product switched off (FR-060)**: `insertOrder` reads `active` with the limit and refuses an
+  inactive product as `unknown_product`. The price stays the draft's snapshot (the customer heard it);
+  confirming a price changed meanwhile is a separate decision (review point 5, deferred).
+- **Lock order (FR-061)**: `insertOrder` takes the capacity rows in `productId` order, and cancelling
+  releases them in the same order, so two transactions never wait on each other in a cycle.
+  Postgres would abort one of them with a deadlock error, which the customer would see as a failure.
+- **Views after a change (FR-062)**: saving or cancelling an order invalidates the orders and the plan
+  queries; a new-order banner invalidates both too.
+- **Input (FR-063)**: `IsoDate` refines to a real calendar date; the phone schemas count digits after
+  removing spaces (9–15, E.164 allows at most 15).
+- **Build in CI**: CI runs `npm run build:deploy` (Expo web export + `next build`), because only the
+  production build caught the `web-push` default import (002 research N10). The workspace manifests
+  declare `@bakery/core` / `@bakery/db` (and `drizzle-orm` in `web`, used by its seed script), so the
+  manifests state the real dependency graph.
+- **Deferred**: idempotency of the web form and of a confirm retried after a lost answer (review 6,
+  already on the list); price confirmation (5); a wider eval-gate filter (costs paid runs — owner's
+  call); `plan.md` sync; moving use-case orchestration out of `packages/db` (no value at this scale).

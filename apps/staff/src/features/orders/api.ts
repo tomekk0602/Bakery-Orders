@@ -1,6 +1,7 @@
 import { StaffOrderDetail, StaffOrdersResponse, type SetOrderStatusBody } from "@bakery/core/contracts";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { type QueryClient, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
+import { planKeys } from "@/features/plan/api";
 import { api } from "@/shared/api/http";
 
 export const orderKeys = {
@@ -8,6 +9,16 @@ export const orderKeys = {
   day: (day: string | null) => [...orderKeys.all, "day", day ?? "today"] as const,
   detail: (id: string) => [...orderKeys.all, "detail", id] as const,
 };
+
+/**
+ * Everything a saved or cancelled order changes on screen: the order lists, the detail and the baking
+ * plan (spec 001 FR-062). One place, so a new kind of change cannot forget the plan again.
+ */
+export const refreshOrderViews = (queryClient: QueryClient) =>
+  Promise.all([
+    queryClient.invalidateQueries({ queryKey: orderKeys.all }),
+    queryClient.invalidateQueries({ queryKey: planKeys.all }),
+  ]);
 
 /** The day's orders; `null` lets the server pick today in Prague. */
 export const useOrdersForDay = (day: string | null) =>
@@ -37,6 +48,6 @@ export function useCancelOrder() {
   return useMutation({
     mutationFn: (id: string) =>
       api(`/api/staff/orders/${id}`, Ok, { method: "PATCH", body: JSON.stringify({ status: "cancelled" }) }),
-    onSettled: () => queryClient.invalidateQueries({ queryKey: orderKeys.all }),
+    onSettled: () => refreshOrderViews(queryClient),
   });
 }

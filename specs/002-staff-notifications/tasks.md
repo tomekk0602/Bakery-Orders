@@ -47,6 +47,11 @@
 - [x] N023 [US5] Service Worker: on push with a visible window, post to it instead of a system notification; verify in Chrome (FR-026; N14)
 - [x] N024 [US5] Quickstart rows 12–16 and a live run with two accounts (SC-007, SC-008) _(owner's live run 2026-11-25: banners by polling in both accounts; push path not switched on — research N16)_
 
+## Phase 6c: Fixes from the code review (2026-11-25; research N18)
+
+- [x] N025 Push registration: HTTPS at a known push service only, 10 s send timeout, 10 registrations per person per hour; tests incl. a private address (FR-027)
+- [x] N026 Plan notifications link `/plan?day=`; the plan screen reads the day from the address; tests (FR-028)
+
 ## Phase 7: Verification
 
 - [ ] N017 _(automated part done 2026-11-24: 247 tests, `next build`, staff export; the live run with VAPID keys is the owner's)_ Quickstart 1–9 locally; live push in Chrome on the deployment; record in `research.md`; README section (SC-001–SC-006)

@@ -280,3 +280,13 @@ Specified in `specs/002-staff-notifications` (spec, plan) with ADR-0016; built f
 - [x] T104 [US8] Routes: list shape, `GET /api/staff/requests/archive` (403 for employees), retention count; route tests
 - [x] T105 [US8] Staff app: "Dnes uzavřené (n)" folded; "Archiv" button for the owner; archive screen with filter, search, "Načíst starší", history and reopen; tests
 - [x] T106 [US8] Quickstart rows and a live run (owner and employee) _(owner's live run 2026-11-25: "działa")_
+
+## Fixes from the code review (2026-11-25; research R35)
+
+- [x] T107 [P] Call lifecycle: end while connecting / failed start release microphone, session, speaker; unmount ends the call; tests per start stage and a refused microphone (FR-058)
+- [x] T108 [P] Traces: tool span input = validated arguments, allowlisted keys only; invalid arguments not exported; tests (FR-032 clarified)
+- [x] T109 [P] Staff app: query cache cleared when the signed-in user changes; test switching accounts (FR-059)
+- [x] T110 Orders: `active` checked at confirmation; capacity locked and released in `productId` order; tests incl. a two-product race (FR-060, FR-061)
+- [x] T111 Staff app: saving/cancelling an order and a new-order banner refresh orders and plan; tests (FR-062)
+- [x] T112 Contracts: real calendar dates; phone digits 9–15; route tests for 400 (FR-063)
+- [x] T113 CI: `build:deploy` in the check job; workspace dependencies declared in the manifests (R35)

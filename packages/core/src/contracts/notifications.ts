@@ -53,9 +53,30 @@ export const UpdateNotificationSettings = z.object({
 });
 export type UpdateNotificationSettings = z.infer<typeof UpdateNotificationSettings>;
 
-/** POST /api/staff/push-subscriptions — a browser's PushSubscription as JSON (FR-009). */
+/**
+ * The browsers' push services (spec 002 FR-027, research N18). A subscription elsewhere is refused, so
+ * the server never sends a request to an address a user chose — no private or internal target (SSRF).
+ */
+const PUSH_SERVICE_HOSTS = ["fcm.googleapis.com", "updates.push.services.mozilla.com"] as const;
+const PUSH_SERVICE_SUFFIXES = [".push.apple.com", ".notify.windows.com"] as const;
+
+export function isPushServiceUrl(value: string): boolean {
+  let url: URL;
+  try {
+    url = new URL(value);
+  } catch {
+    return false;
+  }
+  if (url.protocol !== "https:" || url.port !== "" || url.username || url.password) return false;
+  const host = url.hostname.toLowerCase();
+  return (
+    (PUSH_SERVICE_HOSTS as readonly string[]).includes(host) || PUSH_SERVICE_SUFFIXES.some((s) => host.endsWith(s))
+  );
+}
+
+/** POST /api/staff/push-subscriptions — a browser's PushSubscription as JSON (FR-009, FR-027). */
 export const PushSubscriptionBody = z.object({
-  endpoint: z.url().max(1000),
+  endpoint: z.url().max(1000).refine(isPushServiceUrl, "push_service"),
   keys: z.object({ p256dh: z.string().min(1).max(200), auth: z.string().min(1).max(100) }),
   userAgent: z.string().max(300).optional(),
 });

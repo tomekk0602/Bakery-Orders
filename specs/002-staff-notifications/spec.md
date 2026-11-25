@@ -270,6 +270,12 @@ the banner disappears by itself on the other after about 30 seconds.
   day and through which channel (FR-010).
 - **FR-026**: A banner shown in a tab that the device notification also reached MUST replace that device
   notification, so the person is not told twice on the same screen.
+- **FR-027** _(code review, 2026-11-25)_: A device registration MUST be refused unless its address
+  is HTTPS at a known browser push service; sending to a device MUST time out; registrations MUST
+  be limited per person. The server never sends a request to an address a user chose freely.
+- **FR-028** _(code review, 2026-11-25)_: A plan notification (daily summary, plan changed) MUST open
+  the plan of the day it names — restoring FR-008 ("open what it is about … the day's plan"), which
+  research N11's amendment of 2026-11-24 had narrowed to the plan screen's default day.
 
 **Out of scope**
 

@@ -151,6 +151,42 @@ describe("confirmDraft", () => {
   });
 });
 
+describe("confirmation and concurrency (spec 001 FR-060, FR-061; research R35)", () => {
+  it("a product switched off after the read-back is refused and nothing is saved", async () => {
+    const a = await prepared([
+      { productId: "rohlik", quantity: 6 },
+      { productId: "vanocka", quantity: 1 },
+    ]);
+    await db.update(product).set({ active: false }).where(eq(product.id, "vanocka"));
+    expect(await confirmDraft(db, a.draftId, STAFF, meta, now)).toEqual({ ok: false, reason: "unknown_product" });
+    expect(await db.select().from(order)).toHaveLength(0);
+    expect(await db.select().from(dailyCapacity)).toEqual([]);
+  });
+
+  it("orders sharing products in opposite line order are all saved, none fails waiting on another", async () => {
+    const pairs = 10;
+    const drafts = await Promise.all(
+      Array.from({ length: pairs * 2 }, (_, i) =>
+        prepared(
+          i % 2 === 0
+            ? [
+                { productId: "rohlik", quantity: 1 },
+                { productId: "houska", quantity: 1 },
+              ]
+            : [
+                { productId: "houska", quantity: 1 },
+                { productId: "rohlik", quantity: 1 },
+              ],
+        ),
+      ),
+    );
+    const results = await Promise.all(drafts.map((d) => confirmDraft(db, d.draftId, STAFF, meta, now)));
+    expect(results.every((r) => r.ok)).toBe(true);
+    const caps = await db.select().from(dailyCapacity);
+    expect(caps.map((c) => c.reserved)).toEqual([pairs * 2, pairs * 2]);
+  });
+});
+
 describe("hitRateLimit", () => {
   it("allows up to max hits per window", async () => {
     const hits = [];

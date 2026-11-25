@@ -91,7 +91,7 @@ const callback = async () => {
     note: "Zavolat",
   });
 };
-const device = { endpoint: "https://push.example/employee", keys: { p256dh: "p256", auth: "auth" } };
+const device = { endpoint: "https://fcm.googleapis.com/fcm/send/employee", keys: { p256dh: "p256", auth: "auth" } };
 const pushedPayloads = () => mocks.send.mock.calls.map((c) => JSON.parse(c[1] as string) as Record<string, string>);
 
 describe("the bell and the list (spec 002 FR-007, FR-008)", () => {
@@ -143,6 +143,23 @@ describe("settings (FR-014, FR-015)", () => {
 });
 
 describe("devices (FR-009, FR-011, FR-012)", () => {
+  it("an address that is not a browser's push service is refused before anything is sent (FR-027)", async () => {
+    Object.assign(process.env, {
+      VAPID_PUBLIC_KEY: "test-public-key",
+      VAPID_PRIVATE_KEY: "test-private-key",
+      VAPID_SUBJECT: "mailto:test@test.local",
+    });
+    const res = await call("/api/staff/push-subscriptions", "POST", env.cookies.employee, {
+      ...device,
+      endpoint: "https://127.0.0.1:8443/internal",
+    });
+    expect(res.status).toBe(400);
+    expect(mocks.send).not.toHaveBeenCalled();
+    delete process.env.VAPID_PUBLIC_KEY;
+    delete process.env.VAPID_PRIVATE_KEY;
+    delete process.env.VAPID_SUBJECT;
+  });
+
   it("without VAPID keys the server says device notifications are off", async () => {
     expect((await call("/api/staff/push-subscriptions", "POST", env.cookies.employee, device)).status).toBe(503);
   });
@@ -210,7 +227,7 @@ describe("the daily summary (FR-004, FR-005)", () => {
     expect(first.day).toBe(openDay);
     expect(first.created).toBe(2);
     const summary = (await list(env.cookies.owner)).items.find((n) => n.kind === "plan_summary");
-    expect(summary).toMatchObject({ link: "/plan" });
+    expect(summary).toMatchObject({ link: `/plan?day=${openDay}` });
     expect(summary?.title).toMatch(/^Plán na /);
     expect(((await (await cron("Bearer test-cron-secret")).json()) as { created: number }).created).toBe(0);
   });

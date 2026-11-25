@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Animated, Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useOrder } from "@/features/orders/api";
+import { refreshOrderViews, useOrder } from "@/features/orders/api";
 import { formatCzk, formatDay, itemsSummary } from "@/features/orders/format";
 import { colors, font, radius, space } from "@/shared/ui";
 import { notificationKeys, useNotifications, useReadNotification } from "./api";
@@ -44,8 +44,10 @@ export function NotificationBanner() {
     if (fresh.length === 0) return;
     for (const n of fresh) shown.current.add(n.id);
     setBanners((b) => [...fresh, ...b]);
+    // a new order changes the day's list and the plan on screen too (spec 001 FR-062)
+    if (fresh.some((n) => n.kind === "new_order" || n.kind === "plan_changed")) void refreshOrderViews(queryClient);
     if (!list.data.quiet && isSoundOn()) playChime();
-  }, [list.data]);
+  }, [list.data, queryClient]);
 
   const close = (id: string) => setBanners((b) => b.filter((n) => n.id !== id));
   if (banners.length === 0) return null;

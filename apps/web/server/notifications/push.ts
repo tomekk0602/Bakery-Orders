@@ -39,6 +39,12 @@ export const sendTestPush = (device: PushDevice) =>
     }),
   );
 
+/** A push service that does not answer in this time counts as a failed delivery (FR-027). */
+const SEND_TIMEOUT_MS = 10_000;
+
+/** Device registrations per person: ten an hour is far above real use, low enough to stop a loop (FR-027). */
+export const PUSH_REGISTRATION_LIMIT = { max: 10, windowMs: 60 * 60 * 1000 } as const;
+
 /** Status codes that mean the browser withdrew the registration for good (RFC 8030; research N9). */
 const GONE = new Set([404, 410]);
 
@@ -50,6 +56,7 @@ export const sendWebPush: SendPush = async (device, payload) => {
       payload,
       {
         TTL: 60 * 60,
+        timeout: SEND_TIMEOUT_MS,
         urgency: "high",
       },
     );

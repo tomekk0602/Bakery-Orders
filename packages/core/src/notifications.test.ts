@@ -80,7 +80,7 @@ describe("texts that may show on a lock screen (FR-010)", () => {
     });
     expect(t.title).toBe("Plán na středa 25. 11.");
     expect(t.body).toBe("34 objednávek. Nejvíc upéct: 120× Rohlík, 40× Houska.");
-    expect(t.link).toBe("/plan");
+    expect(t.link).toBe("/plan?day=2026-11-25");
   });
 
   it("a day without orders still gets a summary", () => {

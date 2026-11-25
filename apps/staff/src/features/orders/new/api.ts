@@ -6,9 +6,8 @@ import {
   type StaffOrderInput,
 } from "@bakery/core/contracts";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { planKeys } from "@/features/plan/api";
 import { api } from "@/shared/api/http";
-import { orderKeys } from "../api";
+import { refreshOrderViews } from "../api";
 
 export const useOrderForm = () =>
   useQuery({ queryKey: ["order-form"], queryFn: () => api("/api/staff/order-form", OrderFormResponse) });
@@ -26,11 +25,7 @@ export function useConfirmDraft() {
   return useMutation({
     mutationFn: (draftId: string) =>
       api(`/api/staff/drafts/${draftId}/confirm`, ConfirmDraftResponse, { method: "POST" }),
-    onSuccess: () =>
-      Promise.all([
-        queryClient.invalidateQueries({ queryKey: orderKeys.all }),
-        queryClient.invalidateQueries({ queryKey: planKeys.all }),
-      ]),
+    onSuccess: () => refreshOrderViews(queryClient),
   });
 }
 
