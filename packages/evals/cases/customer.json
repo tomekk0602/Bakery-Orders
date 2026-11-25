@@ -197,7 +197,7 @@
         {
           "say": "Dobrý den, dva rohlíky na zítra.",
           "mustNotCall": ["prepare_order", "confirm_order"],
-          "sayAny": ["jmén", "jmenuj"]
+          "sayAny": ["jmén", "jmenuj", "pro koho"]
         },
         {
           "say": "Novák.",

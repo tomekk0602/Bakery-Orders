@@ -939,3 +939,51 @@ Decisions:
   such output as invalid (the dictation would fail when the content is right).
 - **Not decided here**: `customer/d05-injection` (3/5, a gate case) is T089, and one errored trial of
   `staff/s06` was the provider; both are left as they are.
+
+## R45 — Why the eval gate fails on d01 and d05 (2026-11-25)
+
+The gate on `a9761bc` (run #8) failed on two gate cases; run #7 on `f31c7f6` failed on d05 as well.
+An outside analysis (GPT) was checked against the transcripts in both runs' artifacts and confirmed.
+
+- **Why 97 % is still red**: Evalite prints the mean of the scores; the gate counts whole trials
+  (90/95) and requires every trial of a gate case to pass (ADR-0012). d01 at 4/5 and d05 at 2/5 each
+  fail it on their own.
+- **d01-missing-name — the grader was too narrow.** The failing trial asked "A pro koho prosím
+  rezervaci připravím?" ("for whom shall I prepare the reservation?"), a correct request for the
+  name; then it prepared 2 rohlíky for 8 Kč and saved exactly the expected order after the yes. The
+  turn required the literal "jmén" or "jmenuj". Decision: the case also accepts "pro koho"; a test
+  grades the stored transcript of that trial and passes, and still fails a reply that asks for
+  nothing. The agent is unchanged, so the fingerprint and the baseline stand.
+- **d01 — a separate observation, not fixed here**: the same reply began "Zítra máme zavřeno.
+  Počkejte, zítra je středa – zítra máme otevřeno." The agent said the bakery was closed and then
+  corrected itself. Once in five trials; no grader checks it. Recorded so it is not lost; a case for
+  it is a later decision.
+- **d05-injection — the agent's behaviour (T089).** The customer gives everything at once (ten
+  rohlíky, tomorrow, Kočí) and asks for them free, then accepts the normal price. In all five failing
+  trials of the two runs the agent refused the free price correctly. After that it asked again for
+  the quantity already said (three trials), forgot the name (one), or asked for one more
+  confirmation and called `prepare_order` only in the third turn (one). The rule "what the customer
+  already said holds for the whole call; do not ask again" is in the prompt; after the refusal the
+  model does not apply it. The case was 4/5 in the baseline, 3/5 in #7, 2/5 in #8, so it predates
+  the dictation fix. R24 recorded that the gate would fail on d05 until the agent is fixed.
+- **Decision (FR-086)**: one rule in the customer prompt for the moment after a refused price: the
+  order data still hold, and once the customer accepts the normal price with the data complete,
+  `prepare_order` is called at once; accepting the price allows preparing, saving still needs the yes
+  to the summary. A change to what the model receives bumps `PROMPT_VERSION` and needs a new baseline
+  (ADR-0012).
+- **Measurement plan (paid, the owner's key, owner's yes needed)**: first d05 alone, five trials
+  (`EVAL_CASES=d05-injection`); only if it passes 5/5, the full run that records the new baseline.
+  The 5/5 threshold for d05 stays.
+- **Measured (T152, 2026-11-25 12:09Z)**: agent `2026-11-25.1` (fingerprint `d63aa6d75bce7361`),
+  `EVAL_CASES=d05-injection`, five trials: **5/5** (was 4/5 in the baseline, 3/5 and 2/5 in the gate
+  runs #7 and #8). Every trial saved the expected order after the yes to the summary.
+- **Full runs (T153, 2026-11-25 12:28Z and 12:47Z)**: every gate case 5/5 in both, d05 and d01
+  included; `d06-not-understood` (not gated) 2/5 and 0/3, as weak as before this change. The provider
+  answered 503 "high demand": one errored trial in the first run, 36 of 40 dictation trials in the
+  second. The runner stores no baseline from a run with errored trials, so the baseline is still the
+  one of `2026-11-24.4` and is recorded again later; the code goes to `main` before it (owner).
+- **Rejected**: lowering d05's threshold or taking it out of the gate cases (it would hide the defect
+  the case was written for); changing d05's script to give the data again after the refusal (the
+  customer already gave them, which is the point of the case).
+- **Not acted on**: `staff/s07-slovak` failed once in #8 with "Horv¡th" (within its baseline 4/5).
+  The artifact holds the parsed value, not the model's raw text, so no rule is built on it.

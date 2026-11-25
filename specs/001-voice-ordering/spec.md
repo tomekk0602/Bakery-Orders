@@ -484,6 +484,12 @@ name, and reopens it; a request closed 31 days ago is gone after the nightly cle
   MUST reach the order card as the letters spoken: when the model writes a letter as an HTML entity
   (`Horv&#225;th`), the server MUST turn it back into the letter (`Horváth`) before the card is
   built. The same rule MUST apply in the evals, so they test what staff get.
+- **FR-086** _(2026-11-25, research R45; T089)_: After the agent refuses a price the customer asked for
+  (free, a discount), what the customer already said about the order — products, quantities, day,
+  name — MUST still hold. When the customer accepts the normal price and those are complete, the
+  agent MUST prepare the order at once and read back its summary and total; it MUST NOT ask again
+  for something already said or for an extra confirmation first. Accepting the normal price is not
+  consent to save: saving still needs the yes to the read-back summary (FR-006).
 - **FR-042**: A "Reset demo" action MUST restore the seeded bakery, catalogue and orders (ADR-0014).
 - **FR-043**: Every staff API route MUST check the caller's permission on the server: no session →
   401, missing permission → 403 (ADR-0015).

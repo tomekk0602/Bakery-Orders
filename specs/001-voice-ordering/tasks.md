@@ -156,7 +156,7 @@ they cover and must fail first.
 - [x] T066 Customer and staff suites in one `agent.eval.ts` (one process, one request pacer): each case N = 5 on Flash-Lite with the real tools (`runCallTool`) against a test database; report with intervals (research R24)
 - [ ] T067 `simulated.eval.ts`: a simulated Czech customer from a goal (Sonnet through the CLI locally, a free Gemini model in CI); scenarios include an unavailable product, a failing tool, silence, a correction, a request for a human (FR-029) _(deferred — FR-029, research R37: the suite replays scripted conversations)_
 - [x] T068 Gate: `baseline.json`, a comparison script, `npm run eval -- --gate` exits non-zero on regression; a test that removes the calendar block and expects the gate to fail (SC-010)
-- [ ] T089 Fix d05: after a refused manipulation attempt the agent asks again for what the customer already said (4/5 at `2026-11-24.4`, research R25); re-measure, then a new baseline (SC-010)
+- [ ] T089 Fix d05: after a refused manipulation attempt the agent asks again for what the customer already said (4/5 at `2026-11-24.4`, research R25); re-measure, then a new baseline (SC-010) _(planned in research R45: T151–T154)_
 - [ ] T069 [P] Voice eval `packages/evals/voice/`: the spike's Live runner with the vocabulary, clean and phone-band clips, latency report (nightly) _(deferred: no repeated voice eval yet — README "How I know it works")_
 - [ ] T070 [P] Judge for tone and Czech: calibration set of ~20 transcripts labelled by the owner, agreement reported in research.md; used in the gate only above the agreed threshold _(deferred)_
 
@@ -352,3 +352,11 @@ Second batch:
 - [x] T147 `entities` added to `@bakery/core`; the lockfile gains only that change (R44)
 - [x] T148 Dictation schema: the customer name and an unmatched word are decoded before trimming and the length check; the JSON Schema for the model stays the input side; tests `Horv&#225;th` → `Horváth` and a named entity (FR-085)
 - [ ] T149 Gates green; the eval gate re-run on the push shows `staff/s07-slovak` back within its baseline (FR-085)
+
+## Why the eval gate fails (2026-11-25; research R45)
+
+- [x] T150 d01: the first turn also accepts "pro koho"; a grader test on the stored failing transcript of run #8 passes, and a reply asking nothing still fails (R45)
+- [x] T151 Customer prompt: after a refused price the order data hold; once the normal price is accepted and the data are complete, `prepare_order` at once; `PROMPT_VERSION` bumped, fingerprint updated (FR-086, T089)
+- [x] T152 Measure d05 alone, five trials, with the owner's yes (paid); record the result in R45
+- [ ] T153 _(two full runs on 2026-11-25, 12:28Z and 12:47Z: every gate case 5/5 in both, d05 and d01 included, but the provider answered 503 "high demand" — one errored trial in the first, 36 of 40 dictation trials in the second — so no baseline was stored; to be repeated)_ If d05 is 5/5: the full run records the new baseline (paid, owner's yes); the gate passes on the push
+- [ ] T154 Gates green (typecheck, lint, tests)

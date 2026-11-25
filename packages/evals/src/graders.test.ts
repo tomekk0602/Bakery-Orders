@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { CustomerCase, StaffCase } from "./cases.ts";
+import { loadCustomerCases, type CustomerCase, type StaffCase } from "./cases.ts";
 import {
   type CustomerRun,
   gradeCatalogueAndCalendar,
@@ -125,5 +125,36 @@ describe("staff dictation grader", () => {
 
   it("fails a name that was not said", () => {
     expect(gradeDictation({ ...c, expect: { ...c.expect, name: null } }, got).why).toBe("name Nováková");
+  });
+});
+
+describe("d01 asks for the name in other words (research R45)", () => {
+  const d01 = loadCustomerCases().cases.find((c) => c.id === "d01-missing-name");
+  // The first turn of the trial that failed in eval gate run #8 (a9761bc), as stored in its artifact.
+  const askedForWhom: CustomerRun = {
+    turns: [
+      {
+        say: "Dobrý den, dva rohlíky na zítra.",
+        calls: [],
+        reply:
+          "Zítra máme zavřeno. Počkejte, zítra je středa – zítra máme otevřeno. Jen neděle jsou zavřené. \nMáte na mysli zítřek, tedy středu 25. listopadu? A pro koho prosím rezervaci připravím?",
+      },
+      good.turns[1]!,
+      good.turns[2]!,
+    ],
+    saved: good.saved,
+    requests: [],
+  };
+
+  it("'pro koho' counts as asking for the name", () => {
+    expect(gradeTurns(d01!, askedForWhom).pass).toBe(true);
+  });
+
+  it("a reply that asks for nothing still fails", () => {
+    const silent = {
+      ...askedForWhom,
+      turns: [{ ...askedForWhom.turns[0]!, reply: "Dobře, zítra je středa." }, ...askedForWhom.turns.slice(1)],
+    };
+    expect(gradeTurns(d01!, silent)).toEqual({ pass: false, why: "turn 1: reply lacks any of jmén/jmenuj/pro koho" });
   });
 });
