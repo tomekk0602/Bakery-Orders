@@ -310,3 +310,18 @@ Specified in `specs/002-staff-notifications` (spec, plan) with ADR-0016; built f
 - [x] T122 Every "Zavolat" opens the dialog (header, hero, call section); the call section keeps its text and one button (FR-067)
 - [x] T123 Layout: full screen below 640 px, centred above; the connecting animation; reduced motion respected (FR-069)
 - [ ] T124 _(state tests done in `call-session.test.ts`, research R39; the live run on a phone and a computer is the owner's)_ Component tests: each state, Esc and close during a call end it, a refusal shows the form link, the number is not stored; live run on a phone and a computer (SC-019)
+
+## Staff app sizing (owner, 2026-11-25; research R41)
+
+- [x] T125 Tokens: touch target 44 px, button text 16 px, radius 8; `Button` and `TextField` follow; the day picker and the quantity stepper stay at 44 px (FR-072)
+- [x] T126 `Screen`: content at most 720 px wide and centred on wider screens (FR-073)
+- [x] T128 `Button`: the main button's gradient with `expo-linear-gradient`; pressed 80 %, inactive 60 % (FR-072)
+- [x] T127 Tests stay green; live check on a computer and a phone (SC-020)
+
+## A floating tab bar (owner, 2026-11-25; research R42)
+
+- [x] T129 Dependencies: `expo-blur`, `@expo/vector-icons` (Expo SDK versions); the lockfile gains only their entries
+- [x] T130 Tab bar: floating pill over the content, blurred translucent background, shadow, at most 560 px and centred; `Screen` leaves room under the last item (FR-074)
+- [x] T131 Tabs: Ionicons filled when selected and outlined otherwise, the amber pill behind the selected tab, the focus ring follows it, labels under the icon and short ("Nová"); the bell uses the same icon set (FR-075)
+- [x] T132 Tests: the tabs are found by their labels, not by emoji; an employee has none of the owner's tabs; the badge on Požadavky (FR-075)
+- [x] T133 Live check on a phone-width window and a computer (SC-021)

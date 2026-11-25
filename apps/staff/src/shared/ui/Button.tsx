@@ -1,3 +1,4 @@
+import { LinearGradient } from "expo-linear-gradient";
 import { ActivityIndicator, Pressable, StyleSheet, Text } from "react-native";
 import { colors, font, radius, space, TOUCH_TARGET } from "./tokens";
 
@@ -9,8 +10,18 @@ type Props = {
   variant?: "primary" | "secondary";
 };
 
+/** A pressed button dims to 80 %, an inactive one to 60 % (FR-072). */
+const PRESSED_OPACITY = 0.8;
+const INACTIVE_OPACITY = 0.6;
+
 export function Button({ label, onPress, busy = false, disabled = false, variant = "primary" }: Props) {
   const inactive = disabled || busy;
+  const primary = variant === "primary";
+  const content = busy ? (
+    <ActivityIndicator color={primary ? colors.primaryText : colors.primary} />
+  ) : (
+    <Text style={[styles.label, primary ? styles.primaryLabel : styles.secondaryLabel]}>{label}</Text>
+  );
   return (
     <Pressable
       accessibilityRole="button"
@@ -18,32 +29,34 @@ export function Button({ label, onPress, busy = false, disabled = false, variant
       onPress={onPress}
       disabled={inactive}
       style={({ pressed }) => [
-        styles.base,
-        variant === "primary" ? styles.primary : styles.secondary,
-        (pressed || inactive) && styles.dim,
+        styles.frame,
+        !primary && [styles.inner, styles.secondary],
+        inactive ? styles.inactive : pressed && styles.pressed,
       ]}
     >
-      {busy ? (
-        <ActivityIndicator color={variant === "primary" ? colors.primaryText : colors.primary} />
+      {primary ? (
+        <LinearGradient colors={colors.primaryGradient} style={styles.inner}>
+          {content}
+        </LinearGradient>
       ) : (
-        <Text style={[styles.label, variant === "primary" ? styles.primaryLabel : styles.secondaryLabel]}>{label}</Text>
+        content
       )}
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  base: {
+  frame: { borderRadius: radius.sm, overflow: "hidden" },
+  inner: {
     minHeight: TOUCH_TARGET,
-    borderRadius: radius.md,
-    paddingHorizontal: space.lg,
+    paddingHorizontal: space.md,
     alignItems: "center",
     justifyContent: "center",
   },
-  primary: { backgroundColor: colors.primary },
   secondary: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
-  dim: { opacity: 0.6 },
-  label: { fontSize: font.body, fontWeight: "600" },
+  pressed: { opacity: PRESSED_OPACITY },
+  inactive: { opacity: INACTIVE_OPACITY },
+  label: { fontSize: font.button, fontWeight: "600" },
   primaryLabel: { color: colors.primaryText },
   secondaryLabel: { color: colors.primary },
 });

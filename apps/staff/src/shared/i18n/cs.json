@@ -18,6 +18,7 @@
   "tabs": {
     "today": "Dnes",
     "newOrder": "Nová objednávka",
+    "newOrderShort": "Nová",
     "plan": "Plán",
     "requests": "Požadavky",
     "settings": "Nastavení",

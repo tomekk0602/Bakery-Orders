@@ -62,3 +62,21 @@ npm run dev              # apps/web on :3000, apps/staff (Expo) on :8081
 | Esc or the close button during the call   | the call ends; the microphone indicator disappears                         |
 | Finish an order and hang up               | the order number in the window                                             |
 | Reload the page and open the window again | the number field is empty                                                  |
+
+### Amendment 2026-11-25 — staff app sizing (FR-072, FR-073)
+
+| Scenario                           | Expected                                      |
+| ---------------------------------- | --------------------------------------------- |
+| "Dnes" on a computer (wide window) | cards in a centred column at most 720 px wide |
+| "Dnes" on a phone                  | cards fill the width as before                |
+| Any button                         | 44 px tall, 16 px text                        |
+
+### Amendment 2026-11-25 — the floating tab bar (FR-074, FR-075)
+
+| Scenario                               | Expected                                                              |
+| -------------------------------------- | --------------------------------------------------------------------- |
+| Any staff page on a phone-width window | a rounded bar floating above the bottom edge; content blurs behind it |
+| The same on a computer                 | the bar centred, at most 560 px wide                                  |
+| Tap another tab                        | its icon turns filled, an amber pill behind it                        |
+| Scroll "Dnes" to the end               | the last card stops above the bar                                     |
+| Owner on a 375 px wide phone           | all six labels whole, "Nová" for the new order                        |

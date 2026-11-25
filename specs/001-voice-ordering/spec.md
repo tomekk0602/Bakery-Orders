@@ -432,6 +432,24 @@ name, and reopens it; a request closed 31 days ago is gone after the nightly cle
 - **FR-070**: Closing the window during a call MUST end the call (FR-058).
 - **FR-071**: The phone number MUST NOT be stored in the browser; it is kept only while the page is
   open (owner, 2026-11-25).
+
+**Staff app sizing** _(amended 2026-11-25, owner; research R41)_
+
+- **FR-072**: Buttons and text fields in the staff app MUST be 44 px tall at least (the platform
+  minimum for a finger), with 16 px text; nothing tappable is smaller than 44 px. The main button
+  MUST have a vertical gradient from a lighter to a darker shade of the bakery's brown; the second
+  button stays white with a border. A pressed button dims to 80 %, an inactive one to 60 %.
+- **FR-073**: On a screen wider than 720 px the staff app's page content MUST be at most 720 px
+  wide and centred; below that it fills the width as today.
+- **FR-074** _(2026-11-25, research R42)_: The staff app's tab bar MUST float over the content as a
+  rounded pill, inset from the screen edges, with a translucent blurred background and a soft
+  shadow; it is at most 560 px wide and centred on wider screens. Every page MUST scroll far enough
+  that its last item is not hidden under the bar.
+- **FR-075** _(2026-11-25, research R42)_: Each tab MUST show a single-colour icon above a short
+  label — Dnes, Nová, Plán, Požadavky, Nastavení, Provoz. The selected tab shows a filled icon and a
+  light amber pill behind its icon and label, in the accent colour; the others show an outline icon
+  in grey. The keyboard focus ring follows the pill's shape. The open-requests badge on Požadavky
+  stays (FR-041), and the bell in the header uses the same icon set.
 - **FR-042**: A "Reset demo" action MUST restore the seeded bakery, catalogue and orders (ADR-0014).
 - **FR-043**: Every staff API route MUST check the caller's permission on the server: no session →
   401, missing permission → 403 (ADR-0015).
@@ -496,6 +514,10 @@ name, and reopens it; a request closed 31 days ago is gone after the nightly cle
   screen.
 - **SC-019** _(2026-11-25)_: From any "Zavolat" the customer starts a call in two steps — the number
   and the call button — without the page moving.
+- **SC-020** _(2026-11-25)_: On a computer the "Dnes" list shows its cards in a centred column no
+  wider than 720 px, and the "Vydat" button is 44 px tall.
+- **SC-021** _(2026-11-25)_: On a phone and on a computer the tab bar is a floating pill with the
+  selected tab highlighted, and the owner's six tabs fit on a 375 px wide phone with no label cut.
 - **SC-006**: Voice latency (end of speech to first audio) — target to be set from the voice
   measurement; not yet measured (research R5).
 

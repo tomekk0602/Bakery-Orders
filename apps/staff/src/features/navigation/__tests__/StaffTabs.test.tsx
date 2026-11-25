@@ -42,18 +42,25 @@ async function signInAs(role: Role) {
 }
 
 describe("StaffTabs (FR-045)", () => {
-  it("each tab shows its icon; an employee has none of the owner's (research R38)", async () => {
+  it("the selected tab's icon is filled, the others outlined; an employee has none of the owner's (FR-075)", async () => {
     const screen = await signInAs("employee");
     // the icons are hidden from screen readers, which read the tab's label instead
     const hidden = { includeHiddenElements: true };
-    for (const icon of ["📋", "➕", "🥖", "📞"]) expect(screen.getAllByText(icon, hidden).length).toBeGreaterThan(0);
-    expect(screen.queryByText("⚙️", hidden)).toBeNull();
-    expect(screen.queryByText("📊", hidden)).toBeNull();
+    expect(screen.getByTestId("tab-icon-dnes-filled", hidden)).toBeTruthy();
+    for (const tab of ["nova", "plan", "pozadavky"])
+      expect(screen.getByTestId(`tab-icon-${tab}-outline`, hidden)).toBeTruthy();
+    expect(screen.queryByTestId("tab-icon-nastaveni-outline", hidden)).toBeNull();
+    expect(screen.queryByTestId("tab-icon-provoz-outline", hidden)).toBeNull();
+  });
+
+  it("the bar shows the short label, the page keeps its full title (FR-075)", async () => {
+    const screen = await signInAs("employee");
+    expect(screen.getAllByText("Nová").length).toBeGreaterThan(0);
   });
 
   it("an employee sees the counter tabs but not Nastavení or Provoz", async () => {
     const screen = await signInAs("employee");
-    for (const title of ["Dnes", "Nová objednávka", "Plán", "Požadavky"])
+    for (const title of ["Dnes", "Nová", "Plán", "Požadavky"])
       expect(screen.getAllByText(title).length).toBeGreaterThan(0);
     expect(screen.queryByText("Nastavení")).toBeNull();
     expect(screen.queryByText("Provoz")).toBeNull();

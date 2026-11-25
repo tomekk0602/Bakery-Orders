@@ -46,7 +46,7 @@ const styles = StyleSheet.create({
   label: { flex: 1, fontSize: font.body, color: colors.text },
   btn: {
     width: TOUCH_TARGET,
-    height: TOUCH_TARGET - 8,
+    height: TOUCH_TARGET,
     borderRadius: radius.md,
     borderWidth: 1,
     borderColor: colors.border,

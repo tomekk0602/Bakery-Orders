@@ -26,6 +26,8 @@ Expo Go code and one login on seeded data with a reset (ADR-0014).
 | ----------------------------- | --------------------------------------------------------------------- | ---------------- |
 | Web app, API, customer site   | Next.js (App Router, Route Handlers) + React                          | 16.4 / 19.3      |
 | Staff app (iOS, Android, web) | Expo SDK + Expo Router + React Native                                 | 58 / 58 / 0.88   |
+| Staff button gradient         | expo-linear-gradient _(added 2026-11-25, research R41)_               | 58               |
+| Staff tab bar                 | expo-blur, @expo/vector-icons _(added 2026-11-25, research R42)_      | 58 / 15          |
 | On-device dictation           | expo-speech-recognition                                               | 58.0             |
 | Schemas and validation        | zod (JSON Schema export for tool definitions)                         | 4.6              |
 | Database access, migrations   | drizzle-orm + drizzle-kit, `pg` (Node) and `@neondatabase/serverless` | 0.45 / 0.31      |

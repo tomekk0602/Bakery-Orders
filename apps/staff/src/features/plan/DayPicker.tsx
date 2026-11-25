@@ -34,7 +34,7 @@ export function DayPicker({ days, selected, onSelect }: Props) {
 const styles = StyleSheet.create({
   row: { gap: space.sm },
   chip: {
-    minHeight: TOUCH_TARGET - 12,
+    minHeight: TOUCH_TARGET,
     justifyContent: "center",
     paddingHorizontal: space.md,
     borderRadius: radius.lg,

@@ -771,6 +771,7 @@ Found in the owner's test on the deployment.
   📊 Provoz — the same way as the bell 🔔 in the header. Rejected: `@expo/vector-icons` — a new
   dependency with icon fonts in the web export, for six icons. Emoji look slightly different per
   system; acceptable for the demo, revisit with a designed icon set.
+  _(Superseded 2026-11-25 by R42: single-colour icons from `@expo/vector-icons`.)_
 
 ## R39 — The call window (owner, 2026-11-25)
 
@@ -806,3 +807,53 @@ Found in the owner's test on the deployment.
   eval gate on changes to the agent is unchanged.
 - **Revisit**: after the review, or with a paid tier or a separate project for CI — then the schedule
   goes back, because it is what catches a drift of the model behind the same id (ADR-0012, ADR-0013).
+
+## R41 — Staff app buttons and page width (owner, 2026-11-25)
+
+- **Context**: on the deployed staff app the owner found the buttons far too large — "Vydat" was a
+  56 px band across the whole card, and on a computer the cards and buttons stretched over the full
+  screen width (about 1,900 px). The 56 px height came from a code comment ("busy, often floury
+  hands"), not from the spec.
+- **Decision**: buttons and text fields 44 px tall at least (Apple Human Interface Guidelines
+  minimum, which Material's 48 dp is close to), 16 px text, 8 px corner radius, 16 px side padding —
+  the size of a common "medium" button. Page content at most 720 px wide and centred on wider
+  screens; phones are unchanged. One change in the shared `Button`, `TextField`, `Screen` and the
+  tokens, so every screen follows.
+- **Look of the main button**: a vertical three-stop gradient, amber `#D97706` → the brand brown
+  `#B45309` → `#92400E`, with the white label over the middle stop (white on `#B45309` is about 5:1,
+  above the 4.5:1 of WCAG AA). Drawn with `expo-linear-gradient` — the Expo SDK module for gradients
+  (MIT), which works in Expo Go and in the web build; React Native's own `backgroundImage` gradient is
+  still experimental. Pressed 80 %, inactive 60 %.
+- **Smaller controls stay at the minimum**: the day picker and the quantity stepper keep 44 px.
+- **Rejected**: keeping 56 px on phones and 44 px on computers (two sizes for one control, and 44 px
+  is enough for a finger); auto-width buttons aligned right (the full-width button in a narrow
+  column is easy to hit and needs no layout per screen).
+
+## R42 — A floating tab bar (owner, 2026-11-25)
+
+- **Context**: the owner compared the staff app's tab bar with a floating "pill" tab bar of a current
+  phone app and found ours plain: a flat white band over the full width, coloured emoji that cannot
+  take the selected colour, the selected tab marked only by its label colour (plus a square blue focus
+  ring in the browser), labels beside the icons and spread across a 2,000 px screen on a computer,
+  "Nová obj…" cut on a phone.
+- **Decision**: keep Expo Router's `Tabs` and change its options, no navigator of our own:
+  - the bar is positioned over the content, 12 px from the bottom and the sides, fully rounded, with
+    a soft shadow; at most 560 px wide and centred — it sits under the 720 px content column (FR-073);
+  - the background is `expo-blur`'s `BlurView` (in the browser it is CSS `backdrop-filter`) over a
+    translucent white; where blur is weak (Android) the white is nearly opaque so text stays legible;
+  - the selected tab gets a light amber pill (`#FDE8D0`) behind its icon and label, and the accent
+    colour; the others are grey;
+  - single-colour icons from `@expo/vector-icons` (Ionicons), filled when selected and outlined
+    otherwise, as on iOS: Dnes `clipboard`, Nová `add-circle`, Plán `calendar`, Požadavky `call`,
+    Nastavení `settings`, Provoz `stats-chart`; the header bell `notifications`;
+  - labels always under the icon; "Nová objednávka" is "Nová" in the bar, the page title stays
+    "Nová objednávka";
+  - `Screen` adds bottom space for the bar, so the last card scrolls above it.
+- **Libraries**: `expo-blur` and `@expo/vector-icons` — both Expo SDK modules under MIT, both work in
+  Expo Go and in the web build. This reverses the icon choice of R38 ("a new dependency for six
+  icons"): the emoji cannot follow the selected state, which is what the design needs.
+- **Fallback**: if the selected-tab background cannot be drawn rounded through the tab options on the
+  web, a custom `tabBar` component — React Navigation's documented extension point — draws the pill.
+- **Rejected**: Expo Router's native tabs (`unstable-native-tabs`), which give the real iOS glass but
+  are an unstable API and have no web build, where reviewers look; a side menu on a computer, which
+  would make the computer and the phone look different.
