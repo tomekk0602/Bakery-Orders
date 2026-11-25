@@ -47,6 +47,8 @@ export function TodayScreen() {
             setHandedOver.mutate({ id: order.id, status: order.status === "picked_up" ? "confirmed" : "picked_up" })
           }
           busy={setHandedOver.isPending && setHandedOver.variables?.id === order.id}
+          // the refetch puts the row back to what the server holds; the reason is said on that row (FR-083)
+          error={setHandedOver.isError && setHandedOver.variables?.id === order.id ? t("orders.handOverFailed") : null}
         />
       ))}
     </Screen>

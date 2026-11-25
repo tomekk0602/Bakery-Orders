@@ -25,12 +25,32 @@ export type GateVerdict = { ok: boolean; infrastructure: string[]; regressions: 
 
 export const caseKey = (r: Pick<CaseResult, "suite" | "id">) => `${r.suite}/${r.id}`;
 
+/** What a run was meant to cover, as EVAL_CASES says: everything, the gate cases, or a list of ids. */
+export type Selection = "all" | "gate" | readonly string[];
+
+/** EVAL_CASES as a selection: unset → all, "gate" → the gate cases, otherwise comma-separated ids. */
+export const selectionFrom = (env: string | undefined): Selection =>
+  !env ? "all" : env === "gate" ? "gate" : env.split(",").map((s) => s.trim());
+
+/** The baseline cases a run with this selection must have results for (spec 001 FR-080). */
+function expectedKeys(baseline: Baseline, selection: Selection): string[] {
+  return Object.entries(baseline.cases)
+    .filter(([key, c]) =>
+      selection === "all" ? true : selection === "gate" ? c.gate : selection.includes(key.slice(key.indexOf("/") + 1)),
+    )
+    .map(([key]) => key);
+}
+
 /**
  * The regression gate (ADR-0012): a gate case must pass in every trial (pass^k); any other case must
  * not fall below the lower bound of its baseline interval. Trials that errored are reported apart —
  * a quota failure is not a regression, but the gate does not pass on missing evidence either.
  */
-export function compare(results: readonly CaseResult[], baseline: Baseline, opts: { fullRun: boolean }): GateVerdict {
+export function compare(
+  results: readonly CaseResult[],
+  baseline: Baseline,
+  opts: { selection: Selection },
+): GateVerdict {
   const infrastructure: string[] = [];
   const regressions: string[] = [];
   const notes: string[] = [];
@@ -57,10 +77,11 @@ export function compare(results: readonly CaseResult[], baseline: Baseline, opts
         `${key}: ${r.passed}/${graded} is below the baseline's lower bound ${floor.toFixed(2)} (${base.passed}/${base.trials}) — ${r.failures[0] ?? ""}`,
       );
   }
-  // A dropped case is missing evidence only when everything was meant to run (not with EVAL_CASES).
-  if (opts.fullRun)
-    for (const key of Object.keys(baseline.cases))
-      if (!seen.has(key)) regressions.push(`${key}: in the baseline but not run`);
+  // A case the run was meant to cover and has no result for is missing evidence, like a missing
+  // report; an empty result set never passes (FR-080).
+  for (const key of expectedKeys(baseline, opts.selection))
+    if (!seen.has(key)) regressions.push(`${key}: in the baseline but not run`);
+  if (results.length === 0) regressions.push("no results: the run produced no case at all");
 
   return { ok: infrastructure.length === 0 && regressions.length === 0, infrastructure, regressions, notes };
 }

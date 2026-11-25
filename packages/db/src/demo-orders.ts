@@ -1,7 +1,7 @@
 import { buildCalendar, orderTotal, priceLines, type OrderItem } from "@bakery/core";
 import { sql } from "drizzle-orm";
 import { loadBakery } from "./bakery.repo.ts";
-import type { Db } from "./client.ts";
+import type { Executor } from "./client.ts";
 import { firstRow } from "./rows.ts";
 import { call, dailyCapacity, order, orderLine, staffRequest } from "./schema.ts";
 
@@ -85,7 +85,7 @@ const LATER: DemoOrder[] = [
   },
 ];
 
-async function insertOrder(db: Db, day: string, o: DemoOrder): Promise<void> {
+async function insertOrder(db: Executor, day: string, o: DemoOrder): Promise<void> {
   const bakery = await loadBakery(db);
   const lines = priceLines(o.items, bakery.catalogue);
   const callId = o.transcript
@@ -139,7 +139,7 @@ async function insertOrder(db: Db, day: string, o: DemoOrder): Promise<void> {
 }
 
 /** Orders for today (if open) and the next open days. Separate from seedBakery so tests start empty. */
-export async function seedDemoOrders(db: Db, now = new Date()): Promise<void> {
+export async function seedDemoOrders(db: Executor, now = new Date()): Promise<void> {
   const bakery = await loadBakery(db);
   const open = buildCalendar(now, bakery.schedule, 7).filter((d) => !d.closed);
   for (const [i, day] of open.entries()) {
@@ -149,7 +149,7 @@ export async function seedDemoOrders(db: Db, now = new Date()): Promise<void> {
 }
 
 /** Requests for staff, so "Požadavky" is not empty in the demo: one per kind and origin (FR-008, FR-034). */
-export async function seedDemoRequests(db: Db, now = new Date()): Promise<void> {
+export async function seedDemoRequests(db: Executor, now = new Date()): Promise<void> {
   const minutesAgo = (m: number) => new Date(now.getTime() - m * 60_000);
   const callRow = firstRow(
     await db

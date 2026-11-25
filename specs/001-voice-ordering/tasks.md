@@ -325,3 +325,24 @@ Specified in `specs/002-staff-notifications` (spec, plan) with ADR-0016; built f
 - [x] T131 Tabs: Ionicons filled when selected and outlined otherwise, the amber pill behind the selected tab, the focus ring follows it, labels under the icon and short ("Nová"); the bell uses the same icon set (FR-075)
 - [x] T132 Tests: the tabs are found by their labels, not by emoji; an employee has none of the owner's tabs; the badge on Požadavky (FR-075)
 - [x] T133 Live check on a phone-width window and a computer (SC-021)
+
+## Fixes from the second code review (owner, 2026-11-25; research R43)
+
+Blocking the hand-in:
+
+- [x] T134 `LiveCall`: keep tool calls in flight and wait for them before the end report; keep the `order_number` of each successful `confirm_order`; the end result carries `orderNumbers` (server ∪ seen) and `unknown` when the report failed and none was seen; tests: lost end report with and without a seen number, hang-up during a confirmation (FR-076, SC-022)
+- [x] T135 Call window: the "could not check" text for an unknown result instead of "Žádná objednávka se neuložila"; component or state test (FR-076)
+- [x] T136 Staff app: only a 4xx answer counts as a clear refusal; after an unknown confirmation the card blocks "Upravit" and offers confirming again; a 4xx refusal leaves editing open; tests for both (FR-077, SC-022)
+- [x] T137 Web form: the unknown result belongs to the review step (`checkout.ts`), so it goes when the step moves on; test through lost answer → retry → "Nová objednávka" → choosing a product (FR-078)
+- [x] T138 `openMicrophone` releases the stream and the context when the worklet fails; test with a failing `addModule` (FR-079)
+- [x] T139 Eval gate: `compare` takes the run's selection; a gate run requires every baseline gate case, a full run every case; tests: empty results and one missing gate case fail (FR-080, SC-023)
+
+Second batch:
+
+- [x] T140 Reset demo: `notification` truncated too; the reset in one transaction (the seed functions accept a transaction); integration test (FR-081)
+- [x] T141 Call start: a failed token ends the call with the outcome `error`; route test (FR-082)
+- [x] T142 Dnes: an error on the order row when marking it handed over fails; test (FR-083)
+- [x] T143 Baking plan: a switched-off product gets no walk-in buffer; test with 2 reserved and buffer 15 → 2 (FR-084)
+- [x] T144 README: the opening line says the call is made from the browser (R43)
+- [x] T145 `withLines`: group lines by order once (R43)
+- [ ] T146 _(gates green 2026-11-25: typecheck, lint, format, 338 tests, `build:deploy`; the walk-through of the quickstart amendment is the owner's)_ Gates green (typecheck, lint, tests, build); quickstart amendment walked through locally

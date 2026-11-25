@@ -7,8 +7,9 @@
 
 **Customers order the way they like.**
 
-- **They call the bakery, as they always have.** An assistant picks up straight away, in Czech, and
-  says it is an automated assistant. It takes what they want, for which day and their name, reads the
+- **They call the bakery — in this demo with the "Zavolat" button on the bakery's website**, which
+  opens a call in the browser; there is no phone number to dial. An assistant picks up straight away,
+  in Czech, and says it is an automated assistant. It takes what they want, for which day and their name, reads the
   order back with the price and saves it only when the customer says yes. The customer hears an order
   number. If they would rather speak to a person, the assistant records the request and someone from
   the bakery calls back.

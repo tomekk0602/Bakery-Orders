@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import type { Db } from "./client.ts";
+import type { Executor } from "./client.ts";
 import { bakerySettings, product, walkInBuffer } from "./schema.ts";
 
 /** "Pekárna U Lípy" — an invented bakery for the demo (ADR-0014). Prices are illustrative. */
@@ -82,7 +82,7 @@ const BUFFER_WEEKDAY: Record<string, number> = {
   vanocka: 4,
 };
 
-export async function seedBakery(db: Db): Promise<void> {
+export async function seedBakery(db: Executor): Promise<void> {
   await db
     .insert(bakerySettings)
     .values({
@@ -109,9 +109,9 @@ export async function seedBakery(db: Db): Promise<void> {
 }
 
 /** Removes all bakery data (orders, calls, requests, catalogue) — used by tests and "Reset demo". */
-export async function truncateBakery(db: Db): Promise<void> {
+export async function truncateBakery(db: Executor): Promise<void> {
   await db.execute(
-    sql`TRUNCATE order_line, "order", order_draft, staff_request, daily_capacity, "call", rate_limit, walk_in_buffer, product, closed_day, bakery_settings RESTART IDENTITY CASCADE`,
+    sql`TRUNCATE notification, order_line, "order", order_draft, staff_request, daily_capacity, "call", rate_limit, walk_in_buffer, product, closed_day, bakery_settings RESTART IDENTITY CASCADE`,
   );
   await db.execute(sql`ALTER SEQUENCE order_number_seq RESTART WITH 1001`);
 }

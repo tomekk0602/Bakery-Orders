@@ -16,6 +16,7 @@ const mocks = vi.hoisted(() => {
     connectGate: gate(),
     micGate: gate(),
     micRefused: false,
+    onmessage: ((_m: unknown) => undefined) as (m: unknown) => void,
   };
 });
 vi.mock("./audio", () => ({
@@ -30,9 +31,15 @@ vi.mock("./audio", () => ({
 vi.mock("@google/genai", () => ({
   GoogleGenAI: class {
     live = {
-      connect: async () => {
+      connect: async (opts: { callbacks: { onmessage: (m: unknown) => void } }) => {
+        mocks.onmessage = opts.callbacks.onmessage;
         await mocks.connectGate.ready;
-        return { close: mocks.sessionClose, sendClientContent: vi.fn(), sendRealtimeInput: vi.fn() };
+        return {
+          close: mocks.sessionClose,
+          sendClientContent: vi.fn(),
+          sendRealtimeInput: vi.fn(),
+          sendToolResponse: vi.fn(),
+        };
       },
     };
   },
@@ -49,6 +56,7 @@ beforeEach(() => {
   fetchMock.mockReset();
   fetchMock.mockImplementation(async (url: string) => ({
     ok: true,
+    status: 200,
     json: async () =>
       url === "/api/call/start"
         ? { call_id: "call-1", token: "t", model: "m", cap_seconds: 180 }
@@ -64,7 +72,7 @@ const tick = () => new Promise((r) => setTimeout(r, 0));
 async function newCall() {
   const { LiveCall } = await import("./live-call");
   const statuses: string[] = [];
-  const results: { reason: string; orderNumbers: number[] }[] = [];
+  const results: { reason: string; orderNumbers: number[]; unknown: boolean }[] = [];
   const call = new LiveCall({
     onTranscript: () => undefined,
     onStatus: (s) => statuses.push(s),
@@ -135,7 +143,7 @@ describe("the saved orders reach the screen however the call ends (spec 001 FR-0
       mocks.micGate.open();
       await call.start("+420777123456");
       await vi.advanceTimersByTimeAsync(180 * 1000);
-      await vi.waitFor(() => expect(results).toEqual([{ reason: "capped", orderNumbers: [1042] }]));
+      await vi.waitFor(() => expect(results).toEqual([{ reason: "capped", orderNumbers: [1042], unknown: false }]));
       await call.end("hangup"); // pressing hang-up afterwards changes nothing
       expect(results).toHaveLength(1);
     } finally {
@@ -149,6 +157,61 @@ describe("the saved orders reach the screen however the call ends (spec 001 FR-0
     mocks.micGate.open();
     await call.start("+420777123456");
     await call.end("hangup");
-    expect(results).toEqual([{ reason: "hangup", orderNumbers: [1042] }]);
+    expect(results).toEqual([{ reason: "hangup", orderNumbers: [1042], unknown: false }]);
+  });
+});
+
+describe("the call screen never says 'no order' when it cannot know (spec 001 FR-076, SC-022)", () => {
+  const confirmOrder = { toolCall: { functionCalls: [{ id: "f1", name: "confirm_order", args: { draft_id: "d" } }] } };
+  async function liveCall() {
+    const c = await newCall();
+    mocks.connectGate.open();
+    mocks.micGate.open();
+    await c.call.start("+420777123456");
+    return c;
+  }
+  const answer = (body: unknown, ok = true) => ({ ok, status: ok ? 200 : 500, json: async () => body });
+
+  it("a lost end report still shows the number the confirmation returned", async () => {
+    const { call, results } = await liveCall();
+    fetchMock.mockImplementation(async (url: string) =>
+      url.endsWith("/tools/confirm_order")
+        ? answer({ ok: true, order_number: 1050 })
+        : Promise.reject(new TypeError("offline")),
+    );
+    mocks.onmessage(confirmOrder);
+    await vi.waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
+    await call.end("hangup");
+    expect(results).toEqual([{ reason: "hangup", orderNumbers: [1050], unknown: false }]);
+  });
+
+  it("a lost end report with no confirmation seen is unknown, not 'no order'", async () => {
+    const { call, results } = await liveCall();
+    fetchMock.mockImplementation(async () => answer({ error: { message: "x" } }, false));
+    await call.end("hangup");
+    expect(results).toEqual([{ reason: "hangup", orderNumbers: [], unknown: true }]);
+  });
+
+  it("hanging up while an order is being confirmed waits for it and reports it", async () => {
+    const { call, results } = await liveCall();
+    const confirming = mocks.gate();
+    const order: string[] = [];
+    fetchMock.mockImplementation(async (url: string) => {
+      order.push(url);
+      if (url.endsWith("/tools/confirm_order")) {
+        await confirming.ready;
+        return answer({ ok: true, order_number: 1051 });
+      }
+      return answer({ order_numbers: order.includes("confirmed") ? [1051] : [] });
+    });
+    mocks.onmessage(confirmOrder);
+    await tick();
+    const ending = call.end("hangup");
+    await tick();
+    expect(order.some((u) => u.endsWith("/end"))).toBe(false); // the end report waits for the confirmation
+    order.push("confirmed");
+    confirming.open();
+    await ending;
+    expect(results).toEqual([{ reason: "hangup", orderNumbers: [1051], unknown: false }]);
   });
 });

@@ -2,7 +2,7 @@ import { spawnSync } from "node:child_process";
 import { appendFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { AGENT_FINGERPRINT, PROMPT_VERSION } from "@bakery/core";
 import type { Evalite } from "evalite/types";
-import { type Baseline, type CaseResult, caseKey, compare } from "../src/gate.ts";
+import { type Baseline, type CaseResult, caseKey, compare, selectionFrom } from "../src/gate.ts";
 import { EVAL_AGENT_MODEL } from "../src/model.ts";
 import { passAtK, passHatK, wilson } from "../src/stats.ts";
 
@@ -67,7 +67,7 @@ if (gate) {
   const baseline = JSON.parse(readFileSync(baselinePath, "utf8")) as Baseline;
   if (baseline.fingerprint !== AGENT_FINGERPRINT)
     console.log(`agent changed since the baseline (${baseline.promptVersion} → ${PROMPT_VERSION})`);
-  const verdict = compare(results, baseline, { fullRun: !process.env.EVAL_CASES });
+  const verdict = compare(results, baseline, { selection: selectionFrom(process.env.EVAL_CASES) });
   const lines = [
     `\n## Gate: ${verdict.ok ? "PASS" : "FAIL"}\n`,
     ...verdict.infrastructure.map((l) => `- infrastructure: ${l}`),

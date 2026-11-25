@@ -1,11 +1,11 @@
 import type { BakerySchedule, Product } from "@bakery/core";
 import { and, asc, eq, inArray } from "drizzle-orm";
-import type { Db } from "./client.ts";
+import type { Db, Executor } from "./client.ts";
 import { bakerySettings, closedDay, dailyCapacity, product } from "./schema.ts";
 
 export type Bakery = { name: string; schedule: BakerySchedule; callCapSeconds: number; catalogue: Product[] };
 
-export async function loadBakery(db: Db): Promise<Bakery> {
+export async function loadBakery(db: Executor): Promise<Bakery> {
   const [settings] = await db.select().from(bakerySettings).where(eq(bakerySettings.id, 1));
   if (!settings) throw new Error("bakery_settings missing — run the seed");
   const closed = await db.select({ day: closedDay.day }).from(closedDay);

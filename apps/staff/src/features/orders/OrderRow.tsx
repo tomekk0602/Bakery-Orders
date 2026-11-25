@@ -4,10 +4,17 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Badge, Button, Card, colors, font, space } from "@/shared/ui";
 import { formatCzk, itemsSummary } from "./format";
 
-type Props = { order: StaffOrder; onOpen: () => void; onToggle: () => void; busy: boolean };
+type Props = {
+  order: StaffOrder;
+  onOpen: () => void;
+  onToggle: () => void;
+  busy: boolean;
+  /** Why the last hand-over change of this order was not saved (FR-083). */
+  error?: string | null;
+};
 
 /** One order in the day's list. The summary opens the detail; the hand-over button sits beside it, not inside. */
-export function OrderRow({ order, onOpen, onToggle, busy }: Props) {
+export function OrderRow({ order, onOpen, onToggle, busy, error = null }: Props) {
   const { t } = useTranslation();
   const handedOver = order.status === "picked_up";
   return (
@@ -29,6 +36,11 @@ export function OrderRow({ order, onOpen, onToggle, busy }: Props) {
           {handedOver ? <Badge label={t("orders.handedOver")} tone="success" /> : null}
         </View>
       </Pressable>
+      {error ? (
+        <Text style={styles.error} accessibilityRole="alert">
+          {error}
+        </Text>
+      ) : null}
       <Button
         label={handedOver ? t("orders.undoHandOver") : t("orders.handOver")}
         variant={handedOver ? "secondary" : "primary"}
@@ -47,4 +59,5 @@ const styles = StyleSheet.create({
   total: { fontSize: font.body, fontWeight: "600", color: colors.text },
   items: { fontSize: font.body, color: colors.text },
   meta: { flexDirection: "row", gap: space.sm, flexWrap: "wrap" },
+  error: { fontSize: font.body, color: colors.danger },
 });

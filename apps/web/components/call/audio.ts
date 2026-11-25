@@ -32,12 +32,26 @@ export async function openMicrophone(onChunk: (base64: string, rms: number) => v
   const stream = await navigator.mediaDevices.getUserMedia({
     audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true, autoGainControl: true },
   });
-  const ctx = new AudioContext({ sampleRate: INPUT_RATE });
-  const url = URL.createObjectURL(new Blob([WORKLET], { type: "application/javascript" }));
-  await ctx.audioWorklet.addModule(url);
-  URL.revokeObjectURL(url);
-  const node = new AudioWorkletNode(ctx, "capture");
-  ctx.createMediaStreamSource(stream).connect(node);
+  const stopTracks = () => stream.getTracks().forEach((t) => t.stop());
+  let ctx: AudioContext | null = null;
+  let node: AudioWorkletNode;
+  try {
+    ctx = new AudioContext({ sampleRate: INPUT_RATE });
+    const url = URL.createObjectURL(new Blob([WORKLET], { type: "application/javascript" }));
+    try {
+      await ctx.audioWorklet.addModule(url);
+    } finally {
+      URL.revokeObjectURL(url);
+    }
+    node = new AudioWorkletNode(ctx, "capture");
+    ctx.createMediaStreamSource(stream).connect(node);
+  } catch (e) {
+    // the caller has no handle yet: what was granted is released here, or the microphone stays on (FR-079)
+    stopTracks();
+    void ctx?.close();
+    throw e;
+  }
+  const context = ctx;
 
   let buf = new Float32Array(CHUNK_SAMPLES);
   let fill = 0;
@@ -61,8 +75,8 @@ export async function openMicrophone(onChunk: (base64: string, rms: number) => v
   return {
     stop: () => {
       node.port.onmessage = null;
-      stream.getTracks().forEach((t) => t.stop());
-      void ctx.close();
+      stopTracks();
+      void context.close();
     },
   };
 }

@@ -26,6 +26,13 @@ async function withLines(db: Db | Tx, rows: OrderRow[]): Promise<StaffOrder[]> {
       ),
     )
     .orderBy(asc(product.sortOrder));
+  // grouped once, so the list costs O(orders + lines), not one scan of the lines per order
+  const byOrder = new Map<string, StaffOrder["lines"]>();
+  for (const { orderId, ...l } of lines) {
+    const list = byOrder.get(orderId);
+    if (list) list.push(l);
+    else byOrder.set(orderId, [l]);
+  }
   return rows.map((r) => ({
     id: r.id,
     number: r.number,
@@ -36,7 +43,7 @@ async function withLines(db: Db | Tx, rows: OrderRow[]): Promise<StaffOrder[]> {
     pickupDay: r.pickupDay,
     totalCzk: r.totalCzk,
     createdAt: r.createdAt.toISOString(),
-    lines: lines.filter((l) => l.orderId === r.id).map(({ orderId: _o, ...l }) => l),
+    lines: byOrder.get(r.id) ?? [],
   }));
 }
 

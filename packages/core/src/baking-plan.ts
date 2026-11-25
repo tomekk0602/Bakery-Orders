@@ -5,8 +5,8 @@ export type BakingPlan = { lines: PlanLine[]; totals: { reserved: number; buffer
 
 /**
  * What to bake for a day: reserved pieces plus the owner's walk-in buffer (FR-010). Every active
- * product is listed; an inactive one appears only while it still has orders. A closed day has no
- * walk-in sales, so no buffer.
+ * product is listed; an inactive one appears only while it still has orders, and only with them —
+ * it is not on the shelf, so it has no buffer (FR-084). A closed day has no walk-in sales, so no buffer.
  */
 export function bakingPlan(
   catalogue: readonly Product[],
@@ -18,7 +18,7 @@ export function bakingPlan(
     .filter((p) => p.active || (reserved[p.id] ?? 0) > 0)
     .map((p) => {
       const r = reserved[p.id] ?? 0;
-      const b = closed ? 0 : (buffers[p.id] ?? 0);
+      const b = closed || !p.active ? 0 : (buffers[p.id] ?? 0);
       return { productId: p.id, name: p.name, reserved: r, buffer: b, toBake: r + b };
     });
   const totals = lines.reduce(

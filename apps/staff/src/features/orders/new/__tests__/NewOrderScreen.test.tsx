@@ -172,4 +172,59 @@ describe("NewOrderScreen (US6, FR-017, FR-019, FR-021)", () => {
     expect(await screen.findByText("Diktování je teď nedostupné. Použijte formulář.")).toBeTruthy();
     expect(screen.getByText("Formulářem")).toBeTruthy();
   });
+
+  describe("a confirmation whose answer was lost is not saved twice (FR-077, SC-022)", () => {
+    async function toCard(confirmAnswer: () => Promise<unknown>) {
+      mockApi.mockImplementation((path: string) => {
+        if (path === "/api/staff/order-form") return Promise.resolve(form);
+        if (path === "/api/staff/orders") return Promise.resolve(card);
+        return confirmAnswer();
+      });
+      const screen = await renderForm();
+      await fireEvent.changeText(await screen.findByLabelText("Jméno zákazníka"), "Nováková");
+      await fireEvent.press(screen.getByLabelText("Přidat: Kmínový chléb"));
+      await fireEvent.press(screen.getByText("Zkontrolovat objednávku"));
+      await screen.findByText("Celkem 138 Kč");
+      return screen;
+    }
+    const editDisabled = (screen: Awaited<ReturnType<typeof toCard>>) =>
+      screen.getByRole("button", { name: "Upravit" }).props.accessibilityState?.disabled;
+
+    it("no response: editing is blocked, confirming the same card again saves it", async () => {
+      let attempt = 0;
+      const screen = await toCard(() =>
+        ++attempt === 1
+          ? Promise.reject(new TypeError("Network request failed"))
+          : Promise.resolve({ orderId: "44444444-4444-4444-8444-444444444444", orderNumber: 1042 }),
+      );
+      await fireEvent.press(screen.getByText("Potvrdit"));
+      expect(await screen.findByText(/Nepodařilo se ověřit, zda se objednávka uložila/)).toBeTruthy();
+      expect(editDisabled(screen)).toBe(true);
+      await fireEvent.press(screen.getByText("Potvrdit"));
+      expect(await screen.findByText("Objednávka č. 1042 je uložená.")).toBeTruthy();
+      const confirms = mockApi.mock.calls.filter(([p]) => String(p).endsWith("/confirm"));
+      expect(confirms.map(([p]) => p)).toEqual([
+        `/api/staff/drafts/${card.draftId}/confirm`,
+        `/api/staff/drafts/${card.draftId}/confirm`,
+      ]);
+    });
+
+    it("a server error counts as unknown too", async () => {
+      const screen = await toCard(() =>
+        Promise.reject(Object.assign(new Error("Server neodpovídá."), { status: 503 })),
+      );
+      await fireEvent.press(screen.getByText("Potvrdit"));
+      await screen.findByText(/Nepodařilo se ověřit/);
+      expect(editDisabled(screen)).toBe(true);
+    });
+
+    it("a clear refusal keeps editing open", async () => {
+      const screen = await toCard(() =>
+        Promise.reject(Object.assign(new Error("Denní limit je vyčerpaný."), { status: 409 })),
+      );
+      await fireEvent.press(screen.getByText("Potvrdit"));
+      expect(await screen.findByText("Denní limit je vyčerpaný.")).toBeTruthy();
+      expect(editDisabled(screen)).toBeFalsy();
+    });
+  });
 });

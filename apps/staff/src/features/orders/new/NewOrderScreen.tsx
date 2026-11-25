@@ -2,6 +2,7 @@ import type { DictationResponse, OrderCard } from "@bakery/core/contracts";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
+import { isUncertain } from "@/shared/api/uncertain";
 import { Button, Card, colors, font, Screen, space } from "@/shared/ui";
 import { useConfirmDraft, useDictate, useOrderForm, usePrepareOrder } from "./api";
 import { DictationPanel } from "./DictationPanel";
@@ -23,6 +24,8 @@ export function NewOrderScreen() {
   const dictate = useDictate();
   const confirm = useConfirmDraft();
   const [step, setStep] = useState<Step>({ kind: "voice" });
+  // an edited card is a new draft, so after an unknown result only the same card may be confirmed (FR-077)
+  const uncertain = confirm.isError && isUncertain(confirm.error);
 
   if (form.isPending)
     return <ActivityIndicator style={styles.center} color={colors.primary} accessibilityLabel={t("common.loading")} />;
@@ -90,7 +93,8 @@ export function NewOrderScreen() {
         <OrderCardView
           card={step.card}
           busy={confirm.isPending}
-          error={confirm.error?.message ?? null}
+          error={uncertain ? t("newOrder.uncertain") : (confirm.error?.message ?? null)}
+          uncertain={uncertain}
           onEdit={() => setStep({ kind: "form", values: step.values })}
           onConfirm={() =>
             confirm.mutate(step.card.draftId, {

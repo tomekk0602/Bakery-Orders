@@ -87,4 +87,15 @@ describe("TodayScreen (FR-012)", () => {
     expect(within(summary).queryByText("Vydat")).toBeNull();
     expect(screen.getByText("Vydat")).toBeTruthy();
   });
+
+  it("a hand-over that was not saved says so on that order (FR-083)", async () => {
+    mockApi.mockImplementation((path: string) =>
+      path.startsWith("/api/staff/orders/") ? Promise.reject(new Error("Server neodpovídá.")) : Promise.resolve(day),
+    );
+    await renderScreen();
+    await fireEvent.press(await screen.findByText("Vydat"));
+    const alert = await screen.findByText("Změnu se nepodařilo uložit. Zkuste to prosím znovu.");
+    expect(alert).toBeTruthy();
+    expect(screen.getAllByText("Změnu se nepodařilo uložit. Zkuste to prosím znovu.")).toHaveLength(1);
+  });
 });

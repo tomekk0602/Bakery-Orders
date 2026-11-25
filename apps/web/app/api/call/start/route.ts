@@ -1,7 +1,7 @@
 import { PROMPT_VERSION } from "@bakery/core";
 import { Phone } from "@bakery/core/contracts";
 import { startObservation } from "@langfuse/tracing";
-import { createCall, hitRateLimit, loadBakery } from "@bakery/db";
+import { createCall, endCall, hitRateLimit, loadBakery } from "@bakery/db";
 import { z } from "zod";
 import { CALL_START_LIMIT, liveConfig } from "@/server/call-session";
 import { log } from "@/server/log";
@@ -59,6 +59,18 @@ export async function POST(req: Request) {
       const quota = /quota|RESOURCE_EXHAUSTED|429/.test(message);
       await alertAssistantDown(quota ? "quota" : "unavailable", now).catch((err: unknown) =>
         log.error({ err: err instanceof Error ? err.message : String(err) }, "assistant-down alert not recorded"),
+      );
+      // the browser gets no call id, so nobody else will end this call: "Provoz" counts it as an error (FR-082)
+      await endCall(db(), callId, {
+        outcome: "error",
+        transcript: [],
+        firstAudioMs: [],
+        tokensIn: 0,
+        tokensOut: 0,
+        shadowCostUsd: 0,
+        traceId: null,
+      }).catch((err: unknown) =>
+        log.error({ err: err instanceof Error ? err.message : String(err) }, "failed call not ended"),
       );
       return quota
         ? fail("quota_exhausted", "Hlasový asistent je teď vytížený. Objednejte prosím přes formulář.", 503)

@@ -3,6 +3,7 @@ import { afterAll } from "vitest";
 import { calendarDates, runConversation, runDictation } from "./agents.ts";
 import { type CustomerCase, loadCustomerCases, loadStaffCases, type StaffCase } from "./cases.ts";
 import { startEvalDb } from "./eval-db.ts";
+import { selectionFrom } from "./gate.ts";
 import {
   type CustomerRun,
   type Grade,
@@ -18,12 +19,9 @@ const env = await startEvalDb();
 afterAll(() => env.stop());
 
 /** EVAL_CASES narrows the run: "gate" for the gate cases, or a comma-separated list of ids. */
-const selected = (id: string, gate: boolean) => {
-  const want = process.env.EVAL_CASES;
-  if (!want) return true;
-  if (want === "gate") return gate;
-  return want.split(",").includes(id);
-};
+const selection = selectionFrom(process.env.EVAL_CASES);
+const selected = (id: string, gate: boolean) =>
+  selection === "all" ? true : selection === "gate" ? gate : selection.includes(id);
 
 const score = (g: Grade) => ({ score: g.pass ? 1 : 0, metadata: g.why });
 const dates = calendarDates(env);

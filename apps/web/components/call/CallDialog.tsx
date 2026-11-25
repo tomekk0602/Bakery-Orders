@@ -96,6 +96,12 @@ export function CallDialogProvider({ bakeryName, children }: { bakeryName: strin
             <p className="call-result">
               Děkujeme. Číslo vaší objednávky: <strong>{view.orderNumbers.join(", ")}</strong>
             </p>
+          ) : view.unknown ? (
+            // the end report failed and no confirmation came back: say what is known, not "none" (FR-076)
+            <p className="call-hint" role="alert">
+              Nepodařilo se ověřit, zda se objednávka uložila. Pokud vám asistent přečetl číslo objednávky, objednávka
+              platí.
+            </p>
           ) : (
             <p className="call-hint">Žádná objednávka se neuložila.</p>
           ))}

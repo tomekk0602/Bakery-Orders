@@ -4,10 +4,18 @@ import { StyleSheet, Text, View } from "react-native";
 import { Button, Card, colors, font, space } from "@/shared/ui";
 import { formatCzk, formatDay } from "../format";
 
-type Props = { card: OrderCard; onConfirm: () => void; onEdit: () => void; busy: boolean; error: string | null };
+type Props = {
+  card: OrderCard;
+  onConfirm: () => void;
+  onEdit: () => void;
+  busy: boolean;
+  error: string | null;
+  /** The last confirmation may have saved the order: only confirming again is safe (FR-077). */
+  uncertain?: boolean;
+};
 
 /** The order as the server priced it. Nothing is saved until "Potvrdit" (FR-019). */
-export function OrderCardView({ card, onConfirm, onEdit, busy, error }: Props) {
+export function OrderCardView({ card, onConfirm, onEdit, busy, error, uncertain = false }: Props) {
   const { t } = useTranslation();
   return (
     <>
@@ -33,7 +41,7 @@ export function OrderCardView({ card, onConfirm, onEdit, busy, error }: Props) {
         </Text>
       ) : null}
       <Button label={t("newOrder.confirm")} onPress={onConfirm} busy={busy} />
-      <Button label={t("newOrder.edit")} variant="secondary" onPress={onEdit} disabled={busy} />
+      <Button label={t("newOrder.edit")} variant="secondary" onPress={onEdit} disabled={busy || uncertain} />
     </>
   );
 }

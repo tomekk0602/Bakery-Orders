@@ -857,3 +857,57 @@ Found in the owner's test on the deployment.
 - **Rejected**: Expo Router's native tabs (`unstable-native-tabs`), which give the real iOS glass but
   are an unstable API and have no web build, where reviewers look; a side menu on a computer, which
   would make the computer and the phone look different.
+
+## R43 — Fixes from the second code review of 2026-11-25 (owner)
+
+A second outside review (GPT, commit `8e0f71b`, rated 8/10) was checked against the code; all eleven
+findings were confirmed. Most of them sit where a correct server meets a client that lost an answer.
+Decisions:
+
+- **The call's result (FR-076)**: confirmed twice. `sendEnd` turns any failure of
+  `POST /api/call/[id]/end` into `order_numbers: []`, and the window then says "Žádná objednávka se
+  neuložila". And `end()` reports at once, while a `confirm_order` may still be in flight: the end
+  route reads the call's orders before that one commits. The fix is in the client, which knows both
+  things: `LiveCall` keeps the tool calls in flight and waits for them (each already ends on its own
+  fetch failure) before reporting the end, and it keeps the `order_number` every successful
+  `confirm_order` returned. The screen shows the server's numbers joined with those; when the end
+  report fails and none came back it shows the "could not check" text. Rejected: retrying the end
+  report (the route answers 404 once the call has ended, so a retry would need a second, idempotent
+  end route), and a server lock between the end route and the confirmation (the client wait closes
+  the window that a browser can open; the server already refuses a tool call after the end).
+- **Staff confirmation (FR-077)**: confirmed. `OrderCardView` blocks "Upravit" only while busy; an
+  edited card is a new draft with a new id, so a second order can follow a lost answer. The same
+  rule as the web form (FR-065): no response or 5xx means "unknown", the card stays and only confirm
+  is offered; a 4xx refusal leaves editing open. A fetch that never got a response throws without
+  a status, so "only a 4xx is certain" tells the two apart without changing the HTTP client.
+- **Web form after a retry (FR-078)**: confirmed. `uncertain` was set on an unknown result and never
+  cleared, so the form stayed locked after "Nová objednávka". Rather than clearing a separate flag,
+  the unknown result now lives in the review step it is about (`checkout.ts`): when the step moves
+  on — saved, or a new order — the lock goes with it. The step logic is apart from the component,
+  as the call window's is (R39), so it is tested without a DOM library.
+- **Microphone (FR-079)**: confirmed. `openMicrophone` holds the stream before `addModule` and
+  `AudioWorkletNode`; when either throws, the caller has no handle. `openMicrophone` releases what it
+  opened (tracks and context) before rethrowing.
+- **Eval gate (FR-080)**: confirmed. The PR workflow sets `EVAL_CASES: gate`, so `compare` runs with
+  `fullRun: false` and does not look for missing cases; an empty result list gives `ok: true`. The
+  gate now takes the selection it ran: in a gate run every baseline gate case must be in the results,
+  in a full run every baseline case. A report file that exists but lacks results is as much missing
+  evidence as no file. One parser of `EVAL_CASES` serves both the suite's case filter and the gate,
+  so the two cannot disagree about what was meant to run.
+- **Reset demo (FR-081)**: confirmed. `truncateBakery` does not touch `notification`, whose rows link
+  to orders and requests by text, so the bell could open orders that no longer exist; and the four
+  steps ran on their own. Notifications are truncated with the rest, and the reset runs in one
+  transaction (the seed functions take a transaction as well as the pool).
+- **Provoz (FR-082)**: confirmed. The call row is written before the token; when the token fails the
+  browser has no `call_id`, so nobody ends the call and "Provoz" counts it as open. The start route
+  ends it with the outcome `error` in its failure path. A call abandoned by a crashed browser stays
+  open, as before; counting those needs a rule for "stale", left for later.
+- **Dnes (FR-083)**: confirmed. `useSetHandedOver` has no error handling and the global handler
+  covers queries only; the refetch puts the row back, so the tap looks like it did nothing. The row
+  shows the error.
+- **Baking plan (FR-084)**: confirmed as computed (an inactive product with 2 reserved and buffer 15
+  gives 17). Proposed in the review, the owner may reverse it: a switched-off product is not on the
+  shelf, so only its reservations are baked.
+- **Also** (no behaviour change): the README's opening line says at once that the call is made from
+  the browser, not on the bakery's phone number; `withLines` groups lines by order once (O(n + m)
+  instead of O(n × m)).

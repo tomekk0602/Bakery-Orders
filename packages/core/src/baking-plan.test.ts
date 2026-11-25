@@ -36,6 +36,11 @@ describe("bakingPlan (FR-010)", () => {
     expect(plan.lines.find((l) => l.productId === "vanocka")?.toBake).toBe(2);
   });
 
+  it("a switched-off product gets only its reserved pieces, no walk-in buffer (FR-084)", () => {
+    const plan = bakingPlan(catalogue, { vanocka: 2 }, { vanocka: 15 }, false);
+    expect(plan.lines.find((l) => l.productId === "vanocka")).toMatchObject({ reserved: 2, buffer: 0, toBake: 2 });
+  });
+
   it("on a closed day there is no walk-in buffer", () => {
     const plan = bakingPlan(catalogue, { chleb: 1 }, { chleb: 15 }, true);
     expect(plan.lines.find((l) => l.productId === "chleb")).toMatchObject({ buffer: 0, toBake: 1 });
@@ -50,7 +55,8 @@ describe("bakingPlan (FR-010)", () => {
         for (const l of plan.lines) {
           expect(l.reserved).toBe(reserved[l.productId] ?? 0);
           expect(l.toBake).toBe(l.reserved + l.buffer);
-          expect(l.buffer).toBe(closed ? 0 : (buffers[l.productId] ?? 0));
+          const active = catalogue.find((c) => c.id === l.productId)?.active ?? false;
+          expect(l.buffer).toBe(closed || !active ? 0 : (buffers[l.productId] ?? 0));
         }
         const sum = (k: "reserved" | "buffer" | "toBake") => plan.lines.reduce((s, l) => s + l[k], 0);
         expect(plan.totals).toEqual({ reserved: sum("reserved"), buffer: sum("buffer"), toBake: sum("toBake") });

@@ -24,7 +24,8 @@ const result = (id: string, passed: number, extra: Partial<CaseResult> = {}): Ca
   ...extra,
 });
 
-const full = { fullRun: true };
+const full = { selection: "all" as const };
+const gateRun = { selection: "gate" as const };
 
 describe("the regression gate", () => {
   it("passes when gate cases pass every trial and others hold their interval", () => {
@@ -60,7 +61,24 @@ describe("the regression gate", () => {
     expect(v.notes).toEqual(["customer/d99: not in the baseline, not compared"]);
   });
 
-  it("a subset run (EVAL_CASES) does not count the cases it skipped", () => {
-    expect(compare([result("u01", 5)], baseline, { fullRun: false }).ok).toBe(true);
+  it("a gate run (EVAL_CASES=gate) does not count the non-gate cases it skipped", () => {
+    expect(compare([result("u01", 5)], baseline, gateRun).ok).toBe(true);
+  });
+
+  it("a gate run missing a gate case fails (FR-080, SC-023)", () => {
+    const v = compare([result("d06", 4)], baseline, gateRun);
+    expect(v.ok).toBe(false);
+    expect(v.regressions).toContain("customer/u01: in the baseline but not run");
+  });
+
+  it("an empty result set never passes, whatever was selected (FR-080, SC-023)", () => {
+    expect(compare([], baseline, gateRun).ok).toBe(false);
+    expect(compare([], baseline, full).ok).toBe(false);
+    expect(compare([], baseline, { selection: ["u01"] }).ok).toBe(false);
+  });
+
+  it("a run of listed ids needs exactly those", () => {
+    expect(compare([result("d06", 4)], baseline, { selection: ["d06"] }).ok).toBe(true);
+    expect(compare([result("d06", 4)], baseline, { selection: ["d06", "u01"] }).ok).toBe(false);
   });
 });

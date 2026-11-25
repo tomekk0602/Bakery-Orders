@@ -5,7 +5,7 @@ export type CallView =
   | { step: "number"; error: string | null }
   | { step: "calling" }
   | { step: "live"; startedAt: number; capSeconds: number }
-  | { step: "ended"; reason: EndReason; orderNumbers: number[] };
+  | { step: "ended"; reason: EndReason; orderNumbers: number[]; unknown: boolean };
 
 /** The part of `LiveCall` the window uses; a stand-in in tests. */
 export type CallLike = { start(phone: string): Promise<void>; end(reason: EndReason): Promise<number[]> };
@@ -51,8 +51,8 @@ export class CallSession {
       onLive: (capSeconds) => {
         if (current()) this.set({ step: "live", startedAt: (this.deps.now ?? Date.now)(), capSeconds });
       },
-      onEnded: ({ reason, orderNumbers }) => {
-        if (current()) this.set({ step: "ended", reason, orderNumbers });
+      onEnded: ({ reason, orderNumbers, unknown }) => {
+        if (current()) this.set({ step: "ended", reason, orderNumbers, unknown });
       },
     });
     this.call = call;

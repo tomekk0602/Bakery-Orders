@@ -450,6 +450,36 @@ name, and reopens it; a request closed 31 days ago is gone after the nightly cle
   light amber pill behind its icon and label, in the accent colour; the others show an outline icon
   in grey. The keyboard focus ring follows the pill's shape. The open-requests badge on Požadavky
   stays (FR-041), and the bell in the header uses the same icon set.
+
+**Fixes from the second code review of 2026-11-25** _(owner; research R43)_
+
+- **FR-076** _(amends FR-066)_: The call screen MUST NOT say that no order was saved unless it knows.
+  Before the call's end is reported, the tool calls still in flight MUST finish, so an order being
+  confirmed at hang-up is counted. The order numbers the confirmations returned during the call MUST
+  be shown even when the end report fails. When the end report fails and no number came back, the
+  screen MUST say that it could not check whether an order was saved and that an order whose number
+  the assistant read out is valid — never "Žádná objednávka se neuložila".
+- **FR-077** _(amends FR-065 for staff)_: In the staff app, when confirming an order card fails
+  without a clear answer — no response, or a server error — the card MUST stay, with confirming it
+  again as the way on, and editing it MUST be blocked, because an edited card would be a new order. A
+  clear refusal (a limit, a closed day, an expired card) MUST leave editing open.
+- **FR-078**: After an uncertain web-form confirmation is retried successfully, "Nová objednávka" MUST
+  give the customer a working form: products, the day and the fields can be chosen again.
+- **FR-079** _(amends FR-058)_: A microphone that the browser granted MUST be stopped when anything
+  after the grant fails during the call's start, before the call holds it.
+- **FR-080** _(amends ADR-0012's gate)_: The eval gate MUST fail when a case the baseline marks as a
+  gate case is missing from the results of a gate run, and when any baseline case is missing from a
+  full run; an empty result set never passes.
+- **FR-081** _(amends FR-042)_: "Reset demo" MUST also remove the staff notifications, and it MUST be
+  one transaction: either everything is restored or nothing changes.
+- **FR-082** _(amends FR-033)_: A call whose start fails after it was recorded — the voice service
+  refused the token or is down — MUST be recorded as ended with the outcome "error", so "Provoz"
+  counts it as an error, not as an open call.
+- **FR-083** _(amends FR-012)_: When marking an order as handed over (or taking it back) fails, the
+  "Dnes" screen MUST say so on that order; the order keeps the state the server holds.
+- **FR-084** _(clarifies FR-010)_: A product the owner switched off MUST appear in the baking plan only
+  with its reserved pieces; the walk-in buffer applies to products on offer only. _(Proposed in the
+  review, research R43; the owner may reverse it.)_
 - **FR-042**: A "Reset demo" action MUST restore the seeded bakery, catalogue and orders (ADR-0014).
 - **FR-043**: Every staff API route MUST check the caller's permission on the server: no session →
   401, missing permission → 403 (ADR-0015).
@@ -518,6 +548,11 @@ name, and reopens it; a request closed 31 days ago is gone after the nightly cle
   wider than 720 px, and the "Vydat" button is 44 px tall.
 - **SC-021** _(2026-11-25)_: On a phone and on a computer the tab bar is a floating pill with the
   selected tab highlighted, and the owner's six tabs fit on a 375 px wide phone with no label cut.
+- **SC-022** _(2026-11-25, research R43)_: In no tested sequence — a lost end report, a hang-up while
+  an order is being confirmed, a lost confirmation answer in the staff app — does a screen tell the
+  customer or staff that no order exists when one was saved, or let staff save it twice.
+- **SC-023** _(2026-11-25, research R43)_: The eval gate fails on an empty result set and on a result
+  set missing one gate case (tested on the gate function).
 - **SC-006**: Voice latency (end of speech to first audio) — target to be set from the voice
   measurement; not yet measured (research R5).
 

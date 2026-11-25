@@ -36,8 +36,8 @@ describe("the call window's states (spec 001 FR-068)", () => {
     expect(s.view).toEqual({ step: "live", startedAt: 1_000_000, capSeconds: 180 });
     call.events().onTranscript([{ role: "agent", text: "Dobrý den" }]);
     expect(s.turns).toEqual([{ role: "agent", text: "Dobrý den" }]);
-    call.events().onEnded?.({ reason: "capped", orderNumbers: [1042] });
-    expect(s.view).toEqual({ step: "ended", reason: "capped", orderNumbers: [1042] });
+    call.events().onEnded?.({ reason: "capped", orderNumbers: [1042], unknown: false });
+    expect(s.view).toEqual({ step: "ended", reason: "capped", orderNumbers: [1042], unknown: false });
   });
 
   it("a refusal goes back to the number with the server's reason (FR-016)", async () => {
@@ -48,7 +48,7 @@ describe("the call window's states (spec 001 FR-068)", () => {
       step: "number",
       error: "Hlasový asistent je teď vytížený. Objednejte prosím přes formulář.",
     });
-    call.events().onEnded?.({ reason: "error", orderNumbers: [] }); // the failed call's own report
+    call.events().onEnded?.({ reason: "error", orderNumbers: [], unknown: false }); // the failed call's own report
     expect(s.view.step).toBe("number");
   });
 
@@ -60,7 +60,7 @@ describe("the call window's states (spec 001 FR-068)", () => {
     s.close();
     expect(call.end).toHaveBeenCalledWith("hangup");
     expect(s.view).toEqual({ step: "number", error: null });
-    call.events().onEnded?.({ reason: "hangup", orderNumbers: [1043] });
+    call.events().onEnded?.({ reason: "hangup", orderNumbers: [1043], unknown: false });
     call.events().onTranscript([{ role: "agent", text: "Na shledanou" }]);
     expect(s.view).toEqual({ step: "number", error: null });
     expect(s.turns).toEqual([]);
@@ -80,7 +80,7 @@ describe("the call window's states (spec 001 FR-068)", () => {
     await s.start("+420777123456");
     await s.hangUp();
     expect(first.end).toHaveBeenCalledWith("hangup");
-    first.events().onEnded?.({ reason: "hangup", orderNumbers: [] });
+    first.events().onEnded?.({ reason: "hangup", orderNumbers: [], unknown: false });
     await s.start("+420777123456");
     expect(s.view.step).toBe("calling");
   });

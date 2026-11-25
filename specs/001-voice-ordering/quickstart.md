@@ -80,3 +80,15 @@ npm run dev              # apps/web on :3000, apps/staff (Expo) on :8081
 | Tap another tab                        | its icon turns filled, an amber pill behind it                        |
 | Scroll "Dnes" to the end               | the last card stops above the bar                                     |
 | Owner on a 375 px wide phone           | all six labels whole, "Nová" for the new order                        |
+
+### Amendment 2026-11-25 — the second code review (FR-076–FR-084, research R43)
+
+| Scenario                                                        | Expected                                                                   |
+| --------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| Call: confirm an order, go offline, hang up                     | the number read out is shown, or the "could not check" text — never "none" |
+| Call: hang up while the assistant is confirming                 | the window shows the order's number                                        |
+| Staff: confirm a card offline                                   | the card stays, "Upravit" blocked, confirming again saves one order        |
+| Web form: confirm offline, retry online, then "Nová objednávka" | products can be chosen again                                               |
+| Owner: "Reset demo"                                             | the bell is empty; orders and plan back to the seed                        |
+| Dnes: mark an order handed over with the server down            | an error on that order                                                     |
+| Plán: switch off a product with reservations                    | its line shows only the reserved pieces                                    |

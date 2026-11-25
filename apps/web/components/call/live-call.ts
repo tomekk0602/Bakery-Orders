@@ -11,8 +11,13 @@ export type CallEvents = {
   /** When the assistant is on the line, with the call's length cap in seconds (FR-068). */
   onLive?: (capSeconds: number) => void;
   /** Once, whoever ended the call — the customer, the cap, the assistant or an error (FR-066). */
-  onEnded?: (result: { reason: EndReason; orderNumbers: number[] }) => void;
+  onEnded?: (result: CallResult) => void;
 };
+/**
+ * How the call ended and the orders saved in it. `unknown` when the end report failed and no
+ * confirmation returned a number: nobody can tell whether an order was saved (FR-076).
+ */
+export type CallResult = { reason: EndReason; orderNumbers: number[]; unknown: boolean };
 type StartResponse = { call_id: string; token: string; model: string; cap_seconds: number };
 
 /**
@@ -31,6 +36,10 @@ export class LiveCall {
   private ended = false;
   private endReason: EndReason = "hangup";
   private callId = "";
+  /** Tool calls still waiting for our API; the end report waits for them (FR-076). */
+  private readonly inFlight = new Set<Promise<unknown>>();
+  /** Numbers the confirmations returned, shown even when the end report fails (FR-076). */
+  private readonly confirmed = new Set<number>();
 
   constructor(private readonly events: CallEvents) {}
 
@@ -130,19 +139,28 @@ export class LiveCall {
 
     const calls = m.toolCall?.functionCalls ?? [];
     if (calls.length === 0) return;
-    const functionResponses = await Promise.all(
-      calls.map(async (fc) => {
-        const r = await fetch(`/api/call/${this.callId}/tools/${fc.name}`, {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify(fc.args ?? {}),
-        })
-          .then((x) => x.json())
-          .catch(() => ({ ok: false, reason: "network_error" }));
-        return { id: fc.id, name: fc.name, response: r as Record<string, unknown> };
-      }),
-    );
-    this.session?.sendToolResponse({ functionResponses });
+    const running = Promise.all(calls.map((fc) => this.runTool(fc.id, fc.name ?? "", fc.args ?? {})));
+    this.inFlight.add(running);
+    try {
+      const functionResponses = await running;
+      this.session?.sendToolResponse({ functionResponses });
+    } finally {
+      this.inFlight.delete(running);
+    }
+  }
+
+  /** One tool call, run by our API where the rules are; a confirmed order's number is kept (FR-076). */
+  private async runTool(id: string | undefined, name: string, args: Record<string, unknown>) {
+    const r = (await fetch(`/api/call/${this.callId}/tools/${name}`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(args),
+    })
+      .then((x) => x.json())
+      .catch(() => ({ ok: false, reason: "network_error" }))) as Record<string, unknown>;
+    if (name === "confirm_order" && r.ok === true && typeof r.order_number === "number")
+      this.confirmed.add(r.order_number);
+    return { id, name, response: r };
   }
 
   async end(reason: EndReason): Promise<number[]> {
@@ -156,15 +174,19 @@ export class LiveCall {
 
   /**
    * Tells the server the call ended, with the transcript and measurements; the order numbers come back
-   * and go to the screen through `onEnded`, whoever ended the call (FR-066).
+   * and go to the screen through `onEnded`, whoever ended the call (FR-066). A confirmation still in
+   * flight is waited for first, so its order is counted (FR-076).
    */
   private async report(reason: EndReason): Promise<number[]> {
-    const numbers = await this.sendEnd(reason);
-    this.events.onEnded?.({ reason, orderNumbers: numbers });
-    return numbers;
+    await Promise.allSettled([...this.inFlight]);
+    const fromServer = await this.sendEnd(reason);
+    const orderNumbers = [...new Set([...(fromServer ?? []), ...this.confirmed])].sort((a, b) => a - b);
+    this.events.onEnded?.({ reason, orderNumbers, unknown: fromServer === null && orderNumbers.length === 0 });
+    return orderNumbers;
   }
 
-  private async sendEnd(reason: EndReason): Promise<number[]> {
+  /** The server's order numbers for the call, or null when it could not be asked. */
+  private async sendEnd(reason: EndReason): Promise<number[] | null> {
     if (!this.callId) return [];
     const r = await fetch(`/api/call/${this.callId}/end`, {
       method: "POST",
@@ -176,8 +198,8 @@ export class LiveCall {
         usage: this.usage,
       }),
     })
-      .then((x) => x.json() as Promise<{ order_numbers?: number[] }>)
-      .catch(() => ({ order_numbers: [] }));
-    return r.order_numbers ?? [];
+      .then(async (x) => (x.ok ? ((await x.json()) as { order_numbers?: number[] }) : null))
+      .catch(() => null);
+    return r?.order_numbers ?? null;
   }
 }

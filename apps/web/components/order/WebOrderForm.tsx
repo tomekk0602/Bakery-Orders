@@ -1,17 +1,15 @@
 "use client";
 
-import type { CatalogueResponse, WebOrderInput, WebOrderPlaced, WebOrderReview } from "@bakery/core/contracts";
+import type { CatalogueResponse, WebOrderInput } from "@bakery/core/contracts";
 import { useRef, useState } from "react";
 import { ProductGrid } from "../home/ProductGrid";
 import { dayLabel, deadline, money } from "../home/format";
 import { Icon } from "../home/Icon";
 import { OrderError, placeOrder, previewOrder } from "./api";
+import { confirmFailed, isLocked, type Step } from "./checkout";
 import { Summary } from "./Summary";
 import { MobileBasket } from "./MobileBasket";
 import { changeQuantity, selectedProducts, type Quantities } from "./selection";
-
-type Step =
-  { kind: "form" } | { kind: "preview"; preview: WebOrderReview } | { kind: "placed"; placed: WebOrderPlaced };
 
 /** One selection for photo cards, checkout and server-priced preview (FR-046, T093). */
 export function WebOrderForm({ catalogue }: { catalogue: CatalogueResponse }) {
@@ -22,14 +20,13 @@ export function WebOrderForm({ catalogue }: { catalogue: CatalogueResponse }) {
   const [step, setStep] = useState<Step>({ kind: "form" });
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const [uncertain, setUncertain] = useState(false);
   const pending = useRef(false);
   const checkout = useRef<HTMLDivElement>(null);
   const selected = selectedProducts(catalogue.products, qty);
   const pieces = selected.reduce((sum, p) => sum + p.quantity, 0);
   const total = selected.reduce((sum, p) => sum + p.quantity * p.priceCzk, 0);
   const noDays = catalogue.days.length === 0;
-  const locked = busy || uncertain || step.kind === "placed";
+  const locked = isLocked(step, busy);
   const input = (): WebOrderInput => ({
     customerName: name,
     customerPhone: phone,
@@ -61,7 +58,7 @@ export function WebOrderForm({ catalogue }: { catalogue: CatalogueResponse }) {
     try {
       const data = input();
       const preview = await previewOrder(data);
-      setStep({ kind: "preview", preview });
+      setStep({ kind: "preview", preview, uncertain: false });
       focusCheckout();
     } catch (e) {
       setError(e instanceof OrderError ? e.message : "Objednávku se nepodařilo zkontrolovat. Zkuste to znovu.");
@@ -85,7 +82,7 @@ export function WebOrderForm({ catalogue }: { catalogue: CatalogueResponse }) {
       // server returns the order it already saved (FR-065). Editing stays locked, because a changed
       // order would be a new one.
       const unknown = !(e instanceof OrderError) || e.uncertain;
-      setUncertain(unknown);
+      setStep((s) => confirmFailed(s, unknown));
       setError(
         unknown
           ? "Nepodařilo se ověřit, zda se objednávka uložila. Zkuste ji prosím potvrdit znovu — uloží se nejvýš jednou."
@@ -221,7 +218,7 @@ export function WebOrderForm({ catalogue }: { catalogue: CatalogueResponse }) {
                 <button type="button" className="button primary" onClick={() => void send()} disabled={busy}>
                   {busy ? "Odesíláme…" : "Potvrdit objednávku"}
                 </button>
-                <button type="button" className="button secondary" onClick={edit} disabled={busy || uncertain}>
+                <button type="button" className="button secondary" onClick={edit} disabled={locked}>
                   Upravit
                 </button>
               </div>
