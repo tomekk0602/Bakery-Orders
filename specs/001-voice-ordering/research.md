@@ -795,3 +795,14 @@ Found in the owner's test on the deployment.
   class, `CallSession` (states, a refused start, closing during a call, late events of a closed call),
   tested in Node; the component only draws it. The layout was checked with screenshots of a headless
   Chromium at 1280×800 and 390×844.
+
+## R40 — Nightly evals run by hand during the review (owner, 2026-11-25)
+
+- **Context**: the nightly workflow (T072) runs every eval case five times at 02:30 UTC on Gemini 3.5
+  Flash-Lite. If its key belongs to the same Google project as the deployment's, it spends most of the
+  free tier's 500 requests a day (R10) that the staff dictation needs, so a reviewer could find
+  dictation refused. The customer call is not affected: Gemini Live has no daily request limit.
+- **Decision**: the schedule is off; the workflow stays runnable by hand (`workflow_dispatch`). The
+  eval gate on changes to the agent is unchanged.
+- **Revisit**: after the review, or with a paid tier or a separate project for CI — then the schedule
+  goes back, because it is what catches a drift of the model behind the same id (ADR-0012, ADR-0013).

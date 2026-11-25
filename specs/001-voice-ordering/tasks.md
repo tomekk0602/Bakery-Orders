@@ -165,7 +165,7 @@ they cover and must fail first.
 ## Phase 10: Operations (ADR-0013) and demo (ADR-0014)
 
 - [x] T071 [P] `.github/workflows/ci.yml`: install, typecheck, lint, format check, unit and integration tests (PostgreSQL through Testcontainers); the eval gate in `eval-gate.yml` when the agent changes (research R26), `GEMINI_API_KEY` from secrets; exit 2 on quota exhaustion
-- [ ] T072 [P] `.github/workflows/evals-nightly.yml`: full eval suite and the voice eval; report as an artifact and a run summary — _workflow with the text suite done; the voice eval waits for T069_
+- [ ] T072 [P] `.github/workflows/evals-nightly.yml`: full eval suite and the voice eval; report as an artifact and a run summary — _workflow with the text suite done; the voice eval waits for T069_ _(schedule off during the review, run by hand — research R40)_
 - [x] T073 [P] `GET /api/cron/retention` + Vercel Cron: delete transcripts after 30 days, expired drafts and old rate-limit rows; test with a fixed clock (FR-009, ADR-0008)
 - [x] T074 [P] Shadow cost: `packages/core/src/agent/prices.ts` with source URL and date; cost per call and per dictation on the trace and the call record (ADR-0013)
 - [x] T075 [US4] "Provoz" screen `apps/staff/app/(tabs)/provoz.tsx` + `GET /api/staff/provoz`: first-audio p50/p95, outcome shares, share of phone orders edited by staff (FR-033)
