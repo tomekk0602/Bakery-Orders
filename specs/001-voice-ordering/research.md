@@ -987,3 +987,29 @@ An outside analysis (GPT) was checked against the transcripts in both runs' arti
   customer already gave them, which is the point of the case).
 - **Not acted on**: `staff/s07-slovak` failed once in #8 with "Horv¡th" (within its baseline 4/5).
   The artifact holds the parsed value, not the model's raw text, so no rule is built on it.
+
+## R46 — The eval gate fails on a 429 its retries cannot outwait (2026-11-26)
+
+- **Observed**: the gate on `dbe17e3` (run 45617399323) failed twice with no regression. Attempt 1
+  (2026-11-25 13:03Z): 56 of 95 trials errored on 429, all 39 graded trials passed. Attempt 2
+  (re-run 2026-11-26 ~11:15Z, the daily quota fresh): 93/94, every gate case 5/5, one trial of
+  `customer/u07-day-after` errored on 429. The runner counts an errored trial as missing evidence
+  (exit 2, ADR-0012), so one 429 fails the build.
+- **Cause**: the 429 of attempt 2 was the per-minute limit (`GenerateRequestsPerMinutePerProjectPerModel-FreeTier`,
+  15 a minute, R10), with Google's `RetryInfo` saying "retry in 24 s". The eval client sets
+  `retryOptions: { attempts: 3 }` and the SDK defaults for the rest (`@google/genai` 3.6.1: first wait
+  1 s, factor 2, jitter up to ×2), so the two retries wait about 1–2 s and 2–4 s — all three
+  attempts fall inside the same minute and fail together. The SDK does not read `RetryInfo`.
+  Why a request went over 15 a minute although the runner spaces first attempts 4.1 s apart is not
+  settled: the SDK's own quick retries are not spaced, and the demo's staff dictation spends the same
+  quota (R40).
+- **Decision**: keep the SDK's retry (standard over our own loop) and give it waits that outlast a
+  per-minute window: 5 attempts, first wait 30 s (above the 24 s Google asked for), factor 2, at most
+  60 s. A request that keeps failing now gives up after about 3–4.5 min instead of about 5 s, which a
+  95-trial run within the job's 40-minute timeout absorbs. A spent daily quota still ends the run as
+  missing evidence, only later.
+- **Rejected**: reading `RetryInfo` ourselves and sleeping that long (our own retry next to the SDK's,
+  two layers retrying the same call); counting an errored trial as a pass (the gate would pass without
+  evidence); fewer trials (the gate needs five per case, ADR-0013).
+- **Not acted on**: `staff/s07-slovak` was 4/5 again with "Horv¡th" in attempt 2 (within its
+  baseline), as in R45.

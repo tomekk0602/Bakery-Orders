@@ -360,3 +360,8 @@ Second batch:
 - [x] T152 Measure d05 alone, five trials, with the owner's yes (paid); record the result in R45
 - [ ] T153 _(two full runs on 2026-11-25, 12:28Z and 12:47Z: every gate case 5/5 in both, d05 and d01 included, but the provider answered 503 "high demand" — one errored trial in the first, 36 of 40 dictation trials in the second — so no baseline was stored; to be repeated)_ If d05 is 5/5: the full run records the new baseline (paid, owner's yes); the gate passes on the push
 - [ ] T154 Gates green (typecheck, lint, tests)
+
+## The eval gate and the per-minute quota (2026-11-26; research R46)
+
+- [x] T155 Eval client: the SDK retry waits 30 s first, factor 2, at most 60 s, 5 attempts, as named constants in `packages/evals/src/model.ts`; a test with a fake fetch answering 429 then 200 shows the second request does not go out before 24 s and does by 60 s (R46)
+- [ ] T156 Gates green (typecheck, lint, tests); the eval gate on the push has no errored trial
